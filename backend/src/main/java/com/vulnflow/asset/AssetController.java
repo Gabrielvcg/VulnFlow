@@ -5,6 +5,7 @@ import java.net.URI;
 import java.util.UUID;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -31,7 +32,12 @@ public class AssetController {
     }
 
     @GetMapping
-    public Page<AssetDtos.Response> findAll(@PageableDefault(size = 20) Pageable pageable) {
+    public Page<AssetDtos.Response> findAll(
+            @PageableDefault(
+                    size = 20,
+                    sort = {"createdAt", "id"},
+                    direction = Sort.Direction.DESC)
+            Pageable pageable) {
         return assetService.findAll(pageable);
     }
 
@@ -40,4 +46,3 @@ public class AssetController {
         return assetService.findById(id);
     }
 }
-
