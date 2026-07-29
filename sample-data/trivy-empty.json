@@ -1,0 +1,17 @@
+{
+  "SchemaVersion": 2,
+  "ArtifactName": "clean-demo:1.0.0",
+  "ArtifactType": "container_image",
+  "Scanner": {
+    "Version": "0.65.0"
+  },
+  "Results": [
+    {
+      "Target": "clean-demo:1.0.0",
+      "Class": "os-pkgs",
+      "Type": "alpine",
+      "Vulnerabilities": null
+    }
+  ]
+}
+

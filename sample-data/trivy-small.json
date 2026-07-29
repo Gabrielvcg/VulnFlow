@@ -1,0 +1,27 @@
+{
+  "SchemaVersion": 2,
+  "ArtifactName": "demo-app:1.0.0",
+  "ArtifactType": "container_image",
+  "Scanner": {
+    "Version": "0.65.0"
+  },
+  "Results": [
+    {
+      "Target": "demo-app:1.0.0 (alpine 3.20)",
+      "Class": "os-pkgs",
+      "Type": "alpine",
+      "Vulnerabilities": [
+        {
+          "VulnerabilityID": "CVE-2025-10001",
+          "PkgName": "libxml2",
+          "InstalledVersion": "2.12.7-r0",
+          "FixedVersion": "2.12.7-r1",
+          "Severity": "HIGH",
+          "Title": "Example XML parsing vulnerability",
+          "Description": "Synthetic portfolio data for a high-severity finding."
+        }
+      ]
+    }
+  ]
+}
+
