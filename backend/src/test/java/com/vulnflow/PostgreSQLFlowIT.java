@@ -13,6 +13,7 @@ import static org.mockito.Mockito.verify;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -144,6 +145,75 @@ class PostgreSQLFlowIT {
                 }
             }
         }
+    }
+
+    @Test
+    void assetResolutionCreatesThenReturnsTheExistingIdentityWithoutRenamingIt() throws Exception {
+        AssetResolutionResponse created = resolveAsset("first-name", "registry.example/app:1", 201);
+        AssetResolutionResponse existing = resolveAsset("renamed-by-agent", "registry.example/app:1", 200);
+
+        assertThat(existing.body().path("id").asText()).isEqualTo(created.body().path("id").asText());
+        assertThat(existing.body().path("name").asText()).isEqualTo("first-name");
+        assertThat(assetRepository.count()).isOne();
+    }
+
+    @Test
+    void concurrentAssetResolutionCreatesExactlyOneAsset() throws Exception {
+        CountDownLatch start = new CountDownLatch(1);
+        ExecutorService executor = Executors.newFixedThreadPool(2);
+        try {
+            Future<AssetResolutionResponse> first = executor.submit(() -> {
+                start.await();
+                return resolveAsset("concurrent-a", "registry.example/concurrent:1", null);
+            });
+            Future<AssetResolutionResponse> second = executor.submit(() -> {
+                start.await();
+                return resolveAsset("concurrent-b", "registry.example/concurrent:1", null);
+            });
+            start.countDown();
+            List<AssetResolutionResponse> responses = List.of(
+                    first.get(10, TimeUnit.SECONDS),
+                    second.get(10, TimeUnit.SECONDS));
+
+            assertThat(responses).extracting(AssetResolutionResponse::status)
+                    .containsExactlyInAnyOrder(200, 201);
+            assertThat(responses).extracting(response -> response.body().path("id").asText())
+                    .containsOnly(responses.get(0).body().path("id").asText());
+            assertThat(assetRepository.count()).isOne();
+        } finally {
+            executor.shutdownNow();
+        }
+    }
+
+    @Test
+    void originalAssetCreationEndpointReturnsConflictForDuplicateExternalIdentity() throws Exception {
+        String firstRequest = """
+                {
+                  "name": "original-name",
+                  "type": "CONTAINER_IMAGE",
+                  "externalReference": "registry.example/legacy-post:1"
+                }
+                """;
+        String duplicateRequest = """
+                {
+                  "name": "different-name",
+                  "type": "CONTAINER_IMAGE",
+                  "externalReference": "registry.example/legacy-post:1"
+                }
+                """;
+
+        mockMvc.perform(post("/api/v1/assets")
+                        .header(ApiKeyAuthenticationFilter.HEADER_NAME, API_KEY)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(firstRequest))
+                .andExpect(status().isCreated());
+        mockMvc.perform(post("/api/v1/assets")
+                        .header(ApiKeyAuthenticationFilter.HEADER_NAME, API_KEY)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(duplicateRequest))
+                .andExpect(status().isConflict());
+
+        assertThat(assetRepository.count()).isOne();
     }
 
     @Test
@@ -699,6 +769,24 @@ class PostgreSQLFlowIT {
         return objectMapper.readTree(result.getResponse().getContentAsString());
     }
 
+    private AssetResolutionResponse resolveAsset(String name, String externalReference, Integer expectedStatus)
+            throws Exception {
+        MvcResult result = mockMvc.perform(put("/api/v1/assets/resolve")
+                        .header(ApiKeyAuthenticationFilter.HEADER_NAME, API_KEY)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsBytes(java.util.Map.of(
+                                "name", name,
+                                "type", "CONTAINER_IMAGE",
+                                "externalReference", externalReference))))
+                .andReturn();
+        if (expectedStatus != null) {
+            assertThat(result.getResponse().getStatus()).isEqualTo(expectedStatus);
+        }
+        return new AssetResolutionResponse(
+                result.getResponse().getStatus(),
+                objectMapper.readTree(result.getResponse().getContentAsByteArray()));
+    }
+
     private int redriveStatus(UUID jobId, CountDownLatch start) throws Exception {
         start.await();
         return mockMvc.perform(post("/api/v1/ingestion-jobs/{id}/redrive", jobId)
@@ -746,6 +834,9 @@ class PostgreSQLFlowIT {
 
     private UUID createAsset(String name) {
         return assetRepository.save(new Asset(name, AssetType.CONTAINER_IMAGE, name + ":1")).getId();
+    }
+
+    private record AssetResolutionResponse(int status, JsonNode body) {
     }
 
     private byte[] readReport() throws Exception {

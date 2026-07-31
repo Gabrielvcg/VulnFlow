@@ -11,6 +11,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -29,6 +30,17 @@ public class AssetController {
     public ResponseEntity<AssetDtos.Response> create(@Valid @RequestBody AssetDtos.CreateRequest request) {
         AssetDtos.Response response = assetService.create(request);
         return ResponseEntity.created(URI.create("/api/v1/assets/" + response.id())).body(response);
+    }
+
+    @PutMapping("/resolve")
+    public ResponseEntity<AssetDtos.Response> resolve(@Valid @RequestBody AssetDtos.ResolveRequest request) {
+        AssetDtos.Resolution resolution = assetService.resolve(request);
+        if (resolution.created()) {
+            return ResponseEntity
+                    .created(URI.create("/api/v1/assets/" + resolution.asset().id()))
+                    .body(resolution.asset());
+        }
+        return ResponseEntity.ok(resolution.asset());
     }
 
     @GetMapping
