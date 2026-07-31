@@ -116,4 +116,28 @@ if [ -z "${invalid_job_id}" ]; then
 fi
 
 wait_for_job "${invalid_job_id}" DEAD_LETTER 60
+
+echo "Altering the retained payload and redriving to demonstrate integrity fencing..."
+payload_key=$(docker compose exec -T postgres sh -c \
+  'psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -Atc "$1"' sh \
+  "SELECT payload_key FROM ingestion_jobs WHERE id = '${invalid_job_id}'")
+if [ -z "${payload_key}" ]; then
+  echo "Could not locate the retained payload for the integrity demo." >&2
+  exit 1
+fi
+MSYS_NO_PATHCONV=1 docker compose exec -T backend sh -c \
+  'printf "%s" "{\"Results\":[]}" > "$1"' sh "/var/lib/vulnflow/reports/${payload_key}"
+redrive_response=$(curl --fail-with-body --silent --show-error \
+  -X POST "${api_url}/api/v1/ingestion-jobs/${invalid_job_id}/redrive" \
+  -H "X-API-Key: ${api_key}")
+printf '%s\n' "${redrive_response}"
+if [ "$(json_field "${redrive_response}" status)" != "PENDING" ]; then
+  echo "The integrity demo job was not redriven." >&2
+  exit 1
+fi
+integrity_response=$(wait_for_job "${invalid_job_id}" DEAD_LETTER 60)
+if [ "$(json_field "${integrity_response}" lastError)" != "Stored report payload integrity verification failed" ]; then
+  echo "The altered payload did not fail integrity verification." >&2
+  exit 1
+fi
 echo "VulnFlow asynchronous demo completed."
