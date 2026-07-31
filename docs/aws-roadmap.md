@@ -2,10 +2,10 @@
 
 ## Current position
 
-VulnFlow 0.2.0 remains entirely local. PostgreSQL supplies the persistent job
-queue, a named Docker volume stores report payloads, and an in-process scheduled
-worker performs ingestion. No AWS SDK, credentials, API calls, or resources are
-part of this release.
+VulnFlow 0.3.0 remains entirely local. PostgreSQL supplies the backend job
+queue, named volumes store backend payloads, and an independent Linux agent
+uses a filesystem outbox for continuous scans. No AWS SDK, credentials, API
+calls, or resources are part of this release.
 
 The local design now proves the behavior needed before cloud migration:
 
@@ -14,12 +14,25 @@ The local design now proves the behavior needed before cloud migration:
 - bounded retries, dead letter, redrive, and stale lease recovery;
 - concurrency safety against PostgreSQL;
 - storage and queue adapter boundaries.
+- offline agent scans, durable delivery retry, checksum verification, and
+  idempotent external asset identity.
 
 RabbitMQ was not added because it would create another runtime and operational
 model while PostgreSQL already provides the required local persistence and
 locking semantics.
 
 ## Proposed migration
+
+Agent delivery is expected to evolve as follows:
+
+```text
+Agent -> presigned S3 upload -> SQS message -> Lambda processor
+```
+
+The agent must retain its local outbox until S3 confirms upload and the backend
+accepts the submission envelope. Presigned URLs prevent long-lived AWS
+credentials on VPS hosts. SQS receipt handles and visibility timeouts replace
+database claim tokens only at the queue adapter boundary.
 
 ```text
 0.2 local                         Future AWS adapter
@@ -71,5 +84,5 @@ Before any future deployment:
 4. Configure budgets, retention, and alarms.
 5. Run `terraform destroy`, verify deletion, and inspect for orphaned resources.
 
-Terraform in 0.2.0 remains a non-deploying skeleton and is only formatted,
+Terraform in 0.3.0 remains a non-deploying skeleton and is only formatted,
 initialized without a backend, and validated.
