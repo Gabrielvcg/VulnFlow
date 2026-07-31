@@ -1,89 +1,119 @@
 # Architecture
 
-## Current system
+## Scope
 
-VulnFlow 0.1.1 is one Spring Boot deployable organized by feature:
+VulnFlow 0.2.0 is a Spring Boot modular monolith with PostgreSQL and a local
+persistent report volume. The API and worker run in the same process, but their
+transactional boundaries are independent so either side can later move behind
+an adapter.
 
-```text
-com.vulnflow
-|-- asset
-|-- scan
-|-- finding
-|-- ingestion
-|-- dashboard
-|-- security
-|-- shared
-`-- config
-```
-
-Controllers validate transport input and delegate. Services own business and
-transaction behavior. Repositories own persistence. API responses are DTOs, not
-JPA entities.
-
-## Ingestion sequence
-
-1. Authenticate `X-API-Key`.
-2. Resolve the asset or return `404`.
-3. Reject empty, oversized, or non-JSON uploads.
-4. Read bounded bytes and compute SHA-256.
-5. `ScanRegistrationService.registerProcessing()` opens `REQUIRES_NEW`.
-6. PostgreSQL `ON CONFLICT` preserves `(asset_id, content_hash)` uniqueness.
-7. A pessimistic row lock decides one of:
-   - new claim: `IMPORTED`;
-   - failed claim: reset and `RETRIED`;
-   - completed row: `DUPLICATE`;
-   - active row: `ALREADY_PROCESSING`.
-8. Parse the validated Trivy structure outside a database transaction.
-9. `IngestionPersistenceService.complete()` opens `REQUIRES_NEW`, saves all
-   findings, and marks the scan `COMPLETED` atomically.
-10. A processing error calls `ScanFailureService.markFailed()` in another
-    `REQUIRES_NEW` transaction and then rethrows the original exception.
-11. Response counts are executed after completion and outside failure marking.
-
-There is no self-invocation between the three transactional operations; each is
-called through a separate Spring bean proxy.
-
-## Scan state model
+## Components
 
 ```text
-RECEIVED
-   |
-   v
-PROCESSING -------> COMPLETED
-   |
-   v
-FAILED
-   |
-   `--------------> PROCESSING
+ScanIngestionController
+  -> DefaultScanIngestionService
+      -> AssetService
+      -> ScanRegistrationService
+          -> ScanRepository
+          -> ReportStorage -> LocalFileReportStorage
+          -> IngestionJobRepository
+
+LocalIngestionWorker (@Scheduled)
+  -> IngestionJobRecoveryService
+  -> JobClaimService -> PostgreSQL FOR UPDATE SKIP LOCKED
+  -> IngestionJobProcessor
+      -> ReportStorage.load
+      -> TrivyVulnerabilityReportParser
+      -> IngestionPersistenceService
+          -> FindingRiskCalculator
+          -> FindingRepository
+          -> ScanRepository
+          -> IngestionJobRepository
+      -> JobFailureService
+
+IngestionJobController
+  -> IngestionJobQueryService
+  -> IngestionJobRedriveService
 ```
 
-New HTTP ingestions are inserted directly as `PROCESSING`. `RECEIVED` remains a
-domain/schema state for possible future adapters. Failed retries reuse the same
-row and identifier. Completed rows are immutable to duplicate ingestion.
+## HTTP-to-worker flow
 
-`ScanRecoveryService` performs an atomic conditional update from stale
-`PROCESSING` to `FAILED`. It is idempotent and callable later by a scheduler, but
-0.1.1 does not schedule it automatically.
+1. Spring Security validates `X-API-Key`.
+2. The controller validates multipart transport, asset, media type, and size.
+3. The service reads at most the configured upload limit and computes SHA-256.
+4. Registration inserts a `RECEIVED` scan with `ON CONFLICT DO NOTHING` and
+   locks the matching `(asset_id, content_hash)` row.
+5. For new content, an internal storage key is generated, the report is written
+   through a temporary file, and one `PENDING` job is inserted.
+6. Registration commits and HTTP returns `202`; no JSON parsing occurs in the
+   request thread.
+7. The scheduler selects available jobs with `FOR UPDATE SKIP LOCKED LIMIT n`.
+8. A short claim transaction sets the job and scan to `PROCESSING`, increments
+   attempts, stores `lockedAt`, and returns a detached `JobClaim`.
+9. After commit, the worker loads and parses the report and calculates findings.
+10. A completion transaction locks job then scan, verifies the attempt number,
+    replaces findings, and marks both records `COMPLETED` atomically.
+11. Functional errors dead-letter immediately. Transient errors schedule a
+    future retry or dead-letter after the maximum attempt.
 
-## Data model and migrations
+## State ownership
 
-- `Asset` identifies a host, image, or application.
-- `Scan` records the report hash, lifecycle, source metadata, and generic
-  failure reason.
-- `Finding` is a vulnerability snapshot tied to a scan and asset.
+`Scan` is the domain result:
 
-Flyway V1 creates the original model. V2 adds `scans.failure_reason` and a
-partial processing-time index. V1 was not rewritten, so V2 works on both an
-existing 0.1.0 database and an empty database.
+- `RECEIVED`: durable payload/job waiting, retry waiting, or redriven.
+- `PROCESSING`: the current job attempt owns a lease.
+- `COMPLETED`: findings and scanner version committed.
+- `FAILED`: the job is `DEAD_LETTER`.
 
-## Security boundary
+`IngestionJob` is the work source of truth:
 
-Spring Security applies a stateless API-key filter to `/api/v1/**`. Health and
-local Swagger remain public. Compose limits network exposure to localhost.
-This is machine-to-machine hardening, not the final human identity model.
+- `PENDING`, `PROCESSING`, `RETRY_WAIT`, `COMPLETED`, `DEAD_LETTER`.
 
-## Deliberately deferred
+There is no scan-only recovery path in 0.2.0. Recovery reads and transitions
+jobs, then updates their scans in the same transaction.
 
-Syft, asynchronous processing, reconciliation, frontend, AWS, S3, SQS, Lambda,
-DynamoDB, EventBridge, SNS, and microservices remain outside this version.
-Terraform still defines zero resources.
+## Transaction boundaries
+
+| Boundary | Operations | External work under DB lock |
+| --- | --- | --- |
+| Registration | scan deduplication, payload write, job insert | Bounded local write, no parsing |
+| Claim | job lock, attempt increment, scan `PROCESSING` | None |
+| Processing | storage read, JSON parse, risk calculation | No DB transaction |
+| Completion | finding replacement, scan and job completion | None |
+| Failure | retry/dead-letter and matching scan transition | None |
+| Recovery | stale job retry/dead-letter and scan transition | None |
+| Redrive | state check, payload existence, reset job and scan | Bounded existence check |
+
+The registration transaction registers payload cleanup on rollback because a
+filesystem and PostgreSQL do not provide a distributed transaction.
+
+## Concurrency and idempotency
+
+- `(asset_id, content_hash)` serializes duplicate report submission.
+- `UNIQUE(scan_id)` prevents a second job for a scan.
+- `SKIP LOCKED` lets backend instances claim different jobs without waiting.
+- Claim transactions finish before parsing.
+- `attemptCount` acts as a lease generation. An old worker cannot complete a
+  job after recovery or a later claim.
+- Completion deletes and recreates a scan's findings within one transaction,
+  so redelivery cannot leave duplicates or partial findings.
+- Concurrent redrive locks the job row; only the first transition succeeds.
+
+## Recovery and backoff
+
+Stale `PROCESSING` jobs are selected by `lockedAt`. If attempts remain they move
+to `RETRY_WAIT`, otherwise to `DEAD_LETTER`. Recovery uses row locks and is
+idempotent because the first execution changes the status.
+
+The default retry sequence is 5 seconds, 30 seconds, and 2 minutes. Retries set
+`availableAt`; no worker sleeps while waiting.
+
+## Future adapter boundaries
+
+```text
+LocalFileReportStorage -> S3ReportStorage
+IngestionJobRepository/claim service -> SQS delivery adapter
+LocalIngestionWorker -> Lambda handler
+```
+
+These are migration seams only. No AWS SDK or cloud resource is used in 0.2.0.
