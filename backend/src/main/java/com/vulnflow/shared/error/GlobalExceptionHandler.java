@@ -4,6 +4,7 @@ import com.vulnflow.shared.exception.InvalidReportException;
 import com.vulnflow.shared.exception.ReportTooLargeException;
 import com.vulnflow.shared.exception.ResourceNotFoundException;
 import com.vulnflow.shared.exception.UnsupportedReportMediaTypeException;
+import com.vulnflow.ingestion.JobStateConflictException;
 import jakarta.servlet.http.HttpServletRequest;
 import java.time.Instant;
 import java.util.LinkedHashMap;
@@ -149,6 +150,13 @@ public class GlobalExceptionHandler {
                 "An unexpected error occurred",
                 request,
                 Map.of());
+    }
+
+    @ExceptionHandler(JobStateConflictException.class)
+    ResponseEntity<ApiError> handleConflict(
+            JobStateConflictException exception,
+            HttpServletRequest request) {
+        return response(HttpStatus.CONFLICT, "JOB_STATE_CONFLICT", exception.getMessage(), request, Map.of());
     }
 
     private ResponseEntity<ApiError> response(

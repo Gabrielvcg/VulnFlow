@@ -25,9 +25,10 @@ public class ScanIngestionController {
             @RequestParam UUID assetId,
             @RequestPart("file") MultipartFile file) {
         ScanIngestionResponse response = scanIngestionService.ingestTrivy(assetId, file);
-        if (response.outcome() == ScanIngestionOutcome.ALREADY_PROCESSING) {
-            return ResponseEntity.accepted().body(response);
+        if (response.outcome() == ScanIngestionOutcome.DUPLICATE
+                || response.outcome() == ScanIngestionOutcome.DEAD_LETTER) {
+            return ResponseEntity.ok(response);
         }
-        return ResponseEntity.ok(response);
+        return ResponseEntity.accepted().body(response);
     }
 }

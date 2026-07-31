@@ -30,6 +30,26 @@ jobs:
         working-directory: backend
         run: ./mvnw --batch-mode --no-transfer-progress verify
 
+      - name: Require PostgreSQL integration tests
+        working-directory: backend
+        run: |
+          python - <<'PY'
+          import glob
+          import sys
+          import xml.etree.ElementTree as ET
+
+          reports = glob.glob("target/failsafe-reports/TEST-*.xml")
+          tests = 0
+          skipped = 0
+          for report in reports:
+              root = ET.parse(report).getroot()
+              tests += int(root.attrib.get("tests", 0))
+              skipped += int(root.attrib.get("skipped", 0))
+
+          print(f"Failsafe integration tests: total={tests}, skipped={skipped}")
+          if tests == 0 or skipped != 0:
+              sys.exit("PostgreSQL integration tests did not all run")
+          PY
+
       - name: Build backend image
         run: docker build --tag vulnflow-backend:ci backend
-
