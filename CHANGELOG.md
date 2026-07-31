@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.2.0 - 2026-07-31
+
+- Replaced synchronous Trivy processing with a persistent PostgreSQL ingestion
+  queue and a configurable local background worker.
+- Added secure local report storage with internally generated keys, temporary
+  writes, atomic moves, traversal protection, and Docker volume persistence.
+- Added bounded retries, deterministic backoff, dead-letter handling, explicit
+  redrive, stale-job recovery, and attempt-aware completion guards.
+- Added paginated ingestion-job APIs, Micrometer metrics, and PostgreSQL
+  concurrency coverage for `SKIP LOCKED` and claim release.
+- Added Flyway V3 constraints and indexes without modifying existing migrations.
+
 ## 0.1.1 - 2026-07-29
 
 - Added explicit independent transactions for scan registration, completion,

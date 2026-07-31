@@ -1,9 +1,12 @@
 # ADR-005: Reuse failed scans and serialize retries
 
-- Status: Accepted
+- Status: Superseded by ADR-009 for asynchronous ingestion
 - Date: 2026-07-29
 
 ## Context
+
+This record describes the synchronous 0.1.1 implementation. Version 0.2.0 no
+longer redrives a failed scan through another upload.
 
 The unique `(asset_id, content_hash)` constraint prevented duplicate completed
 scans but also permanently blocked a valid retry after transient failure.
