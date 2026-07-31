@@ -5,12 +5,9 @@ import java.util.UUID;
 
 public record ScanIngestionResponse(
         UUID scanId,
+        UUID jobId,
         UUID assetId,
-        ScanStatus status,
-        ScanIngestionOutcome outcome,
-        long findingsImported,
-        long totalFindings,
-        long criticalFindings,
-        long highFindings,
-        boolean duplicate) {
+        ScanStatus scanStatus,
+        IngestionJobStatus jobStatus,
+        ScanIngestionOutcome outcome) {
 }

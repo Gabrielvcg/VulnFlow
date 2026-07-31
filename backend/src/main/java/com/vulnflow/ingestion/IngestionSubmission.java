@@ -3,9 +3,11 @@ package com.vulnflow.ingestion;
 import com.vulnflow.scan.ScanStatus;
 import java.util.UUID;
 
-public record ScanRegistration(
+public record IngestionSubmission(
         UUID scanId,
+        UUID jobId,
         UUID assetId,
-        ScanStatus status,
+        ScanStatus scanStatus,
+        IngestionJobStatus jobStatus,
         ScanIngestionOutcome outcome) {
 }
