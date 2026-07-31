@@ -141,3 +141,18 @@ exception types remain internal logs; persisted reasons are generic and bounded.
   signing/attestation remains future hardening.
 - Automatic rollback has no target on the first deployment and cannot reverse
   Flyway data or schema changes.
+
+## Prepared AWS boundary
+
+AWS adapters are inactive unless the `aws` profile is explicit. S3 keys are
+generated internally under a validated prefix, payload size is bounded, and an
+application SHA-256 metadata value is checked after download in addition to SDK
+checksum handling. SQS messages contain identifiers and a logical key only;
+they exclude report bytes, filenames, paths, credentials, and API keys.
+
+Terraform blocks S3 public access, enables managed encryption for S3/SQS,
+limits retention/concurrency, and scopes Lambda IAM to one object prefix, one
+queue, and one log group. It intentionally declares no network perimeter or
+database access. A future PostgreSQL result provider needs TLS, secret retrieval,
+connection caps, event-id uniqueness, and a reviewed connectivity model before
+the apply safety gate can open.

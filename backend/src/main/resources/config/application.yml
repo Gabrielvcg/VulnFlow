@@ -61,6 +61,14 @@ vulnflow:
     max-attempts: ${VULNFLOW_WORKER_MAX_ATTEMPTS:3}
     stale-timeout: ${VULNFLOW_WORKER_STALE_TIMEOUT:15m}
     backoff: ${VULNFLOW_WORKER_BACKOFF:5s,30s,2m}
+  aws:
+    region: ${AWS_REGION:eu-west-1}
+    s3-bucket: ${VULNFLOW_S3_BUCKET:}
+    s3-prefix: ${VULNFLOW_S3_PREFIX:reports}
+    sqs-queue-url: ${VULNFLOW_SQS_QUEUE_URL:}
+    max-payload-bytes: ${VULNFLOW_MAX_PAYLOAD_BYTES:10485760}
+    api-call-timeout: ${VULNFLOW_AWS_API_TIMEOUT:10s}
+    connection-timeout: ${VULNFLOW_AWS_CONNECTION_TIMEOUT:3s}
   security:
     api-key:
       value: ${VULNFLOW_API_KEY:}

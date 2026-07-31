@@ -1,5 +1,9 @@
 package com.vulnflow.ingestion;
 
+import com.vulnflow.processing.port.PayloadNotFoundException;
+import com.vulnflow.processing.port.ReportStorage;
+import com.vulnflow.processing.port.ReportStorageException;
+import com.vulnflow.processing.port.TransientReportStorageException;
 import jakarta.annotation.PostConstruct;
 import java.io.IOException;
 import java.nio.file.AtomicMoveNotSupportedException;
@@ -10,8 +14,10 @@ import java.nio.file.StandardCopyOption;
 import java.nio.file.StandardOpenOption;
 import java.util.UUID;
 import org.springframework.stereotype.Component;
+import org.springframework.context.annotation.Profile;
 
 @Component
+@Profile("!aws")
 public class LocalFileReportStorage implements ReportStorage {
 
     private final Path baseDirectory;
