@@ -33,13 +33,15 @@ public class JobClaimService {
                     .orElseThrow(() -> new IllegalStateException("A claimed ingestion job disappeared"));
             Scan scan = scanRepository.findByIdForUpdate(job.getScan().getId())
                     .orElseThrow(() -> new IllegalStateException("The scan for a claimed job disappeared"));
-            job.claim(now);
+            UUID claimToken = job.claim(now);
             scan.markProcessing();
             claims.add(new JobClaim(
                     job.getId(),
                     scan.getId(),
                     scan.getAsset().getId(),
                     job.getPayloadKey(),
+                    scan.getContentHash(),
+                    claimToken,
                     job.getAttemptCount(),
                     job.getMaxAttempts()));
         }

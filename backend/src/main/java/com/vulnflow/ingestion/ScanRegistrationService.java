@@ -61,7 +61,19 @@ public class ScanRegistrationService {
         }
 
         Optional<IngestionJob> existingJob = jobRepository.findByScanId(scan.getId());
+        if (existingJob.isEmpty() && scan.getStatus() != ScanStatus.COMPLETED) {
+            return registerLegacyScan(scan, content);
+        }
         return existingSubmission(scan, existingJob.orElse(null));
+    }
+
+    private IngestionSubmission registerLegacyScan(Scan scan, byte[] content) {
+        scan.markReceived();
+        String payloadKey = reportStorage.store(scan.getId(), content);
+        registerRollbackCleanup(payloadKey);
+        IngestionJob job = jobRepository.save(
+                new IngestionJob(scan, payloadKey, workerProperties.maxAttempts()));
+        return submission(scan, job, ScanIngestionOutcome.ACCEPTED);
     }
 
     private IngestionSubmission existingSubmission(Scan scan, IngestionJob job) {
@@ -71,9 +83,6 @@ public class ScanRegistrationService {
         if (scan.getStatus() == ScanStatus.FAILED
                 || (job != null && job.getStatus() == IngestionJobStatus.DEAD_LETTER)) {
             return submission(scan, job, ScanIngestionOutcome.DEAD_LETTER);
-        }
-        if (job == null) {
-            throw new IllegalStateException("The active scan has no ingestion job");
         }
         if (job.getStatus() == IngestionJobStatus.PROCESSING) {
             return submission(scan, job, ScanIngestionOutcome.ALREADY_PROCESSING);

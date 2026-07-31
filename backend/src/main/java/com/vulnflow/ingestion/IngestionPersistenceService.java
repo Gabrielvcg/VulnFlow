@@ -9,6 +9,7 @@ import com.vulnflow.scan.ScanStatus;
 import com.vulnflow.shared.exception.ResourceNotFoundException;
 import java.time.Instant;
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
@@ -34,11 +35,11 @@ public class IngestionPersistenceService {
     }
 
     @Transactional(propagation = Propagation.REQUIRES_NEW)
-    public void complete(UUID jobId, int expectedAttempt, ParsedVulnerabilityReport report) {
+    public void complete(UUID jobId, UUID expectedClaimToken, ParsedVulnerabilityReport report) {
         IngestionJob job = jobRepository.findByIdForUpdate(jobId)
                 .orElseThrow(() -> new ResourceNotFoundException("IngestionJob", jobId));
         if (job.getStatus() != IngestionJobStatus.PROCESSING
-                || job.getAttemptCount() != expectedAttempt) {
+                || !Objects.equals(job.getClaimToken(), expectedClaimToken)) {
             throw new StaleJobClaimException("The ingestion job claim is no longer current");
         }
         Scan scan = scanRepository.findByIdForUpdate(job.getScan().getId())

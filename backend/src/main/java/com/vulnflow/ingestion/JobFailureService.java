@@ -4,6 +4,7 @@ import com.vulnflow.scan.Scan;
 import com.vulnflow.scan.ScanRepository;
 import com.vulnflow.shared.exception.ResourceNotFoundException;
 import java.time.Instant;
+import java.util.Objects;
 import java.util.UUID;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
@@ -28,13 +29,13 @@ public class JobFailureService {
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public FailureDisposition handleFailure(
             UUID jobId,
-            int expectedAttempt,
+            UUID expectedClaimToken,
             boolean retryable,
             String safeError) {
         IngestionJob job = jobRepository.findByIdForUpdate(jobId)
                 .orElseThrow(() -> new ResourceNotFoundException("IngestionJob", jobId));
         if (job.getStatus() != IngestionJobStatus.PROCESSING
-                || job.getAttemptCount() != expectedAttempt) {
+                || !Objects.equals(job.getClaimToken(), expectedClaimToken)) {
             return FailureDisposition.IGNORED_STALE_CLAIM;
         }
         Scan scan = scanRepository.findByIdForUpdate(job.getScan().getId())

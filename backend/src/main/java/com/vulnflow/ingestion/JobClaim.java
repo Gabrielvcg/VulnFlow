@@ -7,6 +7,8 @@ public record JobClaim(
         UUID scanId,
         UUID assetId,
         String payloadKey,
+        String contentHash,
+        UUID claimToken,
         int attempt,
         int maxAttempts) {
 }
