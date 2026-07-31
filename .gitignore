@@ -7,6 +7,10 @@
 Thumbs.db
 
 backend/target/
+agent/target/
+agent/data/
+.agent-demo.*
+.agent-demo-tools.*
 
 **/.terraform/
 **/*.tfstate
