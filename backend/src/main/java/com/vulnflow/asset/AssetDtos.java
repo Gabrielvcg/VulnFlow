@@ -17,6 +17,15 @@ public final class AssetDtos {
             @Size(max = 500) String externalReference) {
     }
 
+    public record ResolveRequest(
+            @NotBlank @Size(max = 255) String name,
+            @NotNull AssetType type,
+            @NotBlank @Size(max = 500) String externalReference) {
+    }
+
+    public record Resolution(Response asset, boolean created) {
+    }
+
     public record Response(
             UUID id,
             String name,
@@ -36,4 +45,3 @@ public final class AssetDtos {
         }
     }
 }
-

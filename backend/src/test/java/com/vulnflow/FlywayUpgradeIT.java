@@ -32,8 +32,10 @@ class FlywayUpgradeIT {
         UUID received = UUID.randomUUID();
         UUID processingWithoutJob = UUID.randomUUID();
         UUID processingWithJob = UUID.randomUUID();
+        UUID duplicateAssetId = UUID.randomUUID();
         try (Connection connection = connection()) {
             insertAsset(connection, assetId);
+            insertAsset(connection, duplicateAssetId);
             insertScan(connection, completed, assetId, "COMPLETED", "a".repeat(64));
             insertScan(connection, failed, assetId, "FAILED", "b".repeat(64));
             insertScan(connection, received, assetId, "RECEIVED", "c".repeat(64));
@@ -65,7 +67,7 @@ class FlywayUpgradeIT {
         Flyway latest = flywayAt(null);
         latest.migrate();
 
-        assertThat(latest.info().current().getVersion().getVersion()).isEqualTo("4");
+        assertThat(latest.info().current().getVersion().getVersion()).isEqualTo("5");
         assertThat(scanStatus(completed)).isEqualTo("COMPLETED");
         assertThat(scanStatus(failed)).isEqualTo("FAILED");
         assertThat(scanStatus(received)).isEqualTo("FAILED");
@@ -86,6 +88,8 @@ class FlywayUpgradeIT {
             }
         }
         assertThat(countActiveScansWithoutJobs()).isZero();
+        assertThat(assetExternalReference(assetId)).isEqualTo("legacy:1");
+        assertThat(assetExternalReference(duplicateAssetId)).isNull();
     }
 
     private Flyway flywayAt(String target) {
@@ -172,6 +176,18 @@ class FlywayUpgradeIT {
             try (ResultSet result = statement.executeQuery()) {
                 assertThat(result.next()).isTrue();
                 return result.getInt(1);
+            }
+        }
+    }
+
+    private String assetExternalReference(UUID assetId) throws Exception {
+        try (Connection connection = connection();
+                PreparedStatement statement = connection.prepareStatement(
+                        "SELECT external_reference FROM assets WHERE id = ?")) {
+            statement.setObject(1, assetId);
+            try (ResultSet result = statement.executeQuery()) {
+                assertThat(result.next()).isTrue();
+                return result.getString(1);
             }
         }
     }

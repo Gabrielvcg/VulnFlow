@@ -1,5 +1,26 @@
 # Changelog
 
+## 0.3.0 - 2026-07-31
+
+- Added an independent Java 17 Linux agent that scans explicit container-image
+  targets with Trivy and supports daemon, `--once`, `--check`, and `--status`
+  operation.
+- Added a durable bounded filesystem outbox with atomic writes, restart
+  recovery, SHA-256 verification, persisted backoff, dead letter handling, and
+  uploaded-only retention.
+- Added safe shell-free Trivy execution with configurable path and timeout,
+  bounded process output and report size, JSON validation, global concurrency,
+  and per-target overlap protection.
+- Added idempotent `PUT /api/v1/assets/resolve`, Flyway V5 external-identity
+  uniqueness, duplicate-data upgrade policy, and real PostgreSQL concurrency
+  coverage.
+- Added a JDK HTTP multipart client with explicit `2xx`, authentication, asset
+  re-resolution, functional `4xx`, `5xx`, timeout, DNS, and network policies.
+- Added non-root systemd and Docker deployment options without mounting the
+  Docker socket, plus deterministic fake-Trivy and optional real-Trivy demos.
+- Updated CI to verify and build both backend and agent while keeping backend
+  PostgreSQL integration tests mandatory.
+
 ## 0.2.0 - 2026-07-31
 
 - Replaced synchronous Trivy processing with a persistent PostgreSQL ingestion

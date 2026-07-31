@@ -30,6 +30,28 @@ directly in `DEAD_LETTER` without pointless retries.
 Payload-integrity errors also terminate without retry. Public job responses use
 a generic bounded reason and expose neither the expected nor actual hash.
 
+## Agent security boundary
+
+- The agent scans only targets from a bounded validated YAML file. Duplicate,
+  blank, oversized, and unsupported targets fail startup.
+- Trivy receives an immutable argument list. Image references never pass
+  through a shell and output paths are internal random temporaries.
+- Startup fails if `trivy --version` fails. Each scan has a timeout, bounded
+  stdout/stderr capture, report byte limit, and JSON validation.
+- The API key exists only in process configuration and the HTTP header. Safe
+  `--check`, `--status`, logs, target YAML, outbox metadata, and asset cache do
+  not contain it.
+- Structured logs use target names rather than image references, because a
+  reference could accidentally contain registry credentials.
+- The outbox verifies SHA-256 before upload, refuses path traversal, persists
+  through atomic renames, and never applies retention to unuploaded evidence.
+- The systemd and Docker examples run as dedicated non-root identities. The
+  Docker socket is not mounted.
+
+The top-level Trivy `CreatedAt` generation timestamp is removed before outbox
+storage to provide stable deduplication. This field is not used by backend
+parsing; vulnerability and artifact content are preserved.
+
 ## Local payload storage
 
 `LocalFileReportStorage`:
@@ -72,3 +94,9 @@ exception types remain internal logs; persisted reasons are generic and bounded.
 - Local storage is not suitable for horizontally scaled hosts without a shared
   filesystem; S3 is the planned durable replacement.
 - Dependency and container scanning should run in CI and release workflows.
+- A compromised Trivy executable has the permissions of the dedicated agent
+  user; binary provenance and updates remain operator responsibilities.
+- Filesystem atomicity depends on a local filesystem that supports atomic moves.
+- One outbox directory does not support multiple agent processes or shared NFS.
+- Registry credentials inherited by Trivy require separate host-level secret
+  management and are outside VulnFlow's target YAML.
