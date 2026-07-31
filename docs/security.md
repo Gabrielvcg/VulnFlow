@@ -19,12 +19,16 @@ human interface should use OIDC or JWT.
 - The original filename is sanitized and stored only as scan metadata.
 - Client filenames never become storage paths.
 - Trivy structure and required fields are validated by the worker.
+- Stored bytes are checked against the scan SHA-256 before JSON parsing.
 - Vulnerability identifiers are rejected rather than silently truncated.
 - Descriptions are limited to 8,000 characters by default.
 
 The HTTP endpoint deliberately accepts syntactically or semantically invalid
 JSON as durable work. Validation occurs asynchronously and such jobs terminate
 directly in `DEAD_LETTER` without pointless retries.
+
+Payload-integrity errors also terminate without retry. Public job responses use
+a generic bounded reason and expose neither the expected nor actual hash.
 
 ## Local payload storage
 
@@ -49,9 +53,15 @@ Database constraints restrict job states and counters. Error text persisted in
 jobs and scans is generic and limited to 500 characters. Full exceptions may be
 logged for operators but are not included in HTTP responses.
 
-Claim generation validation prevents an interrupted worker from completing a
-newer attempt. `SKIP LOCKED`, unique scan/job constraints, and transactional
-finding replacement are covered by PostgreSQL integration tests.
+Every processing claim receives a random UUID token. Attempt counters only
+track retry budget; completion and failure compare the token so a token from a
+previous redrive cannot affect the current worker. Recovery and redrive clear
+active tokens. `SKIP LOCKED`, unique scan/job constraints, token fencing, and
+transactional finding replacement are covered by PostgreSQL integration tests.
+
+Unknown processing exceptions are conservatively non-retryable. Only explicitly
+transient storage errors and transient/recoverable database causes retry. Full
+exception types remain internal logs; persisted reasons are generic and bounded.
 
 ## Remaining risks
 
