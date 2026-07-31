@@ -73,10 +73,12 @@ public class Scan {
         failureReason = null;
     }
 
-    public void retryProcessing(String sourceFileName) {
-        this.sourceFileName = sourceFileName;
+    public void markReceived() {
+        status = ScanStatus.RECEIVED;
         scannerVersion = null;
-        markProcessing();
+        startedAt = null;
+        completedAt = null;
+        failureReason = null;
     }
 
     public void markCompleted(String scannerVersion) {

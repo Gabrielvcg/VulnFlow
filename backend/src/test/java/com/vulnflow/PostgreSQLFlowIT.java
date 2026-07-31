@@ -2,13 +2,13 @@ package com.vulnflow;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.Mockito.doAnswer;
-import static org.mockito.Mockito.reset;
+import static org.mockito.Mockito.doCallRealMethod;
+import static org.mockito.Mockito.doThrow;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -19,23 +19,30 @@ import com.vulnflow.asset.AssetRepository;
 import com.vulnflow.asset.AssetType;
 import com.vulnflow.finding.FindingRepository;
 import com.vulnflow.finding.FindingRiskCalculator;
-import com.vulnflow.ingestion.ScanFailureService;
-import com.vulnflow.ingestion.ScanIngestionOutcome;
-import com.vulnflow.ingestion.ScanRecoveryService;
-import com.vulnflow.ingestion.ScanRegistration;
-import com.vulnflow.ingestion.ScanRegistrationService;
+import com.vulnflow.ingestion.IngestionJob;
+import com.vulnflow.ingestion.IngestionJobRecoveryService;
+import com.vulnflow.ingestion.IngestionJobRepository;
+import com.vulnflow.ingestion.IngestionJobStatus;
+import com.vulnflow.ingestion.JobClaim;
+import com.vulnflow.ingestion.JobClaimService;
+import com.vulnflow.ingestion.LocalFileReportStorage;
+import com.vulnflow.ingestion.LocalIngestionWorker;
+import com.vulnflow.ingestion.RecoveryResult;
+import com.vulnflow.ingestion.ReportStorage;
+import com.vulnflow.ingestion.ReportStorageException;
+import com.vulnflow.ingestion.ReportStorageProperties;
 import com.vulnflow.ingestion.VulnerabilityReportParser;
-import com.vulnflow.scan.Scan;
 import com.vulnflow.scan.ScanRepository;
 import com.vulnflow.scan.ScanStatus;
 import com.vulnflow.security.ApiKeyAuthenticationFilter;
+import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
-import java.security.MessageDigest;
-import java.sql.Timestamp;
-import java.time.Duration;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.time.Instant;
-import java.util.HexFormat;
+import java.util.Comparator;
+import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
@@ -43,7 +50,6 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -53,472 +59,463 @@ import org.springframework.boot.testcontainers.service.connection.ServiceConnect
 import org.springframework.http.MediaType;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.mock.web.MockMultipartFile;
+import org.springframework.test.context.DynamicPropertyRegistry;
+import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.support.TransactionTemplate;
 import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
-@SpringBootTest(properties = "vulnflow.security.api-key.value=test-api-key")
+@SpringBootTest(properties = {
+    "vulnflow.security.api-key.value=test-api-key",
+    "vulnflow.worker.enabled=false",
+    "vulnflow.worker.poll-interval=1h",
+    "vulnflow.worker.batch-size=5",
+    "vulnflow.worker.max-attempts=3",
+    "vulnflow.worker.stale-timeout=15m",
+    "vulnflow.worker.backoff=5s,30s,2m"
+})
 @AutoConfigureMockMvc
 @Testcontainers(disabledWithoutDocker = true)
 class PostgreSQLFlowIT {
 
     private static final String API_KEY = "test-api-key";
+    private static final Path REPORT_DIRECTORY = createReportDirectory();
 
     @Container
     @ServiceConnection
     static final PostgreSQLContainer<?> POSTGRES =
             new PostgreSQLContainer<>("postgres:16.4-alpine");
 
-    @Autowired
-    MockMvc mockMvc;
+    @DynamicPropertySource
+    static void storageProperties(DynamicPropertyRegistry registry) {
+        registry.add("vulnflow.report-storage.directory", REPORT_DIRECTORY::toString);
+    }
 
-    @Autowired
-    ObjectMapper objectMapper;
+    @Autowired MockMvc mockMvc;
+    @Autowired ObjectMapper objectMapper;
+    @Autowired AssetRepository assetRepository;
+    @Autowired ScanRepository scanRepository;
+    @Autowired FindingRepository findingRepository;
+    @Autowired IngestionJobRepository jobRepository;
+    @Autowired LocalIngestionWorker worker;
+    @Autowired JobClaimService claimService;
+    @Autowired IngestionJobRecoveryService recoveryService;
+    @Autowired JdbcTemplate jdbcTemplate;
+    @Autowired PlatformTransactionManager transactionManager;
 
-    @Autowired
-    FindingRepository findingRepository;
-
-    @Autowired
-    ScanRepository scanRepository;
-
-    @Autowired
-    AssetRepository assetRepository;
-
-    @Autowired
-    ScanRegistrationService registrationService;
-
-    @Autowired
-    ScanFailureService failureService;
-
-    @Autowired
-    ScanRecoveryService recoveryService;
-
-    @Autowired
-    JdbcTemplate jdbcTemplate;
-
-    @MockitoSpyBean
-    VulnerabilityReportParser reportParser;
-
-    @MockitoSpyBean
-    FindingRiskCalculator riskCalculator;
+    @MockitoSpyBean ReportStorage reportStorage;
+    @MockitoSpyBean VulnerabilityReportParser reportParser;
+    @MockitoSpyBean FindingRiskCalculator riskCalculator;
 
     @BeforeEach
-    void cleanDatabase() {
-        reset(reportParser, riskCalculator);
+    void cleanState() throws Exception {
+        jobRepository.deleteAll();
         findingRepository.deleteAll();
         scanRepository.deleteAll();
         assetRepository.deleteAll();
-    }
-
-    @AfterEach
-    void resetSpies() {
-        reset(reportParser, riskCalculator);
-    }
-
-    @Test
-    void persistsAnAssetInPostgreSql() {
-        Asset saved = assetRepository.save(new Asset("database-test", AssetType.HOST, "host-01"));
-
-        assertThat(assetRepository.findById(saved.getId()))
-                .get()
-                .extracting(Asset::getName)
-                .isEqualTo("database-test");
-    }
-
-    @Test
-    void executesTheCompleteIngestionAndCompletedDeduplicationFlow() throws Exception {
-        UUID assetId = createAsset("integration-container", "integration-test:1.0.0");
-        byte[] report = readReport();
-
-        String firstResponse = ingest(assetId, report, "trivy-report.json", false);
-        JsonNode firstJson = objectMapper.readTree(firstResponse);
-        String scanId = firstJson.path("scanId").asText();
-
-        mockMvc.perform(multipart("/api/v1/scans/trivy")
-                        .file(reportFile("same-content-different-name.json", report))
-                        .param("assetId", assetId.toString())
-                        .header(ApiKeyAuthenticationFilter.HEADER_NAME, API_KEY))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.scanId").value(scanId))
-                .andExpect(jsonPath("$.outcome").value("DUPLICATE"))
-                .andExpect(jsonPath("$.duplicate").value(true))
-                .andExpect(jsonPath("$.findingsImported").value(0))
-                .andExpect(jsonPath("$.totalFindings").value(3));
-
-        assertThat(scanRepository.count()).isEqualTo(1);
-        assertThat(findingRepository.count()).isEqualTo(3);
-    }
-
-    @Test
-    void retriesTheSameScanAfterFailedAndReusesItsId() throws Exception {
-        Asset asset = assetRepository.save(
-                new Asset("retry-test", AssetType.CONTAINER_IMAGE, "retry:1"));
-        byte[] report = readReport();
-        String hash = sha256(report);
-        ScanRegistration registration =
-                registrationService.registerProcessing(asset, "first.json", hash);
-        failureService.markFailed(registration.scanId(), "Simulated transient failure");
-
-        mockMvc.perform(multipart("/api/v1/scans/trivy")
-                        .file(reportFile("retry.json", report))
-                        .param("assetId", asset.getId().toString())
-                        .header(ApiKeyAuthenticationFilter.HEADER_NAME, API_KEY))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.scanId").value(registration.scanId().toString()))
-                .andExpect(jsonPath("$.status").value("COMPLETED"))
-                .andExpect(jsonPath("$.outcome").value("RETRIED"))
-                .andExpect(jsonPath("$.findingsImported").value(3))
-                .andExpect(jsonPath("$.totalFindings").value(3));
-
-        assertThat(scanRepository.count()).isEqualTo(1);
-        assertThat(findingRepository.count()).isEqualTo(3);
-    }
-
-    @Test
-    void returnsAcceptedWhenTheSameScanIsAlreadyProcessing() throws Exception {
-        Asset asset = assetRepository.save(
-                new Asset("processing-test", AssetType.CONTAINER_IMAGE, "processing:1"));
-        byte[] report = readReport();
-        ScanRegistration registration =
-                registrationService.registerProcessing(asset, "processing.json", sha256(report));
-
-        mockMvc.perform(multipart("/api/v1/scans/trivy")
-                        .file(reportFile("another-name.json", report))
-                        .param("assetId", asset.getId().toString())
-                        .header(ApiKeyAuthenticationFilter.HEADER_NAME, API_KEY))
-                .andExpect(status().isAccepted())
-                .andExpect(jsonPath("$.scanId").value(registration.scanId().toString()))
-                .andExpect(jsonPath("$.status").value("PROCESSING"))
-                .andExpect(jsonPath("$.outcome").value("ALREADY_PROCESSING"))
-                .andExpect(jsonPath("$.findingsImported").value(0))
-                .andExpect(jsonPath("$.duplicate").value(true));
-
-        assertThat(scanRepository.count()).isEqualTo(1);
-        assertThat(findingRepository.count()).isZero();
-    }
-
-    @Test
-    void serializesTwoSimultaneousRequestsForTheSameAssetAndContent() throws Exception {
-        UUID assetId = createAsset("concurrency-test", "concurrency:1");
-        byte[] report = readReport();
-        CountDownLatch parserEntered = new CountDownLatch(1);
-        CountDownLatch releaseParser = new CountDownLatch(1);
-        doAnswer(invocation -> {
-            parserEntered.countDown();
-            if (!releaseParser.await(10, TimeUnit.SECONDS)) {
-                throw new IllegalStateException("Timed out waiting to release parser");
+        if (Files.exists(REPORT_DIRECTORY)) {
+            try (var paths = Files.walk(REPORT_DIRECTORY)) {
+                for (Path path : paths.sorted(Comparator.reverseOrder()).toList()) {
+                    if (!path.equals(REPORT_DIRECTORY)) {
+                        Files.deleteIfExists(path);
+                    }
+                }
             }
-            return invocation.callRealMethod();
-        }).when(reportParser).parse(any(byte[].class));
+        }
+    }
+
+    @Test
+    void newUploadReturnsAcceptedWithPersistentPendingJob() throws Exception {
+        UUID assetId = createAsset("accepted");
+
+        JsonNode response = upload(assetId, readReport(), "report.json", 202);
+
+        assertThat(response.path("scanId").asText()).isNotBlank();
+        assertThat(response.path("jobId").asText()).isNotBlank();
+        assertThat(response.path("scanStatus").asText()).isEqualTo("RECEIVED");
+        assertThat(response.path("jobStatus").asText()).isEqualTo("PENDING");
+        assertThat(response.path("outcome").asText()).isEqualTo("ACCEPTED");
+        assertThat(scanRepository.count()).isOne();
+        assertThat(jobRepository.count()).isOne();
+
+        mockMvc.perform(get("/api/v1/ingestion-jobs/{id}", response.path("jobId").asText())
+                        .header(ApiKeyAuthenticationFilter.HEADER_NAME, API_KEY))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("PENDING"))
+                .andExpect(jsonPath("$.payloadKey").doesNotExist());
+    }
+
+    @Test
+    void workerCompletesAtomicallyAndCompletedUploadDeduplicates() throws Exception {
+        UUID assetId = createAsset("completed");
+        byte[] report = readReport();
+        JsonNode accepted = upload(assetId, report, "first.json", 202);
+
+        assertThat(worker.pollOnce()).isOne();
+
+        UUID jobId = UUID.fromString(accepted.path("jobId").asText());
+        UUID scanId = UUID.fromString(accepted.path("scanId").asText());
+        assertThat(jobRepository.findById(jobId).orElseThrow().getStatus())
+                .isEqualTo(IngestionJobStatus.COMPLETED);
+        assertThat(scanRepository.findById(scanId).orElseThrow().getStatus())
+                .isEqualTo(ScanStatus.COMPLETED);
+        assertThat(findingRepository.countByScanId(scanId)).isEqualTo(3);
+
+        JsonNode duplicate = upload(assetId, report, "different-name.json", 200);
+        assertThat(duplicate.path("outcome").asText()).isEqualTo("DUPLICATE");
+        assertThat(duplicate.path("scanId").asText()).isEqualTo(scanId.toString());
+        assertThat(jobRepository.count()).isOne();
+        assertThat(findingRepository.countByScanId(scanId)).isEqualTo(3);
+    }
+
+    @Test
+    void queuedDuplicateAndConcurrentUploadsCreateOnlyOneJobAndPayload() throws Exception {
+        UUID assetId = createAsset("concurrent-upload");
+        byte[] report = readReport();
+        CountDownLatch start = new CountDownLatch(1);
+        ExecutorService executor = Executors.newFixedThreadPool(2);
+        try {
+            Future<JsonNode> first = executor.submit(() -> {
+                start.await();
+                return upload(assetId, report, "one.json", 202);
+            });
+            Future<JsonNode> second = executor.submit(() -> {
+                start.await();
+                return upload(assetId, report, "two.json", 202);
+            });
+            start.countDown();
+
+            List<JsonNode> responses = List.of(first.get(10, TimeUnit.SECONDS), second.get(10, TimeUnit.SECONDS));
+            assertThat(responses).extracting(node -> node.path("outcome").asText())
+                    .containsExactlyInAnyOrder("ACCEPTED", "ALREADY_QUEUED");
+        } finally {
+            executor.shutdownNow();
+        }
+        assertThat(scanRepository.count()).isOne();
+        assertThat(jobRepository.count()).isOne();
+        try (var files = Files.walk(REPORT_DIRECTORY)) {
+            assertThat(files.filter(Files::isRegularFile)).hasSize(1);
+        }
+    }
+
+    @Test
+    void invalidReportGoesDirectlyToDeadLetter() throws Exception {
+        JsonNode accepted = upload(createAsset("invalid"), "{}".getBytes(StandardCharsets.UTF_8), "bad.json", 202);
+
+        worker.pollOnce();
+
+        IngestionJob job = jobRepository.findById(UUID.fromString(accepted.path("jobId").asText())).orElseThrow();
+        assertThat(job.getStatus()).isEqualTo(IngestionJobStatus.DEAD_LETTER);
+        assertThat(job.getAttemptCount()).isOne();
+        assertThat(job.getLastError()).isEqualTo("Report validation failed");
+        assertThat(scanRepository.findById(UUID.fromString(accepted.path("scanId").asText())).orElseThrow().getStatus())
+                .isEqualTo(ScanStatus.FAILED);
+        assertThat(findingRepository.count()).isZero();
+
+        JsonNode repeated = upload(
+                UUID.fromString(accepted.path("assetId").asText()),
+                "{}".getBytes(StandardCharsets.UTF_8),
+                "bad-again.json",
+                200);
+        assertThat(repeated.path("outcome").asText()).isEqualTo("DEAD_LETTER");
+        assertThat(jobRepository.count()).isOne();
+    }
+
+    @Test
+    void transientFailureUsesBackoffAndCanCompleteOnRetry() throws Exception {
+        JsonNode accepted = upload(createAsset("retry"), readReport(), "retry.json", 202);
+        UUID jobId = UUID.fromString(accepted.path("jobId").asText());
+        String payloadKey = jobRepository.findById(jobId).orElseThrow().getPayloadKey();
+        doThrow(new ReportStorageException("temporary", new IOException("temporary")))
+                .doCallRealMethod()
+                .when(reportStorage).load(payloadKey);
+        Instant before = Instant.now();
+
+        worker.pollOnce();
+
+        IngestionJob waiting = jobRepository.findById(jobId).orElseThrow();
+        assertThat(waiting.getStatus()).isEqualTo(IngestionJobStatus.RETRY_WAIT);
+        assertThat(waiting.getAvailableAt()).isAfterOrEqualTo(before.plusSeconds(4));
+        assertThat(waiting.getLastError()).isEqualTo("Temporary processing failure");
+        jdbcTemplate.update("UPDATE ingestion_jobs SET available_at = now() - interval '1 second' WHERE id = ?", jobId);
+
+        worker.pollOnce();
+
+        assertThat(jobRepository.findById(jobId).orElseThrow().getStatus())
+                .isEqualTo(IngestionJobStatus.COMPLETED);
+    }
+
+    @Test
+    void exhaustedTransientFailuresBecomeDeadLetter() throws Exception {
+        JsonNode accepted = upload(createAsset("exhausted"), readReport(), "retry.json", 202);
+        UUID jobId = UUID.fromString(accepted.path("jobId").asText());
+        doThrow(new ReportStorageException("temporary", new IOException("temporary")))
+                .when(reportStorage).load(any());
+
+        for (int attempt = 1; attempt <= 3; attempt++) {
+            worker.pollOnce();
+            if (attempt < 3) {
+                jdbcTemplate.update(
+                        "UPDATE ingestion_jobs SET available_at = now() - interval '1 second' WHERE id = ?",
+                        jobId);
+            }
+        }
+
+        IngestionJob job = jobRepository.findById(jobId).orElseThrow();
+        assertThat(job.getAttemptCount()).isEqualTo(3);
+        assertThat(job.getStatus()).isEqualTo(IngestionJobStatus.DEAD_LETTER);
+        assertThat(scanRepository.findById(UUID.fromString(accepted.path("scanId").asText())).orElseThrow().getStatus())
+                .isEqualTo(ScanStatus.FAILED);
+    }
+
+    @Test
+    void missingPayloadDoesNotLeaveAJobProcessing() throws Exception {
+        JsonNode accepted = upload(createAsset("missing"), readReport(), "missing.json", 202);
+        UUID jobId = UUID.fromString(accepted.path("jobId").asText());
+        IngestionJob job = jobRepository.findById(jobId).orElseThrow();
+        reportStorage.delete(job.getPayloadKey());
+
+        worker.pollOnce();
+
+        assertThat(jobRepository.findById(jobId).orElseThrow().getStatus())
+                .isEqualTo(IngestionJobStatus.DEAD_LETTER);
+    }
+
+    @Test
+    void redriveIsExplicitStateCheckedAndConcurrentSafe() throws Exception {
+        JsonNode pending = upload(createAsset("wrong-redrive"), readReport(), "pending.json", 202);
+        mockMvc.perform(post("/api/v1/ingestion-jobs/{id}/redrive", pending.path("jobId").asText())
+                        .header(ApiKeyAuthenticationFilter.HEADER_NAME, API_KEY))
+                .andExpect(status().isConflict());
+
+        JsonNode accepted = upload(createAsset("redrive"), "{}".getBytes(StandardCharsets.UTF_8), "bad.json", 202);
+        UUID jobId = UUID.fromString(accepted.path("jobId").asText());
+        worker.pollOnce();
+        CountDownLatch start = new CountDownLatch(1);
+        ExecutorService executor = Executors.newFixedThreadPool(2);
+        try {
+            Future<Integer> first = executor.submit(() -> redriveStatus(jobId, start));
+            Future<Integer> second = executor.submit(() -> redriveStatus(jobId, start));
+            start.countDown();
+            assertThat(List.of(first.get(10, TimeUnit.SECONDS), second.get(10, TimeUnit.SECONDS)))
+                    .containsExactlyInAnyOrder(202, 409);
+        } finally {
+            executor.shutdownNow();
+        }
+        IngestionJob redriven = jobRepository.findById(jobId).orElseThrow();
+        assertThat(redriven.getStatus()).isEqualTo(IngestionJobStatus.PENDING);
+        assertThat(redriven.getAttemptCount()).isZero();
+        assertThat(scanRepository.findById(UUID.fromString(accepted.path("scanId").asText())).orElseThrow().getStatus())
+                .isEqualTo(ScanStatus.RECEIVED);
+        assertThat(jobRepository.count()).isEqualTo(2);
+    }
+
+    @Test
+    void twoWorkersCannotClaimTheSameJob() throws Exception {
+        upload(createAsset("one-claim"), readReport(), "one.json", 202);
+        CountDownLatch start = new CountDownLatch(1);
+        ExecutorService executor = Executors.newFixedThreadPool(2);
+        try {
+            Future<List<JobClaim>> first = executor.submit(() -> claimAfter(start));
+            Future<List<JobClaim>> second = executor.submit(() -> claimAfter(start));
+            start.countDown();
+            int claimed = first.get(10, TimeUnit.SECONDS).size() + second.get(10, TimeUnit.SECONDS).size();
+            assertThat(claimed).isOne();
+        } finally {
+            executor.shutdownNow();
+        }
+        assertThat(jobRepository.countByStatus(IngestionJobStatus.PROCESSING)).isOne();
+    }
+
+    @Test
+    void skipLockedAllowsAnotherWorkerToClaimADifferentJob() throws Exception {
+        JsonNode firstJob = upload(createAsset("skip-one"), readReport(), "one.json", 202);
+        upload(createAsset("skip-two"), readReport(), "two.json", 202);
+        UUID firstJobId = UUID.fromString(firstJob.path("jobId").asText());
+        CountDownLatch locked = new CountDownLatch(1);
+        CountDownLatch release = new CountDownLatch(1);
+        TransactionTemplate template = new TransactionTemplate(transactionManager);
 
         ExecutorService executor = Executors.newFixedThreadPool(2);
         try {
-            Future<MvcResult> firstRequest = executor.submit(() -> mockMvc.perform(
-                            multipart("/api/v1/scans/trivy")
-                                    .file(reportFile("first.json", report))
-                                    .param("assetId", assetId.toString())
-                                    .header(ApiKeyAuthenticationFilter.HEADER_NAME, API_KEY))
-                    .andExpect(status().isOk())
-                    .andReturn());
-            assertThat(parserEntered.await(10, TimeUnit.SECONDS)).isTrue();
+            Future<UUID> lockHolder = executor.submit(() -> template.execute(status -> {
+                UUID id = jobRepository.findClaimableIds(Instant.now(), 1).get(0);
+                locked.countDown();
+                await(release);
+                return id;
+            }));
+            assertThat(locked.await(5, TimeUnit.SECONDS)).isTrue();
+            Future<List<JobClaim>> claimant = executor.submit(() -> claimService.claimAvailable(1));
+            List<JobClaim> claimed = claimant.get(5, TimeUnit.SECONDS);
+            release.countDown();
+            UUID lockedId = lockHolder.get(5, TimeUnit.SECONDS);
 
-            Future<MvcResult> secondRequest = executor.submit(() -> mockMvc.perform(
-                            multipart("/api/v1/scans/trivy")
-                                    .file(reportFile("second.json", report))
-                                    .param("assetId", assetId.toString())
-                                    .header(ApiKeyAuthenticationFilter.HEADER_NAME, API_KEY))
-                    .andExpect(status().isAccepted())
-                    .andExpect(jsonPath("$.outcome").value("ALREADY_PROCESSING"))
-                    .andReturn());
-
-            MvcResult secondResult = secondRequest.get(10, TimeUnit.SECONDS);
-            releaseParser.countDown();
-            MvcResult firstResult = firstRequest.get(10, TimeUnit.SECONDS);
-
-            String firstScanId =
-                    objectMapper.readTree(firstResult.getResponse().getContentAsString()).path("scanId").asText();
-            String secondScanId =
-                    objectMapper.readTree(secondResult.getResponse().getContentAsString()).path("scanId").asText();
-            assertThat(secondScanId).isEqualTo(firstScanId);
+            assertThat(claimed).singleElement().extracting(JobClaim::jobId).isNotEqualTo(lockedId);
+            assertThat(List.of(lockedId, claimed.get(0).jobId())).contains(firstJobId);
         } finally {
-            releaseParser.countDown();
+            release.countDown();
             executor.shutdownNow();
         }
-
-        assertThat(scanRepository.count()).isEqualTo(1);
-        assertThat(findingRepository.count()).isEqualTo(3);
     }
 
     @Test
-    void allowsTheSameContentForDifferentAssets() throws Exception {
-        UUID firstAsset = createAsset("first-asset", "same:1");
-        UUID secondAsset = createAsset("second-asset", "same:2");
-        byte[] report = readReport();
-
-        String first = ingest(firstAsset, report, "same.json", false);
-        String second = ingest(secondAsset, report, "same.json", false);
-
-        assertThat(objectMapper.readTree(first).path("scanId").asText())
-                .isNotEqualTo(objectMapper.readTree(second).path("scanId").asText());
-        assertThat(scanRepository.count()).isEqualTo(2);
-        assertThat(findingRepository.count()).isEqualTo(6);
-    }
-
-    @Test
-    void rollsBackAllFindingsWhenPersistenceFailsAndRecordsFailed() throws Exception {
-        Asset asset = assetRepository.save(
-                new Asset("rollback-test", AssetType.CONTAINER_IMAGE, "rollback:1"));
-        AtomicInteger calculation = new AtomicInteger();
+    void processingDoesNotHoldTheClaimLockWhileParsing() throws Exception {
+        JsonNode accepted = upload(createAsset("lock-release"), readReport(), "lock.json", 202);
+        UUID jobId = UUID.fromString(accepted.path("jobId").asText());
+        CountDownLatch parsing = new CountDownLatch(1);
+        CountDownLatch release = new CountDownLatch(1);
         doAnswer(invocation -> {
-            if (calculation.incrementAndGet() == 2) {
-                throw new IllegalStateException("Simulated persistence preparation failure");
+            parsing.countDown();
+            await(release);
+            return invocation.callRealMethod();
+        }).when(reportParser).parse(any());
+
+        ExecutorService executor = Executors.newFixedThreadPool(2);
+        try {
+            Future<Integer> processing = executor.submit(worker::pollOnce);
+            assertThat(parsing.await(5, TimeUnit.SECONDS)).isTrue();
+            TransactionTemplate template = new TransactionTemplate(transactionManager);
+            Future<IngestionJobStatus> lockCheck = executor.submit(() -> template.execute(status ->
+                    jobRepository.findByIdForUpdate(jobId).orElseThrow().getStatus()));
+            assertThat(lockCheck.get(2, TimeUnit.SECONDS)).isEqualTo(IngestionJobStatus.PROCESSING);
+            release.countDown();
+            assertThat(processing.get(5, TimeUnit.SECONDS)).isOne();
+        } finally {
+            release.countDown();
+            executor.shutdownNow();
+        }
+    }
+
+    @Test
+    void staleRecoveryRetriesOnceAndIsIdempotent() throws Exception {
+        JsonNode accepted = upload(createAsset("recovery"), readReport(), "recovery.json", 202);
+        UUID jobId = UUID.fromString(accepted.path("jobId").asText());
+        assertThat(claimService.claimAvailable(1)).hasSize(1);
+        jdbcTemplate.update(
+                "UPDATE ingestion_jobs SET locked_at = now() - interval '1 hour' WHERE id = ?",
+                jobId);
+
+        RecoveryResult first = recoveryService.recoverStaleJobs();
+        RecoveryResult second = recoveryService.recoverStaleJobs();
+
+        assertThat(first).isEqualTo(new RecoveryResult(1, 0));
+        assertThat(second).isEqualTo(RecoveryResult.none());
+        assertThat(jobRepository.findById(jobId).orElseThrow().getStatus())
+                .isEqualTo(IngestionJobStatus.RETRY_WAIT);
+    }
+
+    @Test
+    void staleRecoveryDeadLettersAJobWithoutAttempts() throws Exception {
+        JsonNode accepted = upload(createAsset("recovery-dead"), readReport(), "recovery.json", 202);
+        UUID jobId = UUID.fromString(accepted.path("jobId").asText());
+        assertThat(claimService.claimAvailable(1)).hasSize(1);
+        jdbcTemplate.update("""
+                UPDATE ingestion_jobs
+                SET attempt_count = max_attempts,
+                    locked_at = now() - interval '1 hour'
+                WHERE id = ?
+                """, jobId);
+
+        RecoveryResult result = recoveryService.recoverStaleJobs();
+
+        assertThat(result).isEqualTo(new RecoveryResult(0, 1));
+        assertThat(jobRepository.findById(jobId).orElseThrow().getStatus())
+                .isEqualTo(IngestionJobStatus.DEAD_LETTER);
+    }
+
+    @Test
+    void pendingJobAndPayloadSurviveStorageReinitializationAndIgnoreClientPath() throws Exception {
+        byte[] report = readReport();
+        JsonNode accepted = upload(createAsset("persistent"), report, "../../client-name.json", 202);
+        IngestionJob job = jobRepository.findById(UUID.fromString(accepted.path("jobId").asText())).orElseThrow();
+
+        LocalFileReportStorage restarted =
+                new LocalFileReportStorage(new ReportStorageProperties(REPORT_DIRECTORY));
+        restarted.initialize();
+
+        assertThat(job.getStatus()).isEqualTo(IngestionJobStatus.PENDING);
+        assertThat(job.getPayloadKey()).doesNotContain("client-name").doesNotContain("..");
+        assertThat(restarted.load(job.getPayloadKey())).isEqualTo(report);
+    }
+
+    @Test
+    void failedStorageWriteRollsBackScanAndJob() throws Exception {
+        doThrow(new ReportStorageException("write failed", new IOException("write failed")))
+                .when(reportStorage).store(any(), any());
+
+        upload(createAsset("storage-failure"), readReport(), "failure.json", 500);
+
+        assertThat(scanRepository.count()).isZero();
+        assertThat(jobRepository.count()).isZero();
+    }
+
+    @Test
+    void persistenceFailureLeavesNoPartialFindingsAndSchedulesRetry() throws Exception {
+        JsonNode accepted = upload(createAsset("atomic"), readReport(), "atomic.json", 202);
+        UUID jobId = UUID.fromString(accepted.path("jobId").asText());
+        AtomicInteger calculations = new AtomicInteger();
+        doAnswer(invocation -> {
+            if (calculations.incrementAndGet() == 2) {
+                throw new IllegalStateException("temporary database-side calculation failure");
             }
             return invocation.callRealMethod();
-        }).when(riskCalculator).calculate(any(), any(Boolean.class));
+        }).when(riskCalculator).calculate(any(), anyBoolean());
 
-        mockMvc.perform(multipart("/api/v1/scans/trivy")
-                        .file(reportFile("rollback.json", readReport()))
-                        .param("assetId", asset.getId().toString())
-                        .header(ApiKeyAuthenticationFilter.HEADER_NAME, API_KEY))
-                .andExpect(status().isInternalServerError())
-                .andExpect(jsonPath("$.code").value("INTERNAL_ERROR"));
+        worker.pollOnce();
 
-        assertThat(scanRepository.findAll())
-                .singleElement()
-                .satisfies(scan -> {
-                    assertThat(scan.getStatus()).isEqualTo(ScanStatus.FAILED);
-                    assertThat(scan.getFailureReason()).isEqualTo("Report processing failed");
-                });
         assertThat(findingRepository.count()).isZero();
+        assertThat(jobRepository.findById(jobId).orElseThrow().getStatus())
+                .isEqualTo(IngestionJobStatus.RETRY_WAIT);
     }
 
     @Test
-    void recoversOnlyStaleProcessingScansAndIsIdempotent() {
-        Asset asset = assetRepository.save(
-                new Asset("recovery-test", AssetType.APPLICATION, "recovery"));
-        ScanRegistration stale =
-                registrationService.registerProcessing(asset, "stale.json", "a".repeat(64));
-        ScanRegistration recent =
-                registrationService.registerProcessing(asset, "recent.json", "b".repeat(64));
-        jdbcTemplate.update(
-                "UPDATE scans SET started_at = ? WHERE id = ?",
-                Timestamp.from(Instant.now().minus(Duration.ofHours(1))),
-                stale.scanId());
-
-        assertThat(recoveryService.recoverStaleProcessingScans()).isEqualTo(1);
-        assertThat(recoveryService.recoverStaleProcessingScans()).isZero();
-
-        assertThat(scanRepository.findById(stale.scanId()))
-                .get()
-                .satisfies(scan -> {
-                    assertThat(scan.getStatus()).isEqualTo(ScanStatus.FAILED);
-                    assertThat(scan.getFailureReason()).isEqualTo("Processing timeout exceeded");
-                });
-        assertThat(scanRepository.findById(recent.scanId()))
-                .get()
-                .extracting(Scan::getStatus)
-                .isEqualTo(ScanStatus.PROCESSING);
-    }
-
-    @Test
-    void rejectsRequestsWithoutOrWithWrongApiKeyAndAcceptsTheCorrectKey() throws Exception {
-        mockMvc.perform(get("/api/v1/assets"))
-                .andExpect(status().isUnauthorized())
-                .andExpect(jsonPath("$.code").value("INVALID_API_KEY"));
-
-        mockMvc.perform(get("/api/v1/assets")
-                        .header(ApiKeyAuthenticationFilter.HEADER_NAME, "wrong"))
-                .andExpect(status().isUnauthorized())
-                .andExpect(jsonPath("$.code").value("INVALID_API_KEY"));
-
-        mockMvc.perform(get("/api/v1/assets")
-                        .header(ApiKeyAuthenticationFilter.HEADER_NAME, API_KEY))
-                .andExpect(status().isOk());
-    }
-
-    @Test
-    void keepsHealthAndSwaggerPublic() throws Exception {
-        mockMvc.perform(get("/actuator/health"))
+    void jobEndpointsRequireApiKeyAndOperationalEndpointsRemainPublic() throws Exception {
+        mockMvc.perform(multipart("/api/v1/scans/trivy")
+                        .file(new MockMultipartFile(
+                                "file", "report.json", "application/json", readReport()))
+                        .param("assetId", UUID.randomUUID().toString()))
+                .andExpect(status().isUnauthorized());
+        mockMvc.perform(get("/api/v1/ingestion-jobs")).andExpect(status().isUnauthorized());
+        mockMvc.perform(get("/api/v1/ingestion-jobs/{id}", UUID.randomUUID()))
+                .andExpect(status().isUnauthorized());
+        mockMvc.perform(post("/api/v1/ingestion-jobs/{id}/redrive", UUID.randomUUID()))
+                .andExpect(status().isUnauthorized());
+        mockMvc.perform(get("/actuator/health")).andExpect(status().isOk());
+        mockMvc.perform(get("/actuator/metrics"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.status").value("UP"));
-
-        mockMvc.perform(get("/v3/api-docs"))
-                .andExpect(status().isOk());
+                .andExpect(jsonPath("$.names").isArray());
+        mockMvc.perform(get("/swagger-ui.html")).andExpect(status().is3xxRedirection());
     }
 
-    @Test
-    void mapsCommonClientErrorsToFourXxResponses() throws Exception {
-        mockMvc.perform(post("/api/v1/assets")
-                        .header(ApiKeyAuthenticationFilter.HEADER_NAME, API_KEY)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{"))
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.code").value("INVALID_REQUEST_BODY"));
-
-        mockMvc.perform(post("/api/v1/assets")
-                        .header(ApiKeyAuthenticationFilter.HEADER_NAME, API_KEY)
-                        .contentType(MediaType.TEXT_PLAIN)
-                        .content("{}"))
-                .andExpect(status().isUnsupportedMediaType())
-                .andExpect(jsonPath("$.code").value("UNSUPPORTED_MEDIA_TYPE"));
-
-        mockMvc.perform(post("/api/v1/assets")
-                        .header(ApiKeyAuthenticationFilter.HEADER_NAME, API_KEY)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"name\":\"invalid-enum\",\"type\":\"NOPE\"}"))
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.code").value("INVALID_REQUEST_BODY"));
-
-        mockMvc.perform(get("/api/v1/assets/not-a-uuid")
-                        .header(ApiKeyAuthenticationFilter.HEADER_NAME, API_KEY))
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.code").value("INVALID_REQUEST"));
-
-        mockMvc.perform(multipart("/api/v1/scans/trivy")
-                        .file(reportFile("report.json", readReport()))
-                        .header(ApiKeyAuthenticationFilter.HEADER_NAME, API_KEY))
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.code").value("INVALID_REQUEST"));
-
-        mockMvc.perform(multipart("/api/v1/scans/trivy")
-                        .param("assetId", UUID.randomUUID().toString())
-                        .header(ApiKeyAuthenticationFilter.HEADER_NAME, API_KEY))
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.code").value("MISSING_REQUEST_PART"));
-    }
-
-    @Test
-    void mapsOversizedInvalidAndMissingAssetReportsCorrectly() throws Exception {
-        Asset asset = assetRepository.save(
-                new Asset("error-test", AssetType.APPLICATION, "errors"));
-        byte[] oversized = new byte[(10 * 1024 * 1024) + 1];
-
-        mockMvc.perform(multipart("/api/v1/scans/trivy")
-                        .file(reportFile("oversized.json", oversized))
-                        .param("assetId", asset.getId().toString())
-                        .header(ApiKeyAuthenticationFilter.HEADER_NAME, API_KEY))
-                .andExpect(status().isPayloadTooLarge())
-                .andExpect(jsonPath("$.code").value("REPORT_TOO_LARGE"));
-
-        mockMvc.perform(multipart("/api/v1/scans/trivy")
-                        .file(reportFile("invalid.json", "{}".getBytes(StandardCharsets.UTF_8)))
-                        .param("assetId", asset.getId().toString())
-                        .header(ApiKeyAuthenticationFilter.HEADER_NAME, API_KEY))
-                .andExpect(status().isUnprocessableEntity())
-                .andExpect(jsonPath("$.code").value("INVALID_REPORT"));
-
-        mockMvc.perform(multipart("/api/v1/scans/trivy")
-                        .file(reportFile("valid.json", readReport()))
-                        .param("assetId", UUID.randomUUID().toString())
-                        .header(ApiKeyAuthenticationFilter.HEADER_NAME, API_KEY))
-                .andExpect(status().isNotFound())
-                .andExpect(jsonPath("$.code").value("RESOURCE_NOT_FOUND"));
-    }
-
-    @Test
-    void rejectsInvalidAssetInputWithAConsistentError() throws Exception {
-        mockMvc.perform(post("/api/v1/assets")
-                        .header(ApiKeyAuthenticationFilter.HEADER_NAME, API_KEY)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("""
-                                {"name": " ", "type": null}
-                                """))
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.code").value("VALIDATION_FAILED"))
-                .andExpect(jsonPath("$.details.name").exists())
-                .andExpect(jsonPath("$.details.type").exists());
-    }
-
-    @Test
-    void recordsAFailedScanWhenTheReportIsMalformed() throws Exception {
-        Asset asset = assetRepository.save(
-                new Asset("invalid-report-test", AssetType.APPLICATION, "invalid-report"));
-        byte[] invalidReport = "{\"Results\": [".getBytes(StandardCharsets.UTF_8);
-
-        mockMvc.perform(multipart("/api/v1/scans/trivy")
-                        .file(reportFile("invalid.json", invalidReport))
-                        .param("assetId", asset.getId().toString())
-                        .header(ApiKeyAuthenticationFilter.HEADER_NAME, API_KEY))
-                .andExpect(status().isUnprocessableEntity())
-                .andExpect(jsonPath("$.code").value("INVALID_REPORT"));
-
-        assertThat(scanRepository.findAll())
-                .singleElement()
-                .extracting(Scan::getStatus)
-                .isEqualTo(ScanStatus.FAILED);
-        assertThat(findingRepository.count()).isZero();
-    }
-
-    @Test
-    void omitsDescriptionFromListButKeepsItInDetail() throws Exception {
-        UUID assetId = createAsset("description-test", "description:1");
-        ingest(assetId, readReport(), "description.json", false);
-
-        String findingsResponse = mockMvc.perform(get("/api/v1/findings")
+    private JsonNode upload(UUID assetId, byte[] content, String fileName, int expectedStatus) throws Exception {
+        MvcResult result = mockMvc.perform(multipart("/api/v1/scans/trivy")
+                        .file(new MockMultipartFile("file", fileName, "application/json", content))
                         .param("assetId", assetId.toString())
                         .header(ApiKeyAuthenticationFilter.HEADER_NAME, API_KEY))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.content[0].description").doesNotExist())
-                .andReturn()
-                .getResponse()
-                .getContentAsString();
-        String findingId = objectMapper.readTree(findingsResponse)
-                .path("content")
-                .path(0)
-                .path("id")
-                .asText();
+                .andExpect(status().is(expectedStatus))
+                .andReturn();
+        return objectMapper.readTree(result.getResponse().getContentAsString());
+    }
 
-        mockMvc.perform(get("/api/v1/findings/{id}", findingId)
+    private int redriveStatus(UUID jobId, CountDownLatch start) throws Exception {
+        start.await();
+        return mockMvc.perform(post("/api/v1/ingestion-jobs/{id}/redrive", jobId)
                         .header(ApiKeyAuthenticationFilter.HEADER_NAME, API_KEY))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.description").hasJsonPath());
+                .andReturn().getResponse().getStatus();
     }
 
-    private UUID createAsset(String name, String externalReference) throws Exception {
-        String assetResponse = mockMvc.perform(post("/api/v1/assets")
-                        .header(ApiKeyAuthenticationFilter.HEADER_NAME, API_KEY)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("""
-                                {
-                                  "name": "%s",
-                                  "type": "CONTAINER_IMAGE",
-                                  "externalReference": "%s"
-                                }
-                                """.formatted(name, externalReference)))
-                .andExpect(status().isCreated())
-                .andExpect(header().exists("X-Correlation-ID"))
-                .andReturn()
-                .getResponse()
-                .getContentAsString();
-        return UUID.fromString(objectMapper.readTree(assetResponse).path("id").asText());
+    private List<JobClaim> claimAfter(CountDownLatch start) throws Exception {
+        start.await();
+        return claimService.claimAvailable(1);
     }
 
-    private String ingest(
-            UUID assetId,
-            byte[] report,
-            String fileName,
-            boolean duplicate) throws Exception {
-        return mockMvc.perform(multipart("/api/v1/scans/trivy")
-                        .file(reportFile(fileName, report))
-                        .param("assetId", assetId.toString())
-                        .header(ApiKeyAuthenticationFilter.HEADER_NAME, API_KEY))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.status").value("COMPLETED"))
-                .andExpect(jsonPath("$.findingsImported").value(duplicate ? 0 : 3))
-                .andExpect(jsonPath("$.totalFindings").value(3))
-                .andExpect(jsonPath("$.criticalFindings").value(1))
-                .andExpect(jsonPath("$.highFindings").value(1))
-                .andExpect(jsonPath("$.duplicate").value(duplicate))
-                .andReturn()
-                .getResponse()
-                .getContentAsString();
-    }
-
-    private MockMultipartFile reportFile(String fileName, byte[] content) {
-        return new MockMultipartFile("file", fileName, "application/json", content);
+    private UUID createAsset(String name) {
+        return assetRepository.save(new Asset(name, AssetType.CONTAINER_IMAGE, name + ":1")).getId();
     }
 
     private byte[] readReport() throws Exception {
@@ -530,7 +527,22 @@ class PostgreSQLFlowIT {
         }
     }
 
-    private String sha256(byte[] content) throws Exception {
-        return HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(content));
+    private static Path createReportDirectory() {
+        try {
+            return Files.createTempDirectory("vulnflow-it-reports-");
+        } catch (IOException exception) {
+            throw new ExceptionInInitializerError(exception);
+        }
+    }
+
+    private static void await(CountDownLatch latch) {
+        try {
+            if (!latch.await(10, TimeUnit.SECONDS)) {
+                throw new IllegalStateException("Timed out waiting for test coordination");
+            }
+        } catch (InterruptedException exception) {
+            Thread.currentThread().interrupt();
+            throw new IllegalStateException("Test coordination was interrupted", exception);
+        }
     }
 }

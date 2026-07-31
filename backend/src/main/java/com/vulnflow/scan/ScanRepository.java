@@ -22,7 +22,6 @@ public interface ScanRepository extends JpaRepository<Scan, UUID> {
                         asset_id,
                         scanner,
                         status,
-                        started_at,
                         received_at,
                         source_file_name,
                         content_hash
@@ -31,21 +30,20 @@ public interface ScanRepository extends JpaRepository<Scan, UUID> {
                         :id,
                         :assetId,
                         'TRIVY',
-                        'PROCESSING',
-                        :startedAt,
-                        :startedAt,
+                        'RECEIVED',
+                        :receivedAt,
                         :sourceFileName,
                         :contentHash
                     )
                     ON CONFLICT (asset_id, content_hash) DO NOTHING
                     """,
             nativeQuery = true)
-    int insertProcessingIfAbsent(
+    int insertReceivedIfAbsent(
             @Param("id") UUID id,
             @Param("assetId") UUID assetId,
             @Param("sourceFileName") String sourceFileName,
             @Param("contentHash") String contentHash,
-            @Param("startedAt") Instant startedAt);
+            @Param("receivedAt") Instant receivedAt);
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("""
@@ -61,20 +59,4 @@ public interface ScanRepository extends JpaRepository<Scan, UUID> {
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("SELECT scan FROM Scan scan WHERE scan.id = :scanId")
     Optional<Scan> findByIdForUpdate(@Param("scanId") UUID scanId);
-
-    @Modifying(clearAutomatically = true, flushAutomatically = true)
-    @Query("""
-            UPDATE Scan scan
-            SET scan.status = :failedStatus,
-                scan.completedAt = :completedAt,
-                scan.failureReason = :failureReason
-            WHERE scan.status = :processingStatus
-              AND scan.startedAt < :cutoff
-            """)
-    int failStaleProcessing(
-            @Param("processingStatus") ScanStatus processingStatus,
-            @Param("failedStatus") ScanStatus failedStatus,
-            @Param("cutoff") Instant cutoff,
-            @Param("completedAt") Instant completedAt,
-            @Param("failureReason") String failureReason);
 }
