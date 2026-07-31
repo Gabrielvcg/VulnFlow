@@ -1,68 +1,122 @@
 package com.vulnflow.ingestion;
 
 import com.vulnflow.asset.Asset;
-import com.vulnflow.finding.FindingRepository;
 import com.vulnflow.scan.Scan;
 import com.vulnflow.scan.ScanRepository;
 import com.vulnflow.scan.ScanStatus;
 import java.time.Instant;
+import java.util.Optional;
 import java.util.UUID;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 @Service
 public class ScanRegistrationService {
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(ScanRegistrationService.class);
+
     private final ScanRepository scanRepository;
-    private final FindingRepository findingRepository;
+    private final IngestionJobRepository jobRepository;
+    private final ReportStorage reportStorage;
+    private final WorkerProperties workerProperties;
 
     public ScanRegistrationService(
             ScanRepository scanRepository,
-            FindingRepository findingRepository) {
+            IngestionJobRepository jobRepository,
+            ReportStorage reportStorage,
+            WorkerProperties workerProperties) {
         this.scanRepository = scanRepository;
-        this.findingRepository = findingRepository;
+        this.jobRepository = jobRepository;
+        this.reportStorage = reportStorage;
+        this.workerProperties = workerProperties;
     }
 
-    @Transactional(propagation = Propagation.REQUIRES_NEW)
-    public ScanRegistration registerProcessing(
+    @Transactional
+    public IngestionSubmission registerReceived(
             Asset asset,
             String sourceFileName,
-            String contentHash) {
+            String contentHash,
+            byte[] content) {
         UUID candidateId = UUID.randomUUID();
-        Instant startedAt = Instant.now();
-        int inserted = scanRepository.insertProcessingIfAbsent(
+        int inserted = scanRepository.insertReceivedIfAbsent(
                 candidateId,
                 asset.getId(),
                 sourceFileName,
                 contentHash,
-                startedAt);
+                Instant.now());
 
         Scan scan = scanRepository.findByAssetIdAndContentHashForUpdate(asset.getId(), contentHash)
                 .orElseThrow(() -> new IllegalStateException("The registered scan could not be loaded"));
 
         if (inserted == 1) {
-            return registration(scan, ScanIngestionOutcome.IMPORTED);
+            String payloadKey = reportStorage.store(scan.getId(), content);
+            registerRollbackCleanup(payloadKey);
+            IngestionJob job = jobRepository.save(
+                    new IngestionJob(scan, payloadKey, workerProperties.maxAttempts()));
+            return submission(scan, job, ScanIngestionOutcome.ACCEPTED);
         }
 
-        return switch (scan.getStatus()) {
-            case COMPLETED -> registration(scan, ScanIngestionOutcome.DUPLICATE);
-            case PROCESSING -> registration(scan, ScanIngestionOutcome.ALREADY_PROCESSING);
-            case FAILED, RECEIVED -> retryFailedScan(scan, sourceFileName);
-        };
+        Optional<IngestionJob> existingJob = jobRepository.findByScanId(scan.getId());
+        if (existingJob.isEmpty() && scan.getStatus() != ScanStatus.COMPLETED) {
+            return registerLegacyScan(scan, content);
+        }
+        return existingSubmission(scan, existingJob.orElse(null));
     }
 
-    private ScanRegistration retryFailedScan(Scan scan, String sourceFileName) {
-        findingRepository.deleteByScanId(scan.getId());
-        scan.retryProcessing(sourceFileName);
-        return registration(scan, ScanIngestionOutcome.RETRIED);
+    private IngestionSubmission registerLegacyScan(Scan scan, byte[] content) {
+        scan.markReceived();
+        String payloadKey = reportStorage.store(scan.getId(), content);
+        registerRollbackCleanup(payloadKey);
+        IngestionJob job = jobRepository.save(
+                new IngestionJob(scan, payloadKey, workerProperties.maxAttempts()));
+        return submission(scan, job, ScanIngestionOutcome.ACCEPTED);
     }
 
-    private ScanRegistration registration(Scan scan, ScanIngestionOutcome outcome) {
-        return new ScanRegistration(
+    private IngestionSubmission existingSubmission(Scan scan, IngestionJob job) {
+        if (scan.getStatus() == ScanStatus.COMPLETED) {
+            return submission(scan, job, ScanIngestionOutcome.DUPLICATE);
+        }
+        if (scan.getStatus() == ScanStatus.FAILED
+                || (job != null && job.getStatus() == IngestionJobStatus.DEAD_LETTER)) {
+            return submission(scan, job, ScanIngestionOutcome.DEAD_LETTER);
+        }
+        if (job.getStatus() == IngestionJobStatus.PROCESSING) {
+            return submission(scan, job, ScanIngestionOutcome.ALREADY_PROCESSING);
+        }
+        return submission(scan, job, ScanIngestionOutcome.ALREADY_QUEUED);
+    }
+
+    private IngestionSubmission submission(
+            Scan scan,
+            IngestionJob job,
+            ScanIngestionOutcome outcome) {
+        return new IngestionSubmission(
                 scan.getId(),
+                job == null ? null : job.getId(),
                 scan.getAsset().getId(),
                 scan.getStatus(),
+                job == null ? null : job.getStatus(),
                 outcome);
+    }
+
+    private void registerRollbackCleanup(String payloadKey) {
+        TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+            @Override
+            public void afterCompletion(int status) {
+                if (status != TransactionSynchronization.STATUS_COMMITTED) {
+                    try {
+                        reportStorage.delete(payloadKey);
+                    } catch (RuntimeException exception) {
+                        LOGGER.error(
+                                "No se pudo limpiar un payload tras revertir el registro: causa={}",
+                                exception.getClass().getSimpleName());
+                    }
+                }
+            }
+        });
     }
 }

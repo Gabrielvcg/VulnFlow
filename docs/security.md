@@ -1,57 +1,74 @@
 # Security
 
-## Current trust boundary
+## Authentication boundary
 
-VulnFlow 0.1.1 remains local-first. Docker Compose binds the backend and
-PostgreSQL to `127.0.0.1`. The API must not be exposed directly to the internet.
+Every `/api/v1/**` endpoint requires the configured `X-API-Key`. Comparison is
+constant-time and the key is never logged. Health, metrics, OpenAPI, and Swagger
+remain public for the localhost-first phase. Docker binds backend and PostgreSQL
+only to `127.0.0.1` by default.
 
-Every `/api/v1/**` endpoint requires `X-API-Key`. The configured value comes
-from `VULNFLOW_API_KEY`, is compared without logging, and creates a stateless
-machine-to-machine authentication. Missing or wrong credentials return the
-common `401 INVALID_API_KEY` response.
+This is provisional machine-to-machine authentication. It does not provide
+users, roles, per-client attribution, rotation, or authorization. A future
+human interface should use OIDC or JWT.
 
-`/actuator/health`, `/v3/api-docs`, and Swagger UI remain public for local
-development. Swagger must be disabled or protected before a non-local
-deployment.
+## Upload controls
 
-This API key is provisional. It has no user identity, roles, authorization,
-ownership, tenant isolation, expiry, or built-in rotation. A future human UI
-must use OIDC or JWT and enforce resource-level authorization.
+- Multipart and application limits default to 10 MB.
+- Only JSON media types are accepted.
+- SHA-256 deduplication is scoped to an asset.
+- The original filename is sanitized and stored only as scan metadata.
+- Client filenames never become storage paths.
+- Trivy structure and required fields are validated by the worker.
+- Stored bytes are checked against the scan SHA-256 before JSON parsing.
+- Vulnerability identifiers are rejected rather than silently truncated.
+- Descriptions are limited to 8,000 characters by default.
 
-## Implemented controls
+The HTTP endpoint deliberately accepts syntactically or semantically invalid
+JSON as durable work. Validation occurs asynchronously and such jobs terminate
+directly in `DEAD_LETTER` without pointless retries.
 
-- API key required for every application endpoint.
-- Stateless security; HTTP Basic, form login, sessions, logout, and generated
-  development users are disabled.
-- CSRF is disabled because authentication is a stateless custom header and no
-  browser session/cookie is used.
-- Localhost-only Docker port publication.
-- No committed real secrets; `.env` remains ignored.
-- Upload and request size limits.
-- Semantic Trivy structure validation and bounded descriptions.
-- Critical identifiers are rejected when oversized rather than truncated.
-- Basename-only bounded filenames are metadata, never write paths.
-- Stable structured errors without client stack traces.
-- Correlation IDs are restricted before entering MDC.
-- Report bodies, API keys, authorization headers, and descriptions are not
-  logged.
-- Flyway owns schema changes and Hibernate uses `ddl-auto=validate`.
-- Scan registration, completion, and failure use independent explicit
-  transactions.
+Payload-integrity errors also terminate without retry. Public job responses use
+a generic bounded reason and expose neither the expected nor actual hash.
+
+## Local payload storage
+
+`LocalFileReportStorage`:
+
+- generates unpredictable internal keys;
+- normalizes and verifies paths beneath one configured root;
+- rejects absolute paths and traversal;
+- writes a temporary file before moving it into place;
+- uses an atomic move when the filesystem supports it;
+- never logs report content or physical paths;
+- exposes neither keys nor payload content through the API.
+
+The Docker volume is persistent but not an encrypted object store. Host access,
+disk encryption, backup, quotas, malware handling, and secure retention remain
+operator responsibilities. Completed payload deletion is intentionally deferred
+until a reviewed retention policy exists.
+
+## Queue and error safety
+
+Database constraints restrict job states and counters. Error text persisted in
+jobs and scans is generic and limited to 500 characters. Full exceptions may be
+logged for operators but are not included in HTTP responses.
+
+Every processing claim receives a random UUID token. Attempt counters only
+track retry budget; completion and failure compare the token so a token from a
+previous redrive cannot affect the current worker. Recovery and redrive clear
+active tokens. `SKIP LOCKED`, unique scan/job constraints, token fencing, and
+transactional finding replacement are covered by PostgreSQL integration tests.
+
+Unknown processing exceptions are conservatively non-retryable. Only explicitly
+transient storage errors and transient/recoverable database causes retry. Full
+exception types remain internal logs; persisted reasons are generic and bounded.
 
 ## Remaining risks
 
-- No rate limiting or TLS termination.
-- API keys identify no individual client and cannot express authorization.
-- Uploaded JSON is fully materialized in memory.
-- Swagger is public on the local binding.
-- Dependency, container, and secret scanning are not yet CI gates.
-- Asset and finding identifiers are not ownership-scoped.
-
-## Before any AWS deployment
-
-The cloud phase must add an explicit identity and authorization model,
-least-privilege IAM, managed secrets, TLS, throttling, encrypted private storage
-and queues, bounded logs, alarms, scanning gates, incident response, and teardown
-verification. Every AWS design must be threat-modeled and cost-reviewed before
-any `terraform apply`.
+- A shared API key has broad access and no rate limiting.
+- Public local metrics may disclose operational counts if host binding changes.
+- Payload retention can exhaust disk space.
+- The API still reads the bounded multipart file into memory.
+- Local storage is not suitable for horizontally scaled hosts without a shared
+  filesystem; S3 is the planned durable replacement.
+- Dependency and container scanning should run in CI and release workflows.

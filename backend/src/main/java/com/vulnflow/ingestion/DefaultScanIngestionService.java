@@ -2,9 +2,6 @@ package com.vulnflow.ingestion;
 
 import com.vulnflow.asset.Asset;
 import com.vulnflow.asset.AssetService;
-import com.vulnflow.finding.FindingRepository;
-import com.vulnflow.finding.FindingSeverity;
-import com.vulnflow.scan.ScanStatus;
 import com.vulnflow.shared.exception.InvalidReportException;
 import com.vulnflow.shared.exception.ReportTooLargeException;
 import com.vulnflow.shared.exception.UnsupportedReportMediaTypeException;
@@ -22,31 +19,21 @@ import org.springframework.web.multipart.MultipartFile;
 public class DefaultScanIngestionService implements ScanIngestionService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(DefaultScanIngestionService.class);
-    private static final String PROCESSING_FAILURE_REASON = "Report processing failed";
 
     private final AssetService assetService;
-    private final FindingRepository findingRepository;
-    private final VulnerabilityReportParser reportParser;
     private final ScanRegistrationService registrationService;
-    private final IngestionPersistenceService persistenceService;
-    private final ScanFailureService failureService;
     private final IngestionProperties properties;
+    private final IngestionMetrics metrics;
 
     public DefaultScanIngestionService(
             AssetService assetService,
-            FindingRepository findingRepository,
-            VulnerabilityReportParser reportParser,
             ScanRegistrationService registrationService,
-            IngestionPersistenceService persistenceService,
-            ScanFailureService failureService,
-            IngestionProperties properties) {
+            IngestionProperties properties,
+            IngestionMetrics metrics) {
         this.assetService = assetService;
-        this.findingRepository = findingRepository;
-        this.reportParser = reportParser;
         this.registrationService = registrationService;
-        this.persistenceService = persistenceService;
-        this.failureService = failureService;
         this.properties = properties;
+        this.metrics = metrics;
     }
 
     @Override
@@ -56,59 +43,28 @@ public class DefaultScanIngestionService implements ScanIngestionService {
         byte[] content = readContent(file);
         String contentHash = sha256(content);
 
-        ScanRegistration registration = registrationService.registerProcessing(
+        IngestionSubmission submission = registrationService.registerReceived(
                 asset,
                 safeFileName(file),
-                contentHash);
-        if (registration.outcome() == ScanIngestionOutcome.DUPLICATE) {
-            return duplicateResponse(registration);
-        }
-        if (registration.outcome() == ScanIngestionOutcome.ALREADY_PROCESSING) {
-            return response(registration, 0, true);
-        }
-
-        return processClaimedScan(registration, content);
-    }
-
-    private ScanIngestionResponse processClaimedScan(
-            ScanRegistration registration,
-            byte[] content) {
-        ParsedVulnerabilityReport report;
-        try {
-            report = reportParser.parse(content);
-            persistenceService.complete(registration.scanId(), report);
-        } catch (RuntimeException exception) {
-            try {
-                failureService.markFailed(registration.scanId(), PROCESSING_FAILURE_REASON);
-            } catch (RuntimeException markFailureException) {
-                exception.addSuppressed(markFailureException);
-                LOGGER.error(
-                        "No se pudo registrar el fallo del scan: scanId={}, causa={}",
-                        registration.scanId(),
-                        markFailureException.getClass().getSimpleName());
-            }
-            LOGGER.warn(
-                    "Falló el procesamiento del informe Trivy: scanId={}, assetId={}, causa={}",
-                    registration.scanId(),
-                    registration.assetId(),
-                    exception.getClass().getSimpleName());
-            throw exception;
+                contentHash,
+                content);
+        if (submission.outcome() == ScanIngestionOutcome.ACCEPTED) {
+            metrics.jobAccepted();
         }
 
         LOGGER.info(
-                "Informe Trivy procesado: scanId={}, assetId={}, hallazgos={}, resultado={}",
-                registration.scanId(),
-                registration.assetId(),
-                report.vulnerabilities().size(),
-                registration.outcome());
-        return response(
-                new ScanRegistration(
-                        registration.scanId(),
-                        registration.assetId(),
-                        ScanStatus.COMPLETED,
-                        registration.outcome()),
-                report.vulnerabilities().size(),
-                false);
+                "Informe Trivy recibido: jobId={}, scanId={}, assetId={}, resultado={}",
+                submission.jobId(),
+                submission.scanId(),
+                submission.assetId(),
+                submission.outcome());
+        return new ScanIngestionResponse(
+                submission.scanId(),
+                submission.jobId(),
+                submission.assetId(),
+                submission.scanStatus(),
+                submission.jobStatus(),
+                submission.outcome());
     }
 
     private void validateFile(MultipartFile file) {
@@ -154,34 +110,5 @@ public class DefaultScanIngestionService implements ScanIngestionService {
             return "trivy-report.json";
         }
         return name.length() <= 500 ? name : name.substring(name.length() - 500);
-    }
-
-    private ScanIngestionResponse duplicateResponse(ScanRegistration registration) {
-        LOGGER.info(
-                "Informe Trivy duplicado omitido: scanId={}, assetId={}",
-                registration.scanId(),
-                registration.assetId());
-        return response(registration, 0, true);
-    }
-
-    private ScanIngestionResponse response(
-            ScanRegistration registration,
-            long findingsImported,
-            boolean duplicate) {
-        long totalFindings = findingRepository.countByScanId(registration.scanId());
-        return new ScanIngestionResponse(
-                registration.scanId(),
-                registration.assetId(),
-                registration.status(),
-                registration.outcome(),
-                findingsImported,
-                totalFindings,
-                findingRepository.countByScanIdAndSeverity(
-                        registration.scanId(),
-                        FindingSeverity.CRITICAL),
-                findingRepository.countByScanIdAndSeverity(
-                        registration.scanId(),
-                        FindingSeverity.HIGH),
-                duplicate);
     }
 }
