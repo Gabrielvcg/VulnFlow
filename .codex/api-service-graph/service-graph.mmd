@@ -1,0 +1,205 @@
+flowchart LR
+  n2["AgentConfig"]
+  n3["AgentConfigLoader"]
+  n4["AgentConfigLoaderTest"]
+  n5["AgentConfigurationException"]
+  n43["IngestionProperties"]
+  n54["ProcessingConfiguration"]
+  n83["WorkerProperties"]
+  n9["AssetController"]
+  n17["DashboardController"]
+  n22["FindingController"]
+  n30["IngestionJobController"]
+  n6[("AgentObjectMapper")]
+  n25(["GET /api/v1/dashboard/summary"])
+  n26(["GET /api/v1/ingestion-jobs"])
+  n27(["GET /api/v1/ingestion-jobs/{jobId}"])
+  n28(["GET /api/v1/scans"])
+  n29(["GET /api/v1/scans/{id}"])
+  n51(["POST /api/v1/ingestion-jobs/{jobId}/redrive"])
+  n52(["POST /api/v1/scans/trivy"])
+  n13[["AwsAdapterConfiguration"]]
+  n15[["BlockingClient"]]
+  n16[["ClientFailureKind"]]
+  n21[["FailingClient"]]
+  n50[["NoOpClient"]]
+  n55[["ReResolvingClient"]]
+  n76[["VulnFlowClient"]]
+  n77[["VulnFlowClientException"]]
+  n78[["VulnFlowHttpClient"]]
+  n79[["VulnFlowHttpClientTest"]]
+  n18["DashboardController.summary"]
+  n31["IngestionJobController.findAll"]
+  n32["IngestionJobController.findById"]
+  n33["IngestionJobController.redrive"]
+  n62["ScanController.findAll"]
+  n63["ScanController.findById"]
+  n64["ScanIngestionController.ingestTrivy"]
+  n70["SqsVulnerabilityReportHandler"]
+  n71["SqsVulnerabilityReportHandlerTest"]
+  n1["AcceptedResponse"]
+  n7["AgentScheduler"]
+  n8["AgentSchedulerTest"]
+  n39["IngestionJobResponse"]
+  n40["IngestionJobStatus"]
+  n45["JobClaim"]
+  n46["JobFailureClassification"]
+  n47["JobFailureClassifier"]
+  n72["StaleJobClaimException"]
+  n14[("AwsIngestionProperties")]
+  n41[("IngestionMessagePublisher")]
+  n49[("LoadingStorage")]
+  n56[("RecordingStore")]
+  n68[("SqsIngestionMessagePublisher")]
+  n69[("SqsIngestionMessagePublisherTest")]
+  n10[("AssetIdentityRepository")]
+  n11[("AssetRepository")]
+  n23[("FindingRepository")]
+  n38[("IngestionJobRepository")]
+  n44[("InvalidReportException")]
+  n53[("ProcessedVulnerabilityReport")]
+  n57[("ReportStorage")]
+  n58[("ReportStorageException")]
+  n59[("ReportTooLargeException")]
+  n60[("S3ReportStorage")]
+  n61[("S3ReportStorageTest")]
+  n67[("ScanRepository")]
+  n73[("TransientReportStorageException")]
+  n74[("TrivyVulnerabilityReportParser")]
+  n75[("UnsupportedReportMediaTypeException")]
+  n80[("VulnerabilityReportParser")]
+  n81[("VulnerabilityReportProcessingRequest")]
+  n82[("VulnerabilityReportProcessor")]
+  n12{{"AssetService"}}
+  n19{{"DashboardService"}}
+  n20{{"DefaultScanIngestionService"}}
+  n24{{"FindingService"}}
+  n34{{"IngestionJobProcessor"}}
+  n35{{"IngestionJobQueryService"}}
+  n36{{"IngestionJobRecoveryService"}}
+  n37{{"IngestionJobRedriveService"}}
+  n42{{"IngestionPersistenceService"}}
+  n48{{"JobFailureService"}}
+  n65{{"ScanIngestionService"}}
+  n66{{"ScanRegistrationService"}}
+  n25 -- routes to --> n18
+  n26 -- routes to --> n31
+  n27 -- routes to --> n32
+  n51 -- routes to --> n33
+  n52 -- routes to --> n64
+  n28 -- routes to --> n62
+  n29 -- routes to --> n63
+  n77 -- uses client --> n16
+  n78 -- uses client --> n16
+  n78 -- uses client --> n77
+  n3 -- configured by --> n2
+  n3 -- configured by --> n5
+  n79 -- uses client --> n16
+  n79 -- uses client --> n77
+  n79 -- uses client --> n78
+  n79 -- reads from --> n6
+  n79 -- depends on --> n1
+  n1 -- uses client --> n16
+  n1 -- uses client --> n77
+  n1 -- uses client --> n78
+  n1 -- reads from --> n6
+  n1 -- uses client --> n79
+  n4 -- configured by --> n2
+  n4 -- configured by --> n3
+  n4 -- configured by --> n5
+  n8 -- uses client --> n76
+  n8 -- depends on --> n7
+  n8 -- reads from --> n6
+  n8 -- uses client --> n50
+  n50 -- uses client --> n76
+  n50 -- depends on --> n7
+  n50 -- reads from --> n6
+  n50 -- depends on --> n8
+  n55 -- uses client --> n16
+  n55 -- uses client --> n76
+  n55 -- uses client --> n77
+  n55 -- reads from --> n6
+  n55 -- uses client --> n21
+  n55 -- uses client --> n15
+  n21 -- uses client --> n16
+  n21 -- uses client --> n76
+  n21 -- uses client --> n77
+  n21 -- reads from --> n6
+  n21 -- uses client --> n55
+  n21 -- uses client --> n15
+  n15 -- uses client --> n16
+  n15 -- uses client --> n76
+  n15 -- uses client --> n77
+  n15 -- reads from --> n6
+  n15 -- uses client --> n55
+  n15 -- uses client --> n21
+  n68 -- depends on --> n41
+  n60 -- reads from --> n57
+  n60 -- reads from --> n58
+  n60 -- reads from --> n73
+  n69 -- depends on --> n68
+  n61 -- reads from --> n60
+  n61 -- reads from --> n73
+  n70 -- reads from --> n53
+  n70 -- reads from --> n81
+  n70 -- reads from --> n82
+  n70 -- reads from --> n57
+  n71 -- reads from --> n53
+  n71 -- reads from --> n74
+  n71 -- reads from --> n82
+  n71 -- reads from --> n57
+  n49 -- reads from --> n53
+  n49 -- reads from --> n74
+  n49 -- reads from --> n82
+  n49 -- reads from --> n57
+  n56 -- reads from --> n53
+  n56 -- reads from --> n74
+  n56 -- reads from --> n82
+  n56 -- reads from --> n57
+  n9 -- depends on --> n12
+  n12 -- reads from --> n10
+  n12 -- reads from --> n11
+  n13 -- depends on --> n68
+  n13 -- reads from --> n60
+  n13 -- depends on --> n14
+  n13 -- depends on --> n41
+  n13 -- reads from --> n57
+  n54 -- configured by --> n43
+  n54 -- reads from --> n74
+  n54 -- reads from --> n80
+  n54 -- reads from --> n82
+  n17 -- depends on --> n19
+  n19 -- reads from --> n11
+  n19 -- reads from --> n23
+  n19 -- reads from --> n67
+  n22 -- depends on --> n24
+  n24 -- reads from --> n23
+  n20 -- depends on --> n12
+  n20 -- configured by --> n43
+  n20 -- calls --> n65
+  n20 -- depends on --> n66
+  n20 -- reads from --> n44
+  n20 -- reads from --> n59
+  n20 -- reads from --> n75
+  n30 -- depends on --> n35
+  n30 -- depends on --> n37
+  n30 -- depends on --> n39
+  n30 -- depends on --> n40
+  n34 -- depends on --> n42
+  n34 -- depends on --> n45
+  n34 -- depends on --> n46
+  n34 -- depends on --> n47
+  n34 -- depends on --> n48
+  n34 -- depends on --> n72
+  n34 -- reads from --> n53
+  n34 -- reads from --> n81
+  n34 -- reads from --> n82
+  n34 -- reads from --> n57
+  n35 -- reads from --> n38
+  n35 -- depends on --> n39
+  n35 -- depends on --> n40
+  n36 -- reads from --> n38
+  n36 -- configured by --> n83
+  n36 -- reads from --> n67
+  n37 -- reads from --> n38
+  note["Mermaid overview truncated; service-graph.json is the source of truth (284 edges)."]

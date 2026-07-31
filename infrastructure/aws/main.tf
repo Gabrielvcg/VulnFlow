@@ -1,0 +1,42 @@
+module "storage" {
+  source = "./modules/s3"
+
+  bucket_name     = var.report_bucket_name
+  report_prefix   = var.report_prefix
+  lifecycle_days  = var.s3_lifecycle_days
+  force_destroy   = var.allow_destroy_non_empty_bucket
+  additional_tags = local.common_tags
+}
+
+module "queue" {
+  source = "./modules/sqs"
+
+  name                       = local.name_prefix
+  visibility_timeout_seconds = var.sqs_visibility_timeout_seconds
+  message_retention_seconds  = var.sqs_message_retention_seconds
+  dlq_retention_seconds      = var.sqs_dlq_retention_seconds
+  max_receive_count          = var.sqs_max_receive_count
+  additional_tags            = local.common_tags
+}
+
+module "lambda" {
+  source = "./modules/lambda"
+
+  function_name               = "${local.name_prefix}-processor"
+  lambda_zip_path             = var.lambda_zip_path
+  lambda_source_code_hash     = var.lambda_source_code_hash
+  handler                     = "com.vulnflow.aws.lambda.SqsVulnerabilityReportHandler::handleRequest"
+  timeout_seconds             = var.lambda_timeout_seconds
+  memory_size_mb              = var.lambda_memory_size_mb
+  reserved_concurrency        = var.lambda_reserved_concurrency
+  log_retention_days          = var.cloudwatch_log_retention_days
+  queue_arn                   = module.queue.queue_arn
+  bucket_arn                  = module.storage.bucket_arn
+  bucket_name                 = module.storage.bucket_name
+  report_prefix               = var.report_prefix
+  batch_size                  = var.sqs_batch_size
+  maximum_batching_window     = var.sqs_maximum_batching_window_seconds
+  max_payload_bytes           = var.max_payload_bytes
+  result_store_provider_ready = var.result_store_provider_ready
+  additional_tags             = local.common_tags
+}

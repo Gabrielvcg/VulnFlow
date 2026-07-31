@@ -1,0 +1,5099 @@
+{
+  "metadata": {
+    "generated_at": "2026-07-31T21:01:42.617485+00:00",
+    "root": ".",
+    "analyzer_version": "0.1.0"
+  },
+  "nodes": [
+    {
+      "id": "AcceptedResponse",
+      "type": "job",
+      "label": "AcceptedResponse",
+      "file": "agent/src/test/java/com/vulnflow/agent/client/VulnFlowHttpClientTest.java",
+      "line": 92,
+      "confidence": "high",
+      "evidence": [
+        "agent/src/test/java/com/vulnflow/agent/client/VulnFlowHttpClientTest.java:92"
+      ]
+    },
+    {
+      "id": "AgentApplication",
+      "type": "unknown",
+      "label": "AgentApplication",
+      "file": "agent/src/main/java/com/vulnflow/agent/AgentApplication.java",
+      "line": 32,
+      "confidence": "low",
+      "evidence": [
+        "agent/src/main/java/com/vulnflow/agent/AgentApplication.java:32"
+      ]
+    },
+    {
+      "id": "AgentApplicationTest",
+      "type": "unknown",
+      "label": "AgentApplicationTest",
+      "file": "agent/src/test/java/com/vulnflow/agent/AgentApplicationTest.java",
+      "line": 15,
+      "confidence": "low",
+      "evidence": [
+        "agent/src/test/java/com/vulnflow/agent/AgentApplicationTest.java:15"
+      ]
+    },
+    {
+      "id": "AgentConfig",
+      "type": "config",
+      "label": "AgentConfig",
+      "file": "agent/src/main/java/com/vulnflow/agent/config/AgentConfig.java",
+      "line": 11,
+      "confidence": "low",
+      "evidence": [
+        "agent/src/main/java/com/vulnflow/agent/config/AgentConfig.java:11"
+      ]
+    },
+    {
+      "id": "AgentConfigLoader",
+      "type": "config",
+      "label": "AgentConfigLoader",
+      "file": "agent/src/main/java/com/vulnflow/agent/config/AgentConfigLoader.java",
+      "line": 19,
+      "confidence": "low",
+      "evidence": [
+        "agent/src/main/java/com/vulnflow/agent/config/AgentConfigLoader.java:19"
+      ]
+    },
+    {
+      "id": "AgentConfigLoaderTest",
+      "type": "config",
+      "label": "AgentConfigLoaderTest",
+      "file": "agent/src/test/java/com/vulnflow/agent/config/AgentConfigLoaderTest.java",
+      "line": 13,
+      "confidence": "low",
+      "evidence": [
+        "agent/src/test/java/com/vulnflow/agent/config/AgentConfigLoaderTest.java:13"
+      ]
+    },
+    {
+      "id": "AgentConfigurationException",
+      "type": "config",
+      "label": "AgentConfigurationException",
+      "file": "agent/src/main/java/com/vulnflow/agent/config/AgentConfigurationException.java",
+      "line": 3,
+      "confidence": "low",
+      "evidence": [
+        "agent/src/main/java/com/vulnflow/agent/config/AgentConfigurationException.java:3"
+      ]
+    },
+    {
+      "id": "AgentObjectMapper",
+      "type": "dao",
+      "label": "AgentObjectMapper",
+      "file": "agent/src/main/java/com/vulnflow/agent/shared/AgentObjectMapper.java",
+      "line": 7,
+      "confidence": "low",
+      "evidence": [
+        "agent/src/main/java/com/vulnflow/agent/shared/AgentObjectMapper.java:7"
+      ]
+    },
+    {
+      "id": "AgentOutbox",
+      "type": "unknown",
+      "label": "AgentOutbox",
+      "file": "agent/src/main/java/com/vulnflow/agent/outbox/AgentOutbox.java",
+      "line": 10,
+      "confidence": "low",
+      "evidence": [
+        "agent/src/main/java/com/vulnflow/agent/outbox/AgentOutbox.java:10"
+      ]
+    },
+    {
+      "id": "AgentScheduler",
+      "type": "job",
+      "label": "AgentScheduler",
+      "file": "agent/src/main/java/com/vulnflow/agent/scheduling/AgentScheduler.java",
+      "line": 12,
+      "confidence": "low",
+      "evidence": [
+        "agent/src/main/java/com/vulnflow/agent/scheduling/AgentScheduler.java:12"
+      ]
+    },
+    {
+      "id": "AgentSchedulerTest",
+      "type": "job",
+      "label": "AgentSchedulerTest",
+      "file": "agent/src/test/java/com/vulnflow/agent/scheduling/AgentSchedulerTest.java",
+      "line": 26,
+      "confidence": "low",
+      "evidence": [
+        "agent/src/test/java/com/vulnflow/agent/scheduling/AgentSchedulerTest.java:26"
+      ]
+    },
+    {
+      "id": "AgentState",
+      "type": "unknown",
+      "label": "AgentState",
+      "file": "agent/src/main/java/com/vulnflow/agent/scheduling/AgentState.java",
+      "line": 6,
+      "confidence": "low",
+      "evidence": [
+        "agent/src/main/java/com/vulnflow/agent/scheduling/AgentState.java:6"
+      ]
+    },
+    {
+      "id": "AgentStateStore",
+      "type": "unknown",
+      "label": "AgentStateStore",
+      "file": "agent/src/main/java/com/vulnflow/agent/scheduling/AgentStateStore.java",
+      "line": 11,
+      "confidence": "low",
+      "evidence": [
+        "agent/src/main/java/com/vulnflow/agent/scheduling/AgentStateStore.java:11"
+      ]
+    },
+    {
+      "id": "AgentStatus",
+      "type": "unknown",
+      "label": "AgentStatus",
+      "file": "agent/src/main/java/com/vulnflow/agent/scheduling/AgentStatus.java",
+      "line": 7,
+      "confidence": "low",
+      "evidence": [
+        "agent/src/main/java/com/vulnflow/agent/scheduling/AgentStatus.java:7"
+      ]
+    },
+    {
+      "id": "ApiError",
+      "type": "unknown",
+      "label": "ApiError",
+      "file": "backend/src/main/java/com/vulnflow/shared/error/ApiError.java",
+      "line": 6,
+      "confidence": "low",
+      "evidence": [
+        "backend/src/main/java/com/vulnflow/shared/error/ApiError.java:6"
+      ]
+    },
+    {
+      "id": "ApiKeyAuthenticationEntryPoint",
+      "type": "unknown",
+      "label": "ApiKeyAuthenticationEntryPoint",
+      "file": "backend/src/main/java/com/vulnflow/security/ApiKeyAuthenticationEntryPoint.java",
+      "line": 17,
+      "confidence": "low",
+      "evidence": [
+        "backend/src/main/java/com/vulnflow/security/ApiKeyAuthenticationEntryPoint.java:17"
+      ]
+    },
+    {
+      "id": "ApiKeyAuthenticationFilter",
+      "type": "unknown",
+      "label": "ApiKeyAuthenticationFilter",
+      "file": "backend/src/main/java/com/vulnflow/security/ApiKeyAuthenticationFilter.java",
+      "line": 19,
+      "confidence": "low",
+      "evidence": [
+        "backend/src/main/java/com/vulnflow/security/ApiKeyAuthenticationFilter.java:19"
+      ]
+    },
+    {
+      "id": "ApiKeyProperties",
+      "type": "config",
+      "label": "ApiKeyProperties",
+      "file": "backend/src/main/java/com/vulnflow/security/ApiKeyProperties.java",
+      "line": 8,
+      "confidence": "high",
+      "evidence": [
+        "backend/src/main/java/com/vulnflow/security/ApiKeyProperties.java:8"
+      ]
+    },
+    {
+      "id": "Asset",
+      "type": "model",
+      "label": "Asset",
+      "file": "backend/src/main/java/com/vulnflow/asset/Asset.java",
+      "line": 14,
+      "confidence": "medium",
+      "evidence": [
+        "backend/src/main/java/com/vulnflow/asset/Asset.java:14"
+      ]
+    },
+    {
+      "id": "AssetCache",
+      "type": "unknown",
+      "label": "AssetCache",
+      "file": "agent/src/main/java/com/vulnflow/agent/scheduling/AssetCache.java",
+      "line": 15,
+      "confidence": "low",
+      "evidence": [
+        "agent/src/main/java/com/vulnflow/agent/scheduling/AssetCache.java:15"
+      ]
+    },
+    {
+      "id": "AssetController",
+      "type": "controller",
+      "label": "AssetController",
+      "file": "backend/src/main/java/com/vulnflow/asset/AssetController.java",
+      "line": 19,
+      "confidence": "high",
+      "evidence": [
+        "backend/src/main/java/com/vulnflow/asset/AssetController.java:19"
+      ]
+    },
+    {
+      "id": "AssetDtos",
+      "type": "model",
+      "label": "AssetDtos",
+      "file": "backend/src/main/java/com/vulnflow/asset/AssetDtos.java",
+      "line": 9,
+      "confidence": "low",
+      "evidence": [
+        "backend/src/main/java/com/vulnflow/asset/AssetDtos.java:9"
+      ]
+    },
+    {
+      "id": "AssetIdentityConflictException",
+      "type": "model",
+      "label": "AssetIdentityConflictException",
+      "file": "backend/src/main/java/com/vulnflow/asset/AssetIdentityConflictException.java",
+      "line": 3,
+      "confidence": "low",
+      "evidence": [
+        "backend/src/main/java/com/vulnflow/asset/AssetIdentityConflictException.java:3"
+      ]
+    },
+    {
+      "id": "AssetIdentityRepository",
+      "type": "repository",
+      "label": "AssetIdentityRepository",
+      "file": "backend/src/main/java/com/vulnflow/asset/AssetIdentityRepository.java",
+      "line": 10,
+      "confidence": "high",
+      "evidence": [
+        "backend/src/main/java/com/vulnflow/asset/AssetIdentityRepository.java:10"
+      ]
+    },
+    {
+      "id": "AssetRepository",
+      "type": "repository",
+      "label": "AssetRepository",
+      "file": "backend/src/main/java/com/vulnflow/asset/AssetRepository.java",
+      "line": 5,
+      "confidence": "high",
+      "evidence": [
+        "backend/src/main/java/com/vulnflow/asset/AssetRepository.java:5"
+      ]
+    },
+    {
+      "id": "AssetRequestValidationTest",
+      "type": "unknown",
+      "label": "AssetRequestValidationTest",
+      "file": "backend/src/test/java/com/vulnflow/asset/AssetRequestValidationTest.java",
+      "line": 9,
+      "confidence": "low",
+      "evidence": [
+        "backend/src/test/java/com/vulnflow/asset/AssetRequestValidationTest.java:9"
+      ]
+    },
+    {
+      "id": "AssetResolution",
+      "type": "unknown",
+      "label": "AssetResolution",
+      "file": "agent/src/main/java/com/vulnflow/agent/client/AssetResolution.java",
+      "line": 5,
+      "confidence": "low",
+      "evidence": [
+        "agent/src/main/java/com/vulnflow/agent/client/AssetResolution.java:5"
+      ]
+    },
+    {
+      "id": "AssetResolutionResponse",
+      "type": "queue",
+      "label": "AssetResolutionResponse",
+      "file": "backend/src/test/java/com/vulnflow/PostgreSQLFlowIT.java",
+      "line": 341,
+      "confidence": "medium",
+      "evidence": [
+        "backend/src/test/java/com/vulnflow/PostgreSQLFlowIT.java:341"
+      ]
+    },
+    {
+      "id": "AssetService",
+      "type": "service",
+      "label": "AssetService",
+      "file": "backend/src/main/java/com/vulnflow/asset/AssetService.java",
+      "line": 11,
+      "confidence": "high",
+      "evidence": [
+        "backend/src/main/java/com/vulnflow/asset/AssetService.java:11"
+      ]
+    },
+    {
+      "id": "AssetType",
+      "type": "unknown",
+      "label": "AssetType",
+      "file": "backend/src/main/java/com/vulnflow/asset/AssetType.java",
+      "line": 3,
+      "confidence": "low",
+      "evidence": [
+        "backend/src/main/java/com/vulnflow/asset/AssetType.java:3"
+      ]
+    },
+    {
+      "id": "AtomicFiles",
+      "type": "unknown",
+      "label": "AtomicFiles",
+      "file": "agent/src/main/java/com/vulnflow/agent/shared/AtomicFiles.java",
+      "line": 12,
+      "confidence": "low",
+      "evidence": [
+        "agent/src/main/java/com/vulnflow/agent/shared/AtomicFiles.java:12"
+      ]
+    },
+    {
+      "id": "AwsAdapterConfiguration",
+      "type": "external_client",
+      "label": "AwsAdapterConfiguration",
+      "file": "backend/src/main/java/com/vulnflow/config/AwsAdapterConfiguration.java",
+      "line": 21,
+      "confidence": "low",
+      "evidence": [
+        "backend/src/main/java/com/vulnflow/config/AwsAdapterConfiguration.java:21"
+      ]
+    },
+    {
+      "id": "AwsAdapterConfigurationTest",
+      "type": "external_client",
+      "label": "AwsAdapterConfigurationTest",
+      "file": "backend/src/test/java/com/vulnflow/config/AwsAdapterConfigurationTest.java",
+      "line": 13,
+      "confidence": "low",
+      "evidence": [
+        "backend/src/test/java/com/vulnflow/config/AwsAdapterConfigurationTest.java:13"
+      ]
+    },
+    {
+      "id": "AwsIngestionProperties",
+      "type": "queue",
+      "label": "AwsIngestionProperties",
+      "file": "backend/src/main/java/com/vulnflow/config/AwsIngestionProperties.java",
+      "line": 15,
+      "confidence": "medium",
+      "evidence": [
+        "backend/src/main/java/com/vulnflow/config/AwsIngestionProperties.java:15"
+      ]
+    },
+    {
+      "id": "BlockingClient",
+      "type": "external_client",
+      "label": "BlockingClient",
+      "file": "agent/src/test/java/com/vulnflow/agent/scheduling/UploadCoordinatorTest.java",
+      "line": 94,
+      "confidence": "low",
+      "evidence": [
+        "agent/src/test/java/com/vulnflow/agent/scheduling/UploadCoordinatorTest.java:94"
+      ]
+    },
+    {
+      "id": "ClientFailureKind",
+      "type": "external_client",
+      "label": "ClientFailureKind",
+      "file": "agent/src/main/java/com/vulnflow/agent/client/ClientFailureKind.java",
+      "line": 3,
+      "confidence": "low",
+      "evidence": [
+        "agent/src/main/java/com/vulnflow/agent/client/ClientFailureKind.java:3"
+      ]
+    },
+    {
+      "id": "CommandExecutor",
+      "type": "unknown",
+      "label": "CommandExecutor",
+      "file": "agent/src/main/java/com/vulnflow/agent/scanner/CommandExecutor.java",
+      "line": 6,
+      "confidence": "low",
+      "evidence": [
+        "agent/src/main/java/com/vulnflow/agent/scanner/CommandExecutor.java:6"
+      ]
+    },
+    {
+      "id": "CommandResult",
+      "type": "unknown",
+      "label": "CommandResult",
+      "file": "agent/src/main/java/com/vulnflow/agent/scanner/CommandResult.java",
+      "line": 3,
+      "confidence": "low",
+      "evidence": [
+        "agent/src/main/java/com/vulnflow/agent/scanner/CommandResult.java:3"
+      ]
+    },
+    {
+      "id": "Components",
+      "type": "unknown",
+      "label": "Components",
+      "file": "aws/lambda-processor/src/main/java/com/vulnflow/aws/lambda/DefaultLambdaWiring.java",
+      "line": 23,
+      "confidence": "low",
+      "evidence": [
+        "aws/lambda-processor/src/main/java/com/vulnflow/aws/lambda/DefaultLambdaWiring.java:23"
+      ]
+    },
+    {
+      "id": "CorrelationIdFilter",
+      "type": "unknown",
+      "label": "CorrelationIdFilter",
+      "file": "backend/src/main/java/com/vulnflow/shared/web/CorrelationIdFilter.java",
+      "line": 18,
+      "confidence": "low",
+      "evidence": [
+        "backend/src/main/java/com/vulnflow/shared/web/CorrelationIdFilter.java:18"
+      ]
+    },
+    {
+      "id": "CreateRequest",
+      "type": "unknown",
+      "label": "CreateRequest",
+      "file": "backend/src/main/java/com/vulnflow/asset/AssetDtos.java",
+      "line": 14,
+      "confidence": "low",
+      "evidence": [
+        "backend/src/main/java/com/vulnflow/asset/AssetDtos.java:14"
+      ]
+    },
+    {
+      "id": "DashboardController",
+      "type": "controller",
+      "label": "DashboardController",
+      "file": "backend/src/main/java/com/vulnflow/dashboard/DashboardController.java",
+      "line": 7,
+      "confidence": "high",
+      "evidence": [
+        "backend/src/main/java/com/vulnflow/dashboard/DashboardController.java:7"
+      ]
+    },
+    {
+      "id": "DashboardController.summary",
+      "type": "handler",
+      "label": "DashboardController.summary",
+      "file": "backend/src/main/java/com/vulnflow/dashboard/DashboardController.java",
+      "line": 17,
+      "confidence": "high",
+      "evidence": [
+        "backend/src/main/java/com/vulnflow/dashboard/DashboardController.java:17"
+      ]
+    },
+    {
+      "id": "DashboardService",
+      "type": "service",
+      "label": "DashboardService",
+      "file": "backend/src/main/java/com/vulnflow/dashboard/DashboardService.java",
+      "line": 11,
+      "confidence": "high",
+      "evidence": [
+        "backend/src/main/java/com/vulnflow/dashboard/DashboardService.java:11"
+      ]
+    },
+    {
+      "id": "DashboardSummary",
+      "type": "unknown",
+      "label": "DashboardSummary",
+      "file": "backend/src/main/java/com/vulnflow/dashboard/DashboardSummary.java",
+      "line": 3,
+      "confidence": "low",
+      "evidence": [
+        "backend/src/main/java/com/vulnflow/dashboard/DashboardSummary.java:3"
+      ]
+    },
+    {
+      "id": "DefaultFindingRiskCalculator",
+      "type": "unknown",
+      "label": "DefaultFindingRiskCalculator",
+      "file": "processing-core/src/main/java/com/vulnflow/processing/DefaultFindingRiskCalculator.java",
+      "line": 3,
+      "confidence": "low",
+      "evidence": [
+        "processing-core/src/main/java/com/vulnflow/processing/DefaultFindingRiskCalculator.java:3"
+      ]
+    },
+    {
+      "id": "DefaultFindingRiskCalculatorTest",
+      "type": "unknown",
+      "label": "DefaultFindingRiskCalculatorTest",
+      "file": "backend/src/test/java/com/vulnflow/finding/DefaultFindingRiskCalculatorTest.java",
+      "line": 11,
+      "confidence": "low",
+      "evidence": [
+        "backend/src/test/java/com/vulnflow/finding/DefaultFindingRiskCalculatorTest.java:11"
+      ]
+    },
+    {
+      "id": "DefaultLambdaWiring",
+      "type": "unknown",
+      "label": "DefaultLambdaWiring",
+      "file": "aws/lambda-processor/src/main/java/com/vulnflow/aws/lambda/DefaultLambdaWiring.java",
+      "line": 19,
+      "confidence": "low",
+      "evidence": [
+        "aws/lambda-processor/src/main/java/com/vulnflow/aws/lambda/DefaultLambdaWiring.java:19"
+      ]
+    },
+    {
+      "id": "DefaultScanIngestionService",
+      "type": "service",
+      "label": "DefaultScanIngestionService",
+      "file": "backend/src/main/java/com/vulnflow/ingestion/DefaultScanIngestionService.java",
+      "line": 18,
+      "confidence": "high",
+      "evidence": [
+        "backend/src/main/java/com/vulnflow/ingestion/DefaultScanIngestionService.java:18"
+      ]
+    },
+    {
+      "id": "DefaultScanIngestionServiceTest",
+      "type": "service",
+      "label": "DefaultScanIngestionServiceTest",
+      "file": "backend/src/test/java/com/vulnflow/ingestion/DefaultScanIngestionServiceTest.java",
+      "line": 23,
+      "confidence": "low",
+      "evidence": [
+        "backend/src/test/java/com/vulnflow/ingestion/DefaultScanIngestionServiceTest.java:23"
+      ]
+    },
+    {
+      "id": "FailingClient",
+      "type": "external_client",
+      "label": "FailingClient",
+      "file": "agent/src/test/java/com/vulnflow/agent/scheduling/UploadCoordinatorTest.java",
+      "line": 47,
+      "confidence": "low",
+      "evidence": [
+        "agent/src/test/java/com/vulnflow/agent/scheduling/UploadCoordinatorTest.java:47"
+      ]
+    },
+    {
+      "id": "FailureDisposition",
+      "type": "unknown",
+      "label": "FailureDisposition",
+      "file": "backend/src/main/java/com/vulnflow/ingestion/FailureDisposition.java",
+      "line": 3,
+      "confidence": "low",
+      "evidence": [
+        "backend/src/main/java/com/vulnflow/ingestion/FailureDisposition.java:3"
+      ]
+    },
+    {
+      "id": "FileAgentOutbox",
+      "type": "unknown",
+      "label": "FileAgentOutbox",
+      "file": "agent/src/main/java/com/vulnflow/agent/outbox/FileAgentOutbox.java",
+      "line": 23,
+      "confidence": "low",
+      "evidence": [
+        "agent/src/main/java/com/vulnflow/agent/outbox/FileAgentOutbox.java:23"
+      ]
+    },
+    {
+      "id": "FileAgentOutboxTest",
+      "type": "unknown",
+      "label": "FileAgentOutboxTest",
+      "file": "agent/src/test/java/com/vulnflow/agent/outbox/FileAgentOutboxTest.java",
+      "line": 21,
+      "confidence": "low",
+      "evidence": [
+        "agent/src/test/java/com/vulnflow/agent/outbox/FileAgentOutboxTest.java:21"
+      ]
+    },
+    {
+      "id": "Finding",
+      "type": "model",
+      "label": "Finding",
+      "file": "backend/src/main/java/com/vulnflow/finding/Finding.java",
+      "line": 18,
+      "confidence": "medium",
+      "evidence": [
+        "backend/src/main/java/com/vulnflow/finding/Finding.java:18"
+      ]
+    },
+    {
+      "id": "FindingController",
+      "type": "controller",
+      "label": "FindingController",
+      "file": "backend/src/main/java/com/vulnflow/finding/FindingController.java",
+      "line": 17,
+      "confidence": "high",
+      "evidence": [
+        "backend/src/main/java/com/vulnflow/finding/FindingController.java:17"
+      ]
+    },
+    {
+      "id": "FindingDtos",
+      "type": "model",
+      "label": "FindingDtos",
+      "file": "backend/src/main/java/com/vulnflow/finding/FindingDtos.java",
+      "line": 7,
+      "confidence": "low",
+      "evidence": [
+        "backend/src/main/java/com/vulnflow/finding/FindingDtos.java:7"
+      ]
+    },
+    {
+      "id": "FindingRepository",
+      "type": "repository",
+      "label": "FindingRepository",
+      "file": "backend/src/main/java/com/vulnflow/finding/FindingRepository.java",
+      "line": 6,
+      "confidence": "high",
+      "evidence": [
+        "backend/src/main/java/com/vulnflow/finding/FindingRepository.java:6"
+      ]
+    },
+    {
+      "id": "FindingRiskCalculator",
+      "type": "unknown",
+      "label": "FindingRiskCalculator",
+      "file": "processing-core/src/main/java/com/vulnflow/processing/FindingRiskCalculator.java",
+      "line": 3,
+      "confidence": "low",
+      "evidence": [
+        "processing-core/src/main/java/com/vulnflow/processing/FindingRiskCalculator.java:3"
+      ]
+    },
+    {
+      "id": "FindingService",
+      "type": "service",
+      "label": "FindingService",
+      "file": "backend/src/main/java/com/vulnflow/finding/FindingService.java",
+      "line": 10,
+      "confidence": "high",
+      "evidence": [
+        "backend/src/main/java/com/vulnflow/finding/FindingService.java:10"
+      ]
+    },
+    {
+      "id": "FindingSeverity",
+      "type": "unknown",
+      "label": "FindingSeverity",
+      "file": "processing-core/src/main/java/com/vulnflow/processing/FindingSeverity.java",
+      "line": 5,
+      "confidence": "low",
+      "evidence": [
+        "processing-core/src/main/java/com/vulnflow/processing/FindingSeverity.java:5"
+      ]
+    },
+    {
+      "id": "FindingStatus",
+      "type": "unknown",
+      "label": "FindingStatus",
+      "file": "backend/src/main/java/com/vulnflow/finding/FindingStatus.java",
+      "line": 3,
+      "confidence": "low",
+      "evidence": [
+        "backend/src/main/java/com/vulnflow/finding/FindingStatus.java:3"
+      ]
+    },
+    {
+      "id": "Fixture",
+      "type": "unknown",
+      "label": "Fixture",
+      "file": "agent/src/test/java/com/vulnflow/agent/scheduling/UploadCoordinatorTest.java",
+      "line": 34,
+      "confidence": "low",
+      "evidence": [
+        "agent/src/test/java/com/vulnflow/agent/scheduling/UploadCoordinatorTest.java:34"
+      ]
+    },
+    {
+      "id": "FlywayUpgradeIT",
+      "type": "job",
+      "label": "FlywayUpgradeIT",
+      "file": "backend/src/test/java/com/vulnflow/FlywayUpgradeIT.java",
+      "line": 33,
+      "confidence": "high",
+      "evidence": [
+        "backend/src/test/java/com/vulnflow/FlywayUpgradeIT.java:33"
+      ]
+    },
+    {
+      "id": "GET /api/v1/dashboard/summary",
+      "type": "endpoint",
+      "label": "GET /api/v1/dashboard/summary",
+      "file": "backend/src/main/java/com/vulnflow/dashboard/DashboardController.java",
+      "line": 17,
+      "confidence": "high",
+      "evidence": [
+        "backend/src/main/java/com/vulnflow/dashboard/DashboardController.java:17"
+      ]
+    },
+    {
+      "id": "GET /api/v1/ingestion-jobs",
+      "type": "endpoint",
+      "label": "GET /api/v1/ingestion-jobs",
+      "file": "backend/src/main/java/com/vulnflow/ingestion/IngestionJobController.java",
+      "line": 30,
+      "confidence": "high",
+      "evidence": [
+        "backend/src/main/java/com/vulnflow/ingestion/IngestionJobController.java:30"
+      ]
+    },
+    {
+      "id": "GET /api/v1/ingestion-jobs/{jobId}",
+      "type": "endpoint",
+      "label": "GET /api/v1/ingestion-jobs/{jobId}",
+      "file": "backend/src/main/java/com/vulnflow/ingestion/IngestionJobController.java",
+      "line": 42,
+      "confidence": "high",
+      "evidence": [
+        "backend/src/main/java/com/vulnflow/ingestion/IngestionJobController.java:42"
+      ]
+    },
+    {
+      "id": "GET /api/v1/scans",
+      "type": "endpoint",
+      "label": "GET /api/v1/scans",
+      "file": "backend/src/main/java/com/vulnflow/scan/ScanController.java",
+      "line": 23,
+      "confidence": "high",
+      "evidence": [
+        "backend/src/main/java/com/vulnflow/scan/ScanController.java:23"
+      ]
+    },
+    {
+      "id": "GET /api/v1/scans/{id}",
+      "type": "endpoint",
+      "label": "GET /api/v1/scans/{id}",
+      "file": "backend/src/main/java/com/vulnflow/scan/ScanController.java",
+      "line": 33,
+      "confidence": "high",
+      "evidence": [
+        "backend/src/main/java/com/vulnflow/scan/ScanController.java:33"
+      ]
+    },
+    {
+      "id": "GlobalExceptionHandler",
+      "type": "controller",
+      "label": "GlobalExceptionHandler",
+      "file": "backend/src/main/java/com/vulnflow/shared/error/GlobalExceptionHandler.java",
+      "line": 29,
+      "confidence": "high",
+      "evidence": [
+        "backend/src/main/java/com/vulnflow/shared/error/GlobalExceptionHandler.java:29"
+      ]
+    },
+    {
+      "id": "Hashes",
+      "type": "unknown",
+      "label": "Hashes",
+      "file": "agent/src/main/java/com/vulnflow/agent/shared/Hashes.java",
+      "line": 11,
+      "confidence": "low",
+      "evidence": [
+        "agent/src/main/java/com/vulnflow/agent/shared/Hashes.java:11"
+      ]
+    },
+    {
+      "id": "HttpResult",
+      "type": "unknown",
+      "label": "HttpResult",
+      "file": "agent/src/main/java/com/vulnflow/agent/client/VulnFlowHttpClient.java",
+      "line": 61,
+      "confidence": "low",
+      "evidence": [
+        "agent/src/main/java/com/vulnflow/agent/client/VulnFlowHttpClient.java:61"
+      ]
+    },
+    {
+      "id": "IngestionConfigurationContextTest",
+      "type": "config",
+      "label": "IngestionConfigurationContextTest",
+      "file": "backend/src/test/java/com/vulnflow/ingestion/IngestionConfigurationContextTest.java",
+      "line": 58,
+      "confidence": "high",
+      "evidence": [
+        "backend/src/test/java/com/vulnflow/ingestion/IngestionConfigurationContextTest.java:58"
+      ]
+    },
+    {
+      "id": "IngestionConfigurationValidationTest",
+      "type": "config",
+      "label": "IngestionConfigurationValidationTest",
+      "file": "backend/src/test/java/com/vulnflow/ingestion/IngestionConfigurationValidationTest.java",
+      "line": 13,
+      "confidence": "low",
+      "evidence": [
+        "backend/src/test/java/com/vulnflow/ingestion/IngestionConfigurationValidationTest.java:13"
+      ]
+    },
+    {
+      "id": "IngestionEventContractTest",
+      "type": "unknown",
+      "label": "IngestionEventContractTest",
+      "file": "processing-core/src/test/java/com/vulnflow/contract/IngestionEventContractTest.java",
+      "line": 10,
+      "confidence": "low",
+      "evidence": [
+        "processing-core/src/test/java/com/vulnflow/contract/IngestionEventContractTest.java:10"
+      ]
+    },
+    {
+      "id": "IngestionEventJsonCodec",
+      "type": "unknown",
+      "label": "IngestionEventJsonCodec",
+      "file": "processing-core/src/main/java/com/vulnflow/contract/IngestionEventJsonCodec.java",
+      "line": 10,
+      "confidence": "low",
+      "evidence": [
+        "processing-core/src/main/java/com/vulnflow/contract/IngestionEventJsonCodec.java:10"
+      ]
+    },
+    {
+      "id": "IngestionEventV1",
+      "type": "unknown",
+      "label": "IngestionEventV1",
+      "file": "processing-core/src/main/java/com/vulnflow/contract/IngestionEventV1.java",
+      "line": 16,
+      "confidence": "low",
+      "evidence": [
+        "processing-core/src/main/java/com/vulnflow/contract/IngestionEventV1.java:16"
+      ]
+    },
+    {
+      "id": "IngestionJob",
+      "type": "model",
+      "label": "IngestionJob",
+      "file": "backend/src/main/java/com/vulnflow/ingestion/IngestionJob.java",
+      "line": 18,
+      "confidence": "medium",
+      "evidence": [
+        "backend/src/main/java/com/vulnflow/ingestion/IngestionJob.java:18"
+      ]
+    },
+    {
+      "id": "IngestionJobController",
+      "type": "controller",
+      "label": "IngestionJobController",
+      "file": "backend/src/main/java/com/vulnflow/ingestion/IngestionJobController.java",
+      "line": 16,
+      "confidence": "high",
+      "evidence": [
+        "backend/src/main/java/com/vulnflow/ingestion/IngestionJobController.java:16"
+      ]
+    },
+    {
+      "id": "IngestionJobController.findAll",
+      "type": "handler",
+      "label": "IngestionJobController.findAll",
+      "file": "backend/src/main/java/com/vulnflow/ingestion/IngestionJobController.java",
+      "line": 30,
+      "confidence": "high",
+      "evidence": [
+        "backend/src/main/java/com/vulnflow/ingestion/IngestionJobController.java:30"
+      ]
+    },
+    {
+      "id": "IngestionJobController.findById",
+      "type": "handler",
+      "label": "IngestionJobController.findById",
+      "file": "backend/src/main/java/com/vulnflow/ingestion/IngestionJobController.java",
+      "line": 42,
+      "confidence": "high",
+      "evidence": [
+        "backend/src/main/java/com/vulnflow/ingestion/IngestionJobController.java:42"
+      ]
+    },
+    {
+      "id": "IngestionJobController.redrive",
+      "type": "handler",
+      "label": "IngestionJobController.redrive",
+      "file": "backend/src/main/java/com/vulnflow/ingestion/IngestionJobController.java",
+      "line": 47,
+      "confidence": "high",
+      "evidence": [
+        "backend/src/main/java/com/vulnflow/ingestion/IngestionJobController.java:47"
+      ]
+    },
+    {
+      "id": "IngestionJobProcessor",
+      "type": "service",
+      "label": "IngestionJobProcessor",
+      "file": "backend/src/main/java/com/vulnflow/ingestion/IngestionJobProcessor.java",
+      "line": 12,
+      "confidence": "high",
+      "evidence": [
+        "backend/src/main/java/com/vulnflow/ingestion/IngestionJobProcessor.java:12"
+      ]
+    },
+    {
+      "id": "IngestionJobQueryService",
+      "type": "service",
+      "label": "IngestionJobQueryService",
+      "file": "backend/src/main/java/com/vulnflow/ingestion/IngestionJobQueryService.java",
+      "line": 10,
+      "confidence": "high",
+      "evidence": [
+        "backend/src/main/java/com/vulnflow/ingestion/IngestionJobQueryService.java:10"
+      ]
+    },
+    {
+      "id": "IngestionJobRecoveryService",
+      "type": "service",
+      "label": "IngestionJobRecoveryService",
+      "file": "backend/src/main/java/com/vulnflow/ingestion/IngestionJobRecoveryService.java",
+      "line": 12,
+      "confidence": "high",
+      "evidence": [
+        "backend/src/main/java/com/vulnflow/ingestion/IngestionJobRecoveryService.java:12"
+      ]
+    },
+    {
+      "id": "IngestionJobRedriveService",
+      "type": "service",
+      "label": "IngestionJobRedriveService",
+      "file": "backend/src/main/java/com/vulnflow/ingestion/IngestionJobRedriveService.java",
+      "line": 12,
+      "confidence": "high",
+      "evidence": [
+        "backend/src/main/java/com/vulnflow/ingestion/IngestionJobRedriveService.java:12"
+      ]
+    },
+    {
+      "id": "IngestionJobRepository",
+      "type": "repository",
+      "label": "IngestionJobRepository",
+      "file": "backend/src/main/java/com/vulnflow/ingestion/IngestionJobRepository.java",
+      "line": 10,
+      "confidence": "high",
+      "evidence": [
+        "backend/src/main/java/com/vulnflow/ingestion/IngestionJobRepository.java:10"
+      ]
+    },
+    {
+      "id": "IngestionJobResponse",
+      "type": "job",
+      "label": "IngestionJobResponse",
+      "file": "backend/src/main/java/com/vulnflow/ingestion/IngestionJobResponse.java",
+      "line": 20,
+      "confidence": "high",
+      "evidence": [
+        "backend/src/main/java/com/vulnflow/ingestion/IngestionJobResponse.java:20"
+      ]
+    },
+    {
+      "id": "IngestionJobStatus",
+      "type": "job",
+      "label": "IngestionJobStatus",
+      "file": "backend/src/main/java/com/vulnflow/ingestion/IngestionJobStatus.java",
+      "line": 3,
+      "confidence": "low",
+      "evidence": [
+        "backend/src/main/java/com/vulnflow/ingestion/IngestionJobStatus.java:3"
+      ]
+    },
+    {
+      "id": "IngestionMessagePublishException",
+      "type": "unknown",
+      "label": "IngestionMessagePublishException",
+      "file": "aws/aws-adapters/src/main/java/com/vulnflow/aws/messaging/IngestionMessagePublishException.java",
+      "line": 3,
+      "confidence": "low",
+      "evidence": [
+        "aws/aws-adapters/src/main/java/com/vulnflow/aws/messaging/IngestionMessagePublishException.java:3"
+      ]
+    },
+    {
+      "id": "IngestionMessagePublisher",
+      "type": "queue",
+      "label": "IngestionMessagePublisher",
+      "file": "processing-core/src/main/java/com/vulnflow/processing/port/IngestionMessagePublisher.java",
+      "line": 5,
+      "confidence": "low",
+      "evidence": [
+        "processing-core/src/main/java/com/vulnflow/processing/port/IngestionMessagePublisher.java:5"
+      ]
+    },
+    {
+      "id": "IngestionMetrics",
+      "type": "unknown",
+      "label": "IngestionMetrics",
+      "file": "backend/src/main/java/com/vulnflow/ingestion/IngestionMetrics.java",
+      "line": 10,
+      "confidence": "low",
+      "evidence": [
+        "backend/src/main/java/com/vulnflow/ingestion/IngestionMetrics.java:10"
+      ]
+    },
+    {
+      "id": "IngestionPersistenceService",
+      "type": "service",
+      "label": "IngestionPersistenceService",
+      "file": "backend/src/main/java/com/vulnflow/ingestion/IngestionPersistenceService.java",
+      "line": 22,
+      "confidence": "high",
+      "evidence": [
+        "backend/src/main/java/com/vulnflow/ingestion/IngestionPersistenceService.java:22"
+      ]
+    },
+    {
+      "id": "IngestionProperties",
+      "type": "config",
+      "label": "IngestionProperties",
+      "file": "backend/src/main/java/com/vulnflow/ingestion/IngestionProperties.java",
+      "line": 11,
+      "confidence": "high",
+      "evidence": [
+        "backend/src/main/java/com/vulnflow/ingestion/IngestionProperties.java:11"
+      ]
+    },
+    {
+      "id": "IngestionSubmission",
+      "type": "unknown",
+      "label": "IngestionSubmission",
+      "file": "backend/src/main/java/com/vulnflow/ingestion/IngestionSubmission.java",
+      "line": 6,
+      "confidence": "low",
+      "evidence": [
+        "backend/src/main/java/com/vulnflow/ingestion/IngestionSubmission.java:6"
+      ]
+    },
+    {
+      "id": "InvalidReportException",
+      "type": "repository",
+      "label": "InvalidReportException",
+      "file": "processing-core/src/main/java/com/vulnflow/processing/InvalidReportException.java",
+      "line": 3,
+      "confidence": "low",
+      "evidence": [
+        "processing-core/src/main/java/com/vulnflow/processing/InvalidReportException.java:3"
+      ]
+    },
+    {
+      "id": "JobClaim",
+      "type": "job",
+      "label": "JobClaim",
+      "file": "backend/src/main/java/com/vulnflow/ingestion/JobClaim.java",
+      "line": 5,
+      "confidence": "low",
+      "evidence": [
+        "backend/src/main/java/com/vulnflow/ingestion/JobClaim.java:5"
+      ]
+    },
+    {
+      "id": "JobClaimService",
+      "type": "service",
+      "label": "JobClaimService",
+      "file": "backend/src/main/java/com/vulnflow/ingestion/JobClaimService.java",
+      "line": 13,
+      "confidence": "high",
+      "evidence": [
+        "backend/src/main/java/com/vulnflow/ingestion/JobClaimService.java:13"
+      ]
+    },
+    {
+      "id": "JobFailureClassification",
+      "type": "job",
+      "label": "JobFailureClassification",
+      "file": "backend/src/main/java/com/vulnflow/ingestion/JobFailureClassification.java",
+      "line": 3,
+      "confidence": "low",
+      "evidence": [
+        "backend/src/main/java/com/vulnflow/ingestion/JobFailureClassification.java:3"
+      ]
+    },
+    {
+      "id": "JobFailureClassifier",
+      "type": "job",
+      "label": "JobFailureClassifier",
+      "file": "backend/src/main/java/com/vulnflow/ingestion/JobFailureClassifier.java",
+      "line": 17,
+      "confidence": "low",
+      "evidence": [
+        "backend/src/main/java/com/vulnflow/ingestion/JobFailureClassifier.java:17"
+      ]
+    },
+    {
+      "id": "JobFailureClassifierTest",
+      "type": "job",
+      "label": "JobFailureClassifierTest",
+      "file": "backend/src/test/java/com/vulnflow/ingestion/JobFailureClassifierTest.java",
+      "line": 17,
+      "confidence": "low",
+      "evidence": [
+        "backend/src/test/java/com/vulnflow/ingestion/JobFailureClassifierTest.java:17"
+      ]
+    },
+    {
+      "id": "JobFailureService",
+      "type": "service",
+      "label": "JobFailureService",
+      "file": "backend/src/main/java/com/vulnflow/ingestion/JobFailureService.java",
+      "line": 13,
+      "confidence": "high",
+      "evidence": [
+        "backend/src/main/java/com/vulnflow/ingestion/JobFailureService.java:13"
+      ]
+    },
+    {
+      "id": "JobStateConflictException",
+      "type": "job",
+      "label": "JobStateConflictException",
+      "file": "backend/src/main/java/com/vulnflow/ingestion/JobStateConflictException.java",
+      "line": 3,
+      "confidence": "low",
+      "evidence": [
+        "backend/src/main/java/com/vulnflow/ingestion/JobStateConflictException.java:3"
+      ]
+    },
+    {
+      "id": "LambdaProcessingResultStoreProvider",
+      "type": "unknown",
+      "label": "LambdaProcessingResultStoreProvider",
+      "file": "aws/lambda-processor/src/main/java/com/vulnflow/aws/lambda/LambdaProcessingResultStoreProvider.java",
+      "line": 7,
+      "confidence": "low",
+      "evidence": [
+        "aws/lambda-processor/src/main/java/com/vulnflow/aws/lambda/LambdaProcessingResultStoreProvider.java:7"
+      ]
+    },
+    {
+      "id": "LoadingStorage",
+      "type": "queue",
+      "label": "LoadingStorage",
+      "file": "aws/lambda-processor/src/test/java/com/vulnflow/aws/lambda/SqsVulnerabilityReportHandlerTest.java",
+      "line": 29,
+      "confidence": "medium",
+      "evidence": [
+        "aws/lambda-processor/src/test/java/com/vulnflow/aws/lambda/SqsVulnerabilityReportHandlerTest.java:29"
+      ]
+    },
+    {
+      "id": "LocalCompletionContext",
+      "type": "unknown",
+      "label": "LocalCompletionContext",
+      "file": "backend/src/main/java/com/vulnflow/ingestion/LocalCompletionContext.java",
+      "line": 5,
+      "confidence": "low",
+      "evidence": [
+        "backend/src/main/java/com/vulnflow/ingestion/LocalCompletionContext.java:5"
+      ]
+    },
+    {
+      "id": "LocalFileReportStorage",
+      "type": "repository",
+      "label": "LocalFileReportStorage",
+      "file": "backend/src/main/java/com/vulnflow/ingestion/LocalFileReportStorage.java",
+      "line": 21,
+      "confidence": "low",
+      "evidence": [
+        "backend/src/main/java/com/vulnflow/ingestion/LocalFileReportStorage.java:21"
+      ]
+    },
+    {
+      "id": "LocalFileReportStorageTest",
+      "type": "repository",
+      "label": "LocalFileReportStorageTest",
+      "file": "backend/src/test/java/com/vulnflow/ingestion/LocalFileReportStorageTest.java",
+      "line": 13,
+      "confidence": "low",
+      "evidence": [
+        "backend/src/test/java/com/vulnflow/ingestion/LocalFileReportStorageTest.java:13"
+      ]
+    },
+    {
+      "id": "LocalIngestionWorker",
+      "type": "job",
+      "label": "LocalIngestionWorker",
+      "file": "backend/src/main/java/com/vulnflow/ingestion/LocalIngestionWorker.java",
+      "line": 33,
+      "confidence": "high",
+      "evidence": [
+        "backend/src/main/java/com/vulnflow/ingestion/LocalIngestionWorker.java:33"
+      ]
+    },
+    {
+      "id": "Mode",
+      "type": "unknown",
+      "label": "Mode",
+      "file": "agent/src/main/java/com/vulnflow/agent/AgentApplication.java",
+      "line": 48,
+      "confidence": "low",
+      "evidence": [
+        "agent/src/main/java/com/vulnflow/agent/AgentApplication.java:48"
+      ]
+    },
+    {
+      "id": "NoOpClient",
+      "type": "external_client",
+      "label": "NoOpClient",
+      "file": "agent/src/test/java/com/vulnflow/agent/scheduling/AgentSchedulerTest.java",
+      "line": 81,
+      "confidence": "low",
+      "evidence": [
+        "agent/src/test/java/com/vulnflow/agent/scheduling/AgentSchedulerTest.java:81"
+      ]
+    },
+    {
+      "id": "NoOpScanner",
+      "type": "unknown",
+      "label": "NoOpScanner",
+      "file": "agent/src/test/java/com/vulnflow/agent/scheduling/AgentSchedulerTest.java",
+      "line": 73,
+      "confidence": "low",
+      "evidence": [
+        "agent/src/test/java/com/vulnflow/agent/scheduling/AgentSchedulerTest.java:73"
+      ]
+    },
+    {
+      "id": "NormalizedFinding",
+      "type": "unknown",
+      "label": "NormalizedFinding",
+      "file": "processing-core/src/main/java/com/vulnflow/processing/NormalizedFinding.java",
+      "line": 3,
+      "confidence": "low",
+      "evidence": [
+        "processing-core/src/main/java/com/vulnflow/processing/NormalizedFinding.java:3"
+      ]
+    },
+    {
+      "id": "OpenApiConfiguration",
+      "type": "config",
+      "label": "OpenApiConfiguration",
+      "file": "backend/src/main/java/com/vulnflow/config/OpenApiConfiguration.java",
+      "line": 11,
+      "confidence": "high",
+      "evidence": [
+        "backend/src/main/java/com/vulnflow/config/OpenApiConfiguration.java:11"
+      ]
+    },
+    {
+      "id": "OutboxCapacityException",
+      "type": "unknown",
+      "label": "OutboxCapacityException",
+      "file": "agent/src/main/java/com/vulnflow/agent/outbox/OutboxCapacityException.java",
+      "line": 3,
+      "confidence": "low",
+      "evidence": [
+        "agent/src/main/java/com/vulnflow/agent/outbox/OutboxCapacityException.java:3"
+      ]
+    },
+    {
+      "id": "OutboxIntegrityException",
+      "type": "unknown",
+      "label": "OutboxIntegrityException",
+      "file": "agent/src/main/java/com/vulnflow/agent/outbox/OutboxIntegrityException.java",
+      "line": 3,
+      "confidence": "low",
+      "evidence": [
+        "agent/src/main/java/com/vulnflow/agent/outbox/OutboxIntegrityException.java:3"
+      ]
+    },
+    {
+      "id": "OutboxIntegrityVerifier",
+      "type": "unknown",
+      "label": "OutboxIntegrityVerifier",
+      "file": "agent/src/main/java/com/vulnflow/agent/outbox/OutboxIntegrityVerifier.java",
+      "line": 9,
+      "confidence": "low",
+      "evidence": [
+        "agent/src/main/java/com/vulnflow/agent/outbox/OutboxIntegrityVerifier.java:9"
+      ]
+    },
+    {
+      "id": "OutboxItem",
+      "type": "unknown",
+      "label": "OutboxItem",
+      "file": "agent/src/main/java/com/vulnflow/agent/outbox/OutboxItem.java",
+      "line": 9,
+      "confidence": "low",
+      "evidence": [
+        "agent/src/main/java/com/vulnflow/agent/outbox/OutboxItem.java:9"
+      ]
+    },
+    {
+      "id": "OutboxStats",
+      "type": "unknown",
+      "label": "OutboxStats",
+      "file": "agent/src/main/java/com/vulnflow/agent/outbox/OutboxStats.java",
+      "line": 3,
+      "confidence": "low",
+      "evidence": [
+        "agent/src/main/java/com/vulnflow/agent/outbox/OutboxStats.java:3"
+      ]
+    },
+    {
+      "id": "OutboxStatus",
+      "type": "unknown",
+      "label": "OutboxStatus",
+      "file": "agent/src/main/java/com/vulnflow/agent/outbox/OutboxStatus.java",
+      "line": 3,
+      "confidence": "low",
+      "evidence": [
+        "agent/src/main/java/com/vulnflow/agent/outbox/OutboxStatus.java:3"
+      ]
+    },
+    {
+      "id": "POST /api/v1/ingestion-jobs/{jobId}/redrive",
+      "type": "endpoint",
+      "label": "POST /api/v1/ingestion-jobs/{jobId}/redrive",
+      "file": "backend/src/main/java/com/vulnflow/ingestion/IngestionJobController.java",
+      "line": 47,
+      "confidence": "high",
+      "evidence": [
+        "backend/src/main/java/com/vulnflow/ingestion/IngestionJobController.java:47"
+      ]
+    },
+    {
+      "id": "POST /api/v1/scans/trivy",
+      "type": "endpoint",
+      "label": "POST /api/v1/scans/trivy",
+      "file": "backend/src/main/java/com/vulnflow/ingestion/ScanIngestionController.java",
+      "line": 23,
+      "confidence": "high",
+      "evidence": [
+        "backend/src/main/java/com/vulnflow/ingestion/ScanIngestionController.java:23"
+      ]
+    },
+    {
+      "id": "PaginationConfiguration",
+      "type": "config",
+      "label": "PaginationConfiguration",
+      "file": "backend/src/main/java/com/vulnflow/config/PaginationConfiguration.java",
+      "line": 6,
+      "confidence": "high",
+      "evidence": [
+        "backend/src/main/java/com/vulnflow/config/PaginationConfiguration.java:6"
+      ]
+    },
+    {
+      "id": "ParsedVulnerability",
+      "type": "unknown",
+      "label": "ParsedVulnerability",
+      "file": "processing-core/src/main/java/com/vulnflow/processing/ParsedVulnerability.java",
+      "line": 3,
+      "confidence": "low",
+      "evidence": [
+        "processing-core/src/main/java/com/vulnflow/processing/ParsedVulnerability.java:3"
+      ]
+    },
+    {
+      "id": "ParsedVulnerabilityReport",
+      "type": "repository",
+      "label": "ParsedVulnerabilityReport",
+      "file": "processing-core/src/main/java/com/vulnflow/processing/ParsedVulnerabilityReport.java",
+      "line": 5,
+      "confidence": "low",
+      "evidence": [
+        "processing-core/src/main/java/com/vulnflow/processing/ParsedVulnerabilityReport.java:5"
+      ]
+    },
+    {
+      "id": "PayloadIntegrityException",
+      "type": "unknown",
+      "label": "PayloadIntegrityException",
+      "file": "processing-core/src/main/java/com/vulnflow/processing/PayloadIntegrityException.java",
+      "line": 3,
+      "confidence": "low",
+      "evidence": [
+        "processing-core/src/main/java/com/vulnflow/processing/PayloadIntegrityException.java:3"
+      ]
+    },
+    {
+      "id": "PayloadIntegrityVerifier",
+      "type": "unknown",
+      "label": "PayloadIntegrityVerifier",
+      "file": "processing-core/src/main/java/com/vulnflow/processing/PayloadIntegrityVerifier.java",
+      "line": 7,
+      "confidence": "low",
+      "evidence": [
+        "processing-core/src/main/java/com/vulnflow/processing/PayloadIntegrityVerifier.java:7"
+      ]
+    },
+    {
+      "id": "PayloadIntegrityVerifierTest",
+      "type": "unknown",
+      "label": "PayloadIntegrityVerifierTest",
+      "file": "backend/src/test/java/com/vulnflow/ingestion/PayloadIntegrityVerifierTest.java",
+      "line": 13,
+      "confidence": "low",
+      "evidence": [
+        "backend/src/test/java/com/vulnflow/ingestion/PayloadIntegrityVerifierTest.java:13"
+      ]
+    },
+    {
+      "id": "PayloadNotFoundException",
+      "type": "unknown",
+      "label": "PayloadNotFoundException",
+      "file": "processing-core/src/main/java/com/vulnflow/processing/port/PayloadNotFoundException.java",
+      "line": 3,
+      "confidence": "low",
+      "evidence": [
+        "processing-core/src/main/java/com/vulnflow/processing/port/PayloadNotFoundException.java:3"
+      ]
+    },
+    {
+      "id": "PostgreSQLFlowIT",
+      "type": "queue",
+      "label": "PostgreSQLFlowIT",
+      "file": "backend/src/test/java/com/vulnflow/PostgreSQLFlowIT.java",
+      "line": 341,
+      "confidence": "medium",
+      "evidence": [
+        "backend/src/test/java/com/vulnflow/PostgreSQLFlowIT.java:341"
+      ]
+    },
+    {
+      "id": "ProcessBuilderCommandExecutor",
+      "type": "unknown",
+      "label": "ProcessBuilderCommandExecutor",
+      "file": "agent/src/main/java/com/vulnflow/agent/scanner/ProcessBuilderCommandExecutor.java",
+      "line": 15,
+      "confidence": "low",
+      "evidence": [
+        "agent/src/main/java/com/vulnflow/agent/scanner/ProcessBuilderCommandExecutor.java:15"
+      ]
+    },
+    {
+      "id": "ProcessedVulnerabilityReport",
+      "type": "repository",
+      "label": "ProcessedVulnerabilityReport",
+      "file": "processing-core/src/main/java/com/vulnflow/processing/ProcessedVulnerabilityReport.java",
+      "line": 6,
+      "confidence": "low",
+      "evidence": [
+        "processing-core/src/main/java/com/vulnflow/processing/ProcessedVulnerabilityReport.java:6"
+      ]
+    },
+    {
+      "id": "ProcessingConfiguration",
+      "type": "config",
+      "label": "ProcessingConfiguration",
+      "file": "backend/src/main/java/com/vulnflow/config/ProcessingConfiguration.java",
+      "line": 13,
+      "confidence": "high",
+      "evidence": [
+        "backend/src/main/java/com/vulnflow/config/ProcessingConfiguration.java:13"
+      ]
+    },
+    {
+      "id": "ProcessingResultStore",
+      "type": "unknown",
+      "label": "ProcessingResultStore",
+      "file": "processing-core/src/main/java/com/vulnflow/processing/port/ProcessingResultStore.java",
+      "line": 5,
+      "confidence": "low",
+      "evidence": [
+        "processing-core/src/main/java/com/vulnflow/processing/port/ProcessingResultStore.java:5"
+      ]
+    },
+    {
+      "id": "ProcessingStoreOutcome",
+      "type": "unknown",
+      "label": "ProcessingStoreOutcome",
+      "file": "processing-core/src/main/java/com/vulnflow/processing/port/ProcessingStoreOutcome.java",
+      "line": 3,
+      "confidence": "low",
+      "evidence": [
+        "processing-core/src/main/java/com/vulnflow/processing/port/ProcessingStoreOutcome.java:3"
+      ]
+    },
+    {
+      "id": "ProfileAssertions",
+      "type": "queue",
+      "label": "ProfileAssertions",
+      "file": "backend/src/test/java/com/vulnflow/config/AwsAdapterConfigurationTest.java",
+      "line": 11,
+      "confidence": "medium",
+      "evidence": [
+        "backend/src/test/java/com/vulnflow/config/AwsAdapterConfigurationTest.java:11"
+      ]
+    },
+    {
+      "id": "PropertiesConfiguration",
+      "type": "config",
+      "label": "PropertiesConfiguration",
+      "file": "backend/src/test/java/com/vulnflow/ingestion/IngestionConfigurationContextTest.java",
+      "line": 58,
+      "confidence": "high",
+      "evidence": [
+        "backend/src/test/java/com/vulnflow/ingestion/IngestionConfigurationContextTest.java:58"
+      ]
+    },
+    {
+      "id": "ReResolvingClient",
+      "type": "external_client",
+      "label": "ReResolvingClient",
+      "file": "agent/src/test/java/com/vulnflow/agent/scheduling/UploadCoordinatorTest.java",
+      "line": 34,
+      "confidence": "low",
+      "evidence": [
+        "agent/src/test/java/com/vulnflow/agent/scheduling/UploadCoordinatorTest.java:34"
+      ]
+    },
+    {
+      "id": "RecordingExecutor",
+      "type": "unknown",
+      "label": "RecordingExecutor",
+      "file": "agent/src/test/java/com/vulnflow/agent/scanner/TrivyImageScannerTest.java",
+      "line": 23,
+      "confidence": "low",
+      "evidence": [
+        "agent/src/test/java/com/vulnflow/agent/scanner/TrivyImageScannerTest.java:23"
+      ]
+    },
+    {
+      "id": "RecordingStore",
+      "type": "queue",
+      "label": "RecordingStore",
+      "file": "aws/lambda-processor/src/test/java/com/vulnflow/aws/lambda/SqsVulnerabilityReportHandlerTest.java",
+      "line": 29,
+      "confidence": "medium",
+      "evidence": [
+        "aws/lambda-processor/src/test/java/com/vulnflow/aws/lambda/SqsVulnerabilityReportHandlerTest.java:29"
+      ]
+    },
+    {
+      "id": "RecoveryResult",
+      "type": "unknown",
+      "label": "RecoveryResult",
+      "file": "backend/src/main/java/com/vulnflow/ingestion/RecoveryResult.java",
+      "line": 3,
+      "confidence": "low",
+      "evidence": [
+        "backend/src/main/java/com/vulnflow/ingestion/RecoveryResult.java:3"
+      ]
+    },
+    {
+      "id": "ReportStorage",
+      "type": "repository",
+      "label": "ReportStorage",
+      "file": "processing-core/src/main/java/com/vulnflow/processing/port/ReportStorage.java",
+      "line": 5,
+      "confidence": "low",
+      "evidence": [
+        "processing-core/src/main/java/com/vulnflow/processing/port/ReportStorage.java:5"
+      ]
+    },
+    {
+      "id": "ReportStorageException",
+      "type": "repository",
+      "label": "ReportStorageException",
+      "file": "processing-core/src/main/java/com/vulnflow/processing/port/ReportStorageException.java",
+      "line": 3,
+      "confidence": "low",
+      "evidence": [
+        "processing-core/src/main/java/com/vulnflow/processing/port/ReportStorageException.java:3"
+      ]
+    },
+    {
+      "id": "ReportStorageProperties",
+      "type": "repository",
+      "label": "ReportStorageProperties",
+      "file": "backend/src/main/java/com/vulnflow/ingestion/ReportStorageProperties.java",
+      "line": 11,
+      "confidence": "low",
+      "evidence": [
+        "backend/src/main/java/com/vulnflow/ingestion/ReportStorageProperties.java:11"
+      ]
+    },
+    {
+      "id": "ReportTooLargeException",
+      "type": "repository",
+      "label": "ReportTooLargeException",
+      "file": "backend/src/main/java/com/vulnflow/shared/exception/ReportTooLargeException.java",
+      "line": 3,
+      "confidence": "low",
+      "evidence": [
+        "backend/src/main/java/com/vulnflow/shared/exception/ReportTooLargeException.java:3"
+      ]
+    },
+    {
+      "id": "Resolution",
+      "type": "unknown",
+      "label": "Resolution",
+      "file": "backend/src/main/java/com/vulnflow/asset/AssetDtos.java",
+      "line": 26,
+      "confidence": "low",
+      "evidence": [
+        "backend/src/main/java/com/vulnflow/asset/AssetDtos.java:26"
+      ]
+    },
+    {
+      "id": "ResolveRequest",
+      "type": "unknown",
+      "label": "ResolveRequest",
+      "file": "backend/src/main/java/com/vulnflow/asset/AssetDtos.java",
+      "line": 20,
+      "confidence": "low",
+      "evidence": [
+        "backend/src/main/java/com/vulnflow/asset/AssetDtos.java:20"
+      ]
+    },
+    {
+      "id": "ResourceNotFoundException",
+      "type": "controller",
+      "label": "ResourceNotFoundException",
+      "file": "backend/src/main/java/com/vulnflow/shared/exception/ResourceNotFoundException.java",
+      "line": 3,
+      "confidence": "low",
+      "evidence": [
+        "backend/src/main/java/com/vulnflow/shared/exception/ResourceNotFoundException.java:3"
+      ]
+    },
+    {
+      "id": "Response",
+      "type": "unknown",
+      "label": "Response",
+      "file": "backend/src/main/java/com/vulnflow/finding/FindingDtos.java",
+      "line": 50,
+      "confidence": "low",
+      "evidence": [
+        "backend/src/main/java/com/vulnflow/finding/FindingDtos.java:50"
+      ]
+    },
+    {
+      "id": "S3ReportStorage",
+      "type": "repository",
+      "label": "S3ReportStorage",
+      "file": "aws/aws-adapters/src/main/java/com/vulnflow/aws/storage/S3ReportStorage.java",
+      "line": 28,
+      "confidence": "low",
+      "evidence": [
+        "aws/aws-adapters/src/main/java/com/vulnflow/aws/storage/S3ReportStorage.java:28"
+      ]
+    },
+    {
+      "id": "S3ReportStorageTest",
+      "type": "repository",
+      "label": "S3ReportStorageTest",
+      "file": "aws/aws-adapters/src/test/java/com/vulnflow/aws/storage/S3ReportStorageTest.java",
+      "line": 21,
+      "confidence": "low",
+      "evidence": [
+        "aws/aws-adapters/src/test/java/com/vulnflow/aws/storage/S3ReportStorageTest.java:21"
+      ]
+    },
+    {
+      "id": "SafeErrors",
+      "type": "unknown",
+      "label": "SafeErrors",
+      "file": "agent/src/main/java/com/vulnflow/agent/shared/SafeErrors.java",
+      "line": 3,
+      "confidence": "low",
+      "evidence": [
+        "agent/src/main/java/com/vulnflow/agent/shared/SafeErrors.java:3"
+      ]
+    },
+    {
+      "id": "Scan",
+      "type": "model",
+      "label": "Scan",
+      "file": "backend/src/main/java/com/vulnflow/scan/Scan.java",
+      "line": 16,
+      "confidence": "medium",
+      "evidence": [
+        "backend/src/main/java/com/vulnflow/scan/Scan.java:16"
+      ]
+    },
+    {
+      "id": "ScanArtifact",
+      "type": "unknown",
+      "label": "ScanArtifact",
+      "file": "agent/src/main/java/com/vulnflow/agent/scanner/ScanArtifact.java",
+      "line": 8,
+      "confidence": "low",
+      "evidence": [
+        "agent/src/main/java/com/vulnflow/agent/scanner/ScanArtifact.java:8"
+      ]
+    },
+    {
+      "id": "ScanController",
+      "type": "controller",
+      "label": "ScanController",
+      "file": "backend/src/main/java/com/vulnflow/scan/ScanController.java",
+      "line": 13,
+      "confidence": "high",
+      "evidence": [
+        "backend/src/main/java/com/vulnflow/scan/ScanController.java:13"
+      ]
+    },
+    {
+      "id": "ScanController.findAll",
+      "type": "handler",
+      "label": "ScanController.findAll",
+      "file": "backend/src/main/java/com/vulnflow/scan/ScanController.java",
+      "line": 23,
+      "confidence": "high",
+      "evidence": [
+        "backend/src/main/java/com/vulnflow/scan/ScanController.java:23"
+      ]
+    },
+    {
+      "id": "ScanController.findById",
+      "type": "handler",
+      "label": "ScanController.findById",
+      "file": "backend/src/main/java/com/vulnflow/scan/ScanController.java",
+      "line": 33,
+      "confidence": "high",
+      "evidence": [
+        "backend/src/main/java/com/vulnflow/scan/ScanController.java:33"
+      ]
+    },
+    {
+      "id": "ScanCoordinator",
+      "type": "unknown",
+      "label": "ScanCoordinator",
+      "file": "agent/src/main/java/com/vulnflow/agent/scheduling/ScanCoordinator.java",
+      "line": 19,
+      "confidence": "low",
+      "evidence": [
+        "agent/src/main/java/com/vulnflow/agent/scheduling/ScanCoordinator.java:19"
+      ]
+    },
+    {
+      "id": "ScanCoordinatorTest",
+      "type": "unknown",
+      "label": "ScanCoordinatorTest",
+      "file": "agent/src/test/java/com/vulnflow/agent/scheduling/ScanCoordinatorTest.java",
+      "line": 24,
+      "confidence": "low",
+      "evidence": [
+        "agent/src/test/java/com/vulnflow/agent/scheduling/ScanCoordinatorTest.java:24"
+      ]
+    },
+    {
+      "id": "ScanException",
+      "type": "unknown",
+      "label": "ScanException",
+      "file": "agent/src/main/java/com/vulnflow/agent/scanner/ScanException.java",
+      "line": 3,
+      "confidence": "low",
+      "evidence": [
+        "agent/src/main/java/com/vulnflow/agent/scanner/ScanException.java:3"
+      ]
+    },
+    {
+      "id": "ScanIngestionController",
+      "type": "controller",
+      "label": "ScanIngestionController",
+      "file": "backend/src/main/java/com/vulnflow/ingestion/ScanIngestionController.java",
+      "line": 13,
+      "confidence": "high",
+      "evidence": [
+        "backend/src/main/java/com/vulnflow/ingestion/ScanIngestionController.java:13"
+      ]
+    },
+    {
+      "id": "ScanIngestionController.ingestTrivy",
+      "type": "handler",
+      "label": "ScanIngestionController.ingestTrivy",
+      "file": "backend/src/main/java/com/vulnflow/ingestion/ScanIngestionController.java",
+      "line": 23,
+      "confidence": "high",
+      "evidence": [
+        "backend/src/main/java/com/vulnflow/ingestion/ScanIngestionController.java:23"
+      ]
+    },
+    {
+      "id": "ScanIngestionOutcome",
+      "type": "unknown",
+      "label": "ScanIngestionOutcome",
+      "file": "backend/src/main/java/com/vulnflow/ingestion/ScanIngestionOutcome.java",
+      "line": 3,
+      "confidence": "low",
+      "evidence": [
+        "backend/src/main/java/com/vulnflow/ingestion/ScanIngestionOutcome.java:3"
+      ]
+    },
+    {
+      "id": "ScanIngestionResponse",
+      "type": "unknown",
+      "label": "ScanIngestionResponse",
+      "file": "backend/src/main/java/com/vulnflow/ingestion/ScanIngestionResponse.java",
+      "line": 6,
+      "confidence": "low",
+      "evidence": [
+        "backend/src/main/java/com/vulnflow/ingestion/ScanIngestionResponse.java:6"
+      ]
+    },
+    {
+      "id": "ScanIngestionService",
+      "type": "service",
+      "label": "ScanIngestionService",
+      "file": "backend/src/main/java/com/vulnflow/ingestion/ScanIngestionService.java",
+      "line": 6,
+      "confidence": "low",
+      "evidence": [
+        "backend/src/main/java/com/vulnflow/ingestion/ScanIngestionService.java:6"
+      ]
+    },
+    {
+      "id": "ScanQueryService",
+      "type": "service",
+      "label": "ScanQueryService",
+      "file": "backend/src/main/java/com/vulnflow/scan/ScanQueryService.java",
+      "line": 10,
+      "confidence": "high",
+      "evidence": [
+        "backend/src/main/java/com/vulnflow/scan/ScanQueryService.java:10"
+      ]
+    },
+    {
+      "id": "ScanRegistrationService",
+      "type": "service",
+      "label": "ScanRegistrationService",
+      "file": "backend/src/main/java/com/vulnflow/ingestion/ScanRegistrationService.java",
+      "line": 18,
+      "confidence": "high",
+      "evidence": [
+        "backend/src/main/java/com/vulnflow/ingestion/ScanRegistrationService.java:18"
+      ]
+    },
+    {
+      "id": "ScanRepository",
+      "type": "repository",
+      "label": "ScanRepository",
+      "file": "backend/src/main/java/com/vulnflow/scan/ScanRepository.java",
+      "line": 7,
+      "confidence": "high",
+      "evidence": [
+        "backend/src/main/java/com/vulnflow/scan/ScanRepository.java:7"
+      ]
+    },
+    {
+      "id": "ScanResponse",
+      "type": "unknown",
+      "label": "ScanResponse",
+      "file": "backend/src/main/java/com/vulnflow/scan/ScanResponse.java",
+      "line": 6,
+      "confidence": "low",
+      "evidence": [
+        "backend/src/main/java/com/vulnflow/scan/ScanResponse.java:6"
+      ]
+    },
+    {
+      "id": "ScanStatus",
+      "type": "unknown",
+      "label": "ScanStatus",
+      "file": "backend/src/main/java/com/vulnflow/scan/ScanStatus.java",
+      "line": 3,
+      "confidence": "low",
+      "evidence": [
+        "backend/src/main/java/com/vulnflow/scan/ScanStatus.java:3"
+      ]
+    },
+    {
+      "id": "ScannerType",
+      "type": "unknown",
+      "label": "ScannerType",
+      "file": "backend/src/main/java/com/vulnflow/scan/ScannerType.java",
+      "line": 3,
+      "confidence": "low",
+      "evidence": [
+        "backend/src/main/java/com/vulnflow/scan/ScannerType.java:3"
+      ]
+    },
+    {
+      "id": "SecurityConfiguration",
+      "type": "config",
+      "label": "SecurityConfiguration",
+      "file": "backend/src/main/java/com/vulnflow/security/SecurityConfiguration.java",
+      "line": 12,
+      "confidence": "high",
+      "evidence": [
+        "backend/src/main/java/com/vulnflow/security/SecurityConfiguration.java:12"
+      ]
+    },
+    {
+      "id": "SqsIngestionMessagePublisher",
+      "type": "queue",
+      "label": "SqsIngestionMessagePublisher",
+      "file": "aws/aws-adapters/src/main/java/com/vulnflow/aws/messaging/SqsIngestionMessagePublisher.java",
+      "line": 9,
+      "confidence": "medium",
+      "evidence": [
+        "aws/aws-adapters/src/main/java/com/vulnflow/aws/messaging/SqsIngestionMessagePublisher.java:9"
+      ]
+    },
+    {
+      "id": "SqsIngestionMessagePublisherTest",
+      "type": "queue",
+      "label": "SqsIngestionMessagePublisherTest",
+      "file": "aws/aws-adapters/src/test/java/com/vulnflow/aws/messaging/SqsIngestionMessagePublisherTest.java",
+      "line": 15,
+      "confidence": "medium",
+      "evidence": [
+        "aws/aws-adapters/src/test/java/com/vulnflow/aws/messaging/SqsIngestionMessagePublisherTest.java:15"
+      ]
+    },
+    {
+      "id": "SqsVulnerabilityReportHandler",
+      "type": "handler",
+      "label": "SqsVulnerabilityReportHandler",
+      "file": "aws/lambda-processor/src/main/java/com/vulnflow/aws/lambda/SqsVulnerabilityReportHandler.java",
+      "line": 19,
+      "confidence": "low",
+      "evidence": [
+        "aws/lambda-processor/src/main/java/com/vulnflow/aws/lambda/SqsVulnerabilityReportHandler.java:19"
+      ]
+    },
+    {
+      "id": "SqsVulnerabilityReportHandlerTest",
+      "type": "handler",
+      "label": "SqsVulnerabilityReportHandlerTest",
+      "file": "aws/lambda-processor/src/test/java/com/vulnflow/aws/lambda/SqsVulnerabilityReportHandlerTest.java",
+      "line": 29,
+      "confidence": "low",
+      "evidence": [
+        "aws/lambda-processor/src/test/java/com/vulnflow/aws/lambda/SqsVulnerabilityReportHandlerTest.java:29"
+      ]
+    },
+    {
+      "id": "StaleJobClaimException",
+      "type": "job",
+      "label": "StaleJobClaimException",
+      "file": "backend/src/main/java/com/vulnflow/ingestion/StaleJobClaimException.java",
+      "line": 3,
+      "confidence": "low",
+      "evidence": [
+        "backend/src/main/java/com/vulnflow/ingestion/StaleJobClaimException.java:3"
+      ]
+    },
+    {
+      "id": "StatusUpdateRequest",
+      "type": "unknown",
+      "label": "StatusUpdateRequest",
+      "file": "backend/src/main/java/com/vulnflow/finding/FindingDtos.java",
+      "line": 12,
+      "confidence": "low",
+      "evidence": [
+        "backend/src/main/java/com/vulnflow/finding/FindingDtos.java:12"
+      ]
+    },
+    {
+      "id": "SummaryResponse",
+      "type": "unknown",
+      "label": "SummaryResponse",
+      "file": "backend/src/main/java/com/vulnflow/finding/FindingDtos.java",
+      "line": 15,
+      "confidence": "low",
+      "evidence": [
+        "backend/src/main/java/com/vulnflow/finding/FindingDtos.java:15"
+      ]
+    },
+    {
+      "id": "TargetDocument",
+      "type": "unknown",
+      "label": "TargetDocument",
+      "file": "agent/src/main/java/com/vulnflow/agent/config/AgentConfigLoader.java",
+      "line": 79,
+      "confidence": "low",
+      "evidence": [
+        "agent/src/main/java/com/vulnflow/agent/config/AgentConfigLoader.java:79"
+      ]
+    },
+    {
+      "id": "TestScanner",
+      "type": "unknown",
+      "label": "TestScanner",
+      "file": "agent/src/test/java/com/vulnflow/agent/scheduling/ScanCoordinatorTest.java",
+      "line": 34,
+      "confidence": "low",
+      "evidence": [
+        "agent/src/test/java/com/vulnflow/agent/scheduling/ScanCoordinatorTest.java:34"
+      ]
+    },
+    {
+      "id": "TransientReportStorageException",
+      "type": "repository",
+      "label": "TransientReportStorageException",
+      "file": "processing-core/src/main/java/com/vulnflow/processing/port/TransientReportStorageException.java",
+      "line": 3,
+      "confidence": "low",
+      "evidence": [
+        "processing-core/src/main/java/com/vulnflow/processing/port/TransientReportStorageException.java:3"
+      ]
+    },
+    {
+      "id": "TrivyImageScanner",
+      "type": "unknown",
+      "label": "TrivyImageScanner",
+      "file": "agent/src/main/java/com/vulnflow/agent/scanner/TrivyImageScanner.java",
+      "line": 18,
+      "confidence": "low",
+      "evidence": [
+        "agent/src/main/java/com/vulnflow/agent/scanner/TrivyImageScanner.java:18"
+      ]
+    },
+    {
+      "id": "TrivyImageScannerTest",
+      "type": "unknown",
+      "label": "TrivyImageScannerTest",
+      "file": "agent/src/test/java/com/vulnflow/agent/scanner/TrivyImageScannerTest.java",
+      "line": 17,
+      "confidence": "low",
+      "evidence": [
+        "agent/src/test/java/com/vulnflow/agent/scanner/TrivyImageScannerTest.java:17"
+      ]
+    },
+    {
+      "id": "TrivyVulnerabilityReportParser",
+      "type": "repository",
+      "label": "TrivyVulnerabilityReportParser",
+      "file": "processing-core/src/main/java/com/vulnflow/processing/TrivyVulnerabilityReportParser.java",
+      "line": 9,
+      "confidence": "low",
+      "evidence": [
+        "processing-core/src/main/java/com/vulnflow/processing/TrivyVulnerabilityReportParser.java:9"
+      ]
+    },
+    {
+      "id": "TrivyVulnerabilityReportParserTest",
+      "type": "repository",
+      "label": "TrivyVulnerabilityReportParserTest",
+      "file": "backend/src/test/java/com/vulnflow/ingestion/TrivyVulnerabilityReportParserTest.java",
+      "line": 14,
+      "confidence": "low",
+      "evidence": [
+        "backend/src/test/java/com/vulnflow/ingestion/TrivyVulnerabilityReportParserTest.java:14"
+      ]
+    },
+    {
+      "id": "UUIDHolder",
+      "type": "unknown",
+      "label": "UUIDHolder",
+      "file": "agent/src/main/java/com/vulnflow/agent/AgentApplication.java",
+      "line": 156,
+      "confidence": "low",
+      "evidence": [
+        "agent/src/main/java/com/vulnflow/agent/AgentApplication.java:156"
+      ]
+    },
+    {
+      "id": "UnsupportedEventVersionException",
+      "type": "unknown",
+      "label": "UnsupportedEventVersionException",
+      "file": "processing-core/src/main/java/com/vulnflow/contract/UnsupportedEventVersionException.java",
+      "line": 3,
+      "confidence": "low",
+      "evidence": [
+        "processing-core/src/main/java/com/vulnflow/contract/UnsupportedEventVersionException.java:3"
+      ]
+    },
+    {
+      "id": "UnsupportedReportMediaTypeException",
+      "type": "repository",
+      "label": "UnsupportedReportMediaTypeException",
+      "file": "backend/src/main/java/com/vulnflow/shared/exception/UnsupportedReportMediaTypeException.java",
+      "line": 3,
+      "confidence": "low",
+      "evidence": [
+        "backend/src/main/java/com/vulnflow/shared/exception/UnsupportedReportMediaTypeException.java:3"
+      ]
+    },
+    {
+      "id": "UploadCoordinator",
+      "type": "unknown",
+      "label": "UploadCoordinator",
+      "file": "agent/src/main/java/com/vulnflow/agent/scheduling/UploadCoordinator.java",
+      "line": 19,
+      "confidence": "low",
+      "evidence": [
+        "agent/src/main/java/com/vulnflow/agent/scheduling/UploadCoordinator.java:19"
+      ]
+    },
+    {
+      "id": "UploadCoordinatorTest",
+      "type": "unknown",
+      "label": "UploadCoordinatorTest",
+      "file": "agent/src/test/java/com/vulnflow/agent/scheduling/UploadCoordinatorTest.java",
+      "line": 28,
+      "confidence": "low",
+      "evidence": [
+        "agent/src/test/java/com/vulnflow/agent/scheduling/UploadCoordinatorTest.java:28"
+      ]
+    },
+    {
+      "id": "UploadReceipt",
+      "type": "unknown",
+      "label": "UploadReceipt",
+      "file": "agent/src/main/java/com/vulnflow/agent/client/UploadReceipt.java",
+      "line": 5,
+      "confidence": "low",
+      "evidence": [
+        "agent/src/main/java/com/vulnflow/agent/client/UploadReceipt.java:5"
+      ]
+    },
+    {
+      "id": "VulnFlowApplication",
+      "type": "config",
+      "label": "VulnFlowApplication",
+      "file": "backend/src/main/java/com/vulnflow/VulnFlowApplication.java",
+      "line": 10,
+      "confidence": "high",
+      "evidence": [
+        "backend/src/main/java/com/vulnflow/VulnFlowApplication.java:10"
+      ]
+    },
+    {
+      "id": "VulnFlowClient",
+      "type": "external_client",
+      "label": "VulnFlowClient",
+      "file": "agent/src/main/java/com/vulnflow/agent/client/VulnFlowClient.java",
+      "line": 7,
+      "confidence": "low",
+      "evidence": [
+        "agent/src/main/java/com/vulnflow/agent/client/VulnFlowClient.java:7"
+      ]
+    },
+    {
+      "id": "VulnFlowClientException",
+      "type": "external_client",
+      "label": "VulnFlowClientException",
+      "file": "agent/src/main/java/com/vulnflow/agent/client/VulnFlowClientException.java",
+      "line": 3,
+      "confidence": "low",
+      "evidence": [
+        "agent/src/main/java/com/vulnflow/agent/client/VulnFlowClientException.java:3"
+      ]
+    },
+    {
+      "id": "VulnFlowHttpClient",
+      "type": "external_client",
+      "label": "VulnFlowHttpClient",
+      "file": "agent/src/main/java/com/vulnflow/agent/client/VulnFlowHttpClient.java",
+      "line": 19,
+      "confidence": "low",
+      "evidence": [
+        "agent/src/main/java/com/vulnflow/agent/client/VulnFlowHttpClient.java:19"
+      ]
+    },
+    {
+      "id": "VulnFlowHttpClientTest",
+      "type": "external_client",
+      "label": "VulnFlowHttpClientTest",
+      "file": "agent/src/test/java/com/vulnflow/agent/client/VulnFlowHttpClientTest.java",
+      "line": 27,
+      "confidence": "low",
+      "evidence": [
+        "agent/src/test/java/com/vulnflow/agent/client/VulnFlowHttpClientTest.java:27"
+      ]
+    },
+    {
+      "id": "VulnerabilityReportParser",
+      "type": "repository",
+      "label": "VulnerabilityReportParser",
+      "file": "processing-core/src/main/java/com/vulnflow/processing/VulnerabilityReportParser.java",
+      "line": 3,
+      "confidence": "low",
+      "evidence": [
+        "processing-core/src/main/java/com/vulnflow/processing/VulnerabilityReportParser.java:3"
+      ]
+    },
+    {
+      "id": "VulnerabilityReportProcessingRequest",
+      "type": "repository",
+      "label": "VulnerabilityReportProcessingRequest",
+      "file": "processing-core/src/main/java/com/vulnflow/processing/VulnerabilityReportProcessingRequest.java",
+      "line": 7,
+      "confidence": "low",
+      "evidence": [
+        "processing-core/src/main/java/com/vulnflow/processing/VulnerabilityReportProcessingRequest.java:7"
+      ]
+    },
+    {
+      "id": "VulnerabilityReportProcessor",
+      "type": "repository",
+      "label": "VulnerabilityReportProcessor",
+      "file": "processing-core/src/main/java/com/vulnflow/processing/VulnerabilityReportProcessor.java",
+      "line": 5,
+      "confidence": "low",
+      "evidence": [
+        "processing-core/src/main/java/com/vulnflow/processing/VulnerabilityReportProcessor.java:5"
+      ]
+    },
+    {
+      "id": "VulnerabilityReportProcessorTest",
+      "type": "repository",
+      "label": "VulnerabilityReportProcessorTest",
+      "file": "processing-core/src/test/java/com/vulnflow/processing/VulnerabilityReportProcessorTest.java",
+      "line": 13,
+      "confidence": "low",
+      "evidence": [
+        "processing-core/src/test/java/com/vulnflow/processing/VulnerabilityReportProcessorTest.java:13"
+      ]
+    },
+    {
+      "id": "VulnerabilityScanner",
+      "type": "unknown",
+      "label": "VulnerabilityScanner",
+      "file": "agent/src/main/java/com/vulnflow/agent/scanner/VulnerabilityScanner.java",
+      "line": 5,
+      "confidence": "low",
+      "evidence": [
+        "agent/src/main/java/com/vulnflow/agent/scanner/VulnerabilityScanner.java:5"
+      ]
+    },
+    {
+      "id": "WorkerProperties",
+      "type": "config",
+      "label": "WorkerProperties",
+      "file": "backend/src/main/java/com/vulnflow/ingestion/WorkerProperties.java",
+      "line": 13,
+      "confidence": "high",
+      "evidence": [
+        "backend/src/main/java/com/vulnflow/ingestion/WorkerProperties.java:13"
+      ]
+    }
+  ],
+  "edges": [
+    {
+      "from": "AcceptedResponse",
+      "to": "AgentObjectMapper",
+      "type": "reads_from",
+      "confidence": "medium",
+      "evidence": [
+        "agent/src/test/java/com/vulnflow/agent/client/VulnFlowHttpClientTest.java:8"
+      ]
+    },
+    {
+      "from": "AcceptedResponse",
+      "to": "ClientFailureKind",
+      "type": "uses_client",
+      "confidence": "medium",
+      "evidence": [
+        "agent/src/test/java/com/vulnflow/agent/client/VulnFlowHttpClientTest.java:123"
+      ]
+    },
+    {
+      "from": "AcceptedResponse",
+      "to": "VulnFlowClientException",
+      "type": "uses_client",
+      "confidence": "medium",
+      "evidence": [
+        "agent/src/test/java/com/vulnflow/agent/client/VulnFlowHttpClientTest.java:145"
+      ]
+    },
+    {
+      "from": "AcceptedResponse",
+      "to": "VulnFlowHttpClient",
+      "type": "uses_client",
+      "confidence": "medium",
+      "evidence": [
+        "agent/src/test/java/com/vulnflow/agent/client/VulnFlowHttpClientTest.java:65"
+      ]
+    },
+    {
+      "from": "AcceptedResponse",
+      "to": "VulnFlowHttpClientTest",
+      "type": "uses_client",
+      "confidence": "medium",
+      "evidence": [
+        "agent/src/test/java/com/vulnflow/agent/client/VulnFlowHttpClientTest.java:27"
+      ]
+    },
+    {
+      "from": "AgentConfigLoader",
+      "to": "AgentConfig",
+      "type": "configured_by",
+      "confidence": "medium",
+      "evidence": [
+        "agent/src/main/java/com/vulnflow/agent/config/AgentConfigLoader.java:26"
+      ]
+    },
+    {
+      "from": "AgentConfigLoader",
+      "to": "AgentConfigurationException",
+      "type": "configured_by",
+      "confidence": "medium",
+      "evidence": [
+        "agent/src/main/java/com/vulnflow/agent/config/AgentConfigLoader.java:73"
+      ]
+    },
+    {
+      "from": "AgentConfigLoaderTest",
+      "to": "AgentConfig",
+      "type": "configured_by",
+      "confidence": "medium",
+      "evidence": [
+        "agent/src/test/java/com/vulnflow/agent/config/AgentConfigLoaderTest.java:21"
+      ]
+    },
+    {
+      "from": "AgentConfigLoaderTest",
+      "to": "AgentConfigLoader",
+      "type": "configured_by",
+      "confidence": "medium",
+      "evidence": [
+        "agent/src/test/java/com/vulnflow/agent/config/AgentConfigLoaderTest.java:21"
+      ]
+    },
+    {
+      "from": "AgentConfigLoaderTest",
+      "to": "AgentConfigurationException",
+      "type": "configured_by",
+      "confidence": "medium",
+      "evidence": [
+        "agent/src/test/java/com/vulnflow/agent/config/AgentConfigLoaderTest.java:34"
+      ]
+    },
+    {
+      "from": "AgentSchedulerTest",
+      "to": "AgentObjectMapper",
+      "type": "reads_from",
+      "confidence": "medium",
+      "evidence": [
+        "agent/src/test/java/com/vulnflow/agent/scheduling/AgentSchedulerTest.java:12"
+      ]
+    },
+    {
+      "from": "AgentSchedulerTest",
+      "to": "AgentScheduler",
+      "type": "depends_on",
+      "confidence": "medium",
+      "evidence": [
+        "agent/src/test/java/com/vulnflow/agent/scheduling/AgentSchedulerTest.java:45"
+      ]
+    },
+    {
+      "from": "AgentSchedulerTest",
+      "to": "NoOpClient",
+      "type": "uses_client",
+      "confidence": "medium",
+      "evidence": [
+        "agent/src/test/java/com/vulnflow/agent/scheduling/AgentSchedulerTest.java:81"
+      ]
+    },
+    {
+      "from": "AgentSchedulerTest",
+      "to": "VulnFlowClient",
+      "type": "uses_client",
+      "confidence": "medium",
+      "evidence": [
+        "agent/src/test/java/com/vulnflow/agent/scheduling/AgentSchedulerTest.java:8"
+      ]
+    },
+    {
+      "from": "AssetController",
+      "to": "AssetIdentityRepository",
+      "type": "inferred_dependency",
+      "confidence": "low",
+      "evidence": [
+        "backend/src/main/java/com/vulnflow/asset/AssetController.java:19",
+        "backend/src/main/java/com/vulnflow/asset/AssetIdentityRepository.java:10"
+      ],
+      "inferred": true
+    },
+    {
+      "from": "AssetController",
+      "to": "AssetRepository",
+      "type": "inferred_dependency",
+      "confidence": "low",
+      "evidence": [
+        "backend/src/main/java/com/vulnflow/asset/AssetController.java:19",
+        "backend/src/main/java/com/vulnflow/asset/AssetRepository.java:5"
+      ],
+      "inferred": true
+    },
+    {
+      "from": "AssetController",
+      "to": "AssetResolutionResponse",
+      "type": "inferred_dependency",
+      "confidence": "low",
+      "evidence": [
+        "backend/src/test/java/com/vulnflow/PostgreSQLFlowIT.java:341",
+        "backend/src/main/java/com/vulnflow/asset/AssetController.java:19"
+      ],
+      "inferred": true
+    },
+    {
+      "from": "AssetController",
+      "to": "AssetService",
+      "type": "depends_on",
+      "confidence": "medium",
+      "evidence": [
+        "backend/src/main/java/com/vulnflow/asset/AssetController.java:23"
+      ]
+    },
+    {
+      "from": "AssetController",
+      "to": "AssetService",
+      "type": "inferred_dependency",
+      "confidence": "low",
+      "evidence": [
+        "backend/src/main/java/com/vulnflow/asset/AssetService.java:11",
+        "backend/src/main/java/com/vulnflow/asset/AssetController.java:19"
+      ],
+      "inferred": true
+    },
+    {
+      "from": "AssetResolutionResponse",
+      "to": "AssetRepository",
+      "type": "reads_from",
+      "confidence": "medium",
+      "evidence": [
+        "backend/src/test/java/com/vulnflow/PostgreSQLFlowIT.java:23"
+      ]
+    },
+    {
+      "from": "AssetResolutionResponse",
+      "to": "FindingRepository",
+      "type": "reads_from",
+      "confidence": "medium",
+      "evidence": [
+        "backend/src/test/java/com/vulnflow/PostgreSQLFlowIT.java:25"
+      ]
+    },
+    {
+      "from": "AssetResolutionResponse",
+      "to": "IngestionJobRecoveryService",
+      "type": "depends_on",
+      "confidence": "medium",
+      "evidence": [
+        "backend/src/test/java/com/vulnflow/PostgreSQLFlowIT.java:30"
+      ]
+    },
+    {
+      "from": "AssetResolutionResponse",
+      "to": "IngestionJobRedriveService",
+      "type": "depends_on",
+      "confidence": "medium",
+      "evidence": [
+        "backend/src/test/java/com/vulnflow/PostgreSQLFlowIT.java:31"
+      ]
+    },
+    {
+      "from": "AssetResolutionResponse",
+      "to": "IngestionJobRepository",
+      "type": "reads_from",
+      "confidence": "medium",
+      "evidence": [
+        "backend/src/test/java/com/vulnflow/PostgreSQLFlowIT.java:32"
+      ]
+    },
+    {
+      "from": "AssetResolutionResponse",
+      "to": "IngestionJobStatus",
+      "type": "depends_on",
+      "confidence": "medium",
+      "evidence": [
+        "backend/src/test/java/com/vulnflow/PostgreSQLFlowIT.java:33"
+      ]
+    },
+    {
+      "from": "AssetResolutionResponse",
+      "to": "IngestionPersistenceService",
+      "type": "depends_on",
+      "confidence": "medium",
+      "evidence": [
+        "backend/src/test/java/com/vulnflow/PostgreSQLFlowIT.java:34"
+      ]
+    },
+    {
+      "from": "AssetResolutionResponse",
+      "to": "JobClaim",
+      "type": "depends_on",
+      "confidence": "medium",
+      "evidence": [
+        "backend/src/test/java/com/vulnflow/PostgreSQLFlowIT.java:35"
+      ]
+    },
+    {
+      "from": "AssetResolutionResponse",
+      "to": "JobClaimService",
+      "type": "depends_on",
+      "confidence": "medium",
+      "evidence": [
+        "backend/src/test/java/com/vulnflow/PostgreSQLFlowIT.java:36"
+      ]
+    },
+    {
+      "from": "AssetResolutionResponse",
+      "to": "JobFailureService",
+      "type": "depends_on",
+      "confidence": "medium",
+      "evidence": [
+        "backend/src/test/java/com/vulnflow/PostgreSQLFlowIT.java:37"
+      ]
+    },
+    {
+      "from": "AssetResolutionResponse",
+      "to": "LocalFileReportStorage",
+      "type": "reads_from",
+      "confidence": "medium",
+      "evidence": [
+        "backend/src/test/java/com/vulnflow/PostgreSQLFlowIT.java:38"
+      ]
+    },
+    {
+      "from": "AssetResolutionResponse",
+      "to": "LocalIngestionWorker",
+      "type": "depends_on",
+      "confidence": "medium",
+      "evidence": [
+        "backend/src/test/java/com/vulnflow/PostgreSQLFlowIT.java:39"
+      ]
+    },
+    {
+      "from": "AssetResolutionResponse",
+      "to": "ParsedVulnerabilityReport",
+      "type": "reads_from",
+      "confidence": "medium",
+      "evidence": [
+        "backend/src/test/java/com/vulnflow/PostgreSQLFlowIT.java:45"
+      ]
+    },
+    {
+      "from": "AssetResolutionResponse",
+      "to": "ProcessedVulnerabilityReport",
+      "type": "reads_from",
+      "confidence": "medium",
+      "evidence": [
+        "backend/src/test/java/com/vulnflow/PostgreSQLFlowIT.java:46"
+      ]
+    },
+    {
+      "from": "AssetResolutionResponse",
+      "to": "ReportStorage",
+      "type": "reads_from",
+      "confidence": "medium",
+      "evidence": [
+        "backend/src/test/java/com/vulnflow/PostgreSQLFlowIT.java:50"
+      ]
+    },
+    {
+      "from": "AssetResolutionResponse",
+      "to": "ReportStorageException",
+      "type": "reads_from",
+      "confidence": "medium",
+      "evidence": [
+        "backend/src/test/java/com/vulnflow/PostgreSQLFlowIT.java:51"
+      ]
+    },
+    {
+      "from": "AssetResolutionResponse",
+      "to": "ReportStorageProperties",
+      "type": "reads_from",
+      "confidence": "medium",
+      "evidence": [
+        "backend/src/test/java/com/vulnflow/PostgreSQLFlowIT.java:42"
+      ]
+    },
+    {
+      "from": "AssetResolutionResponse",
+      "to": "ScanRepository",
+      "type": "reads_from",
+      "confidence": "medium",
+      "evidence": [
+        "backend/src/test/java/com/vulnflow/PostgreSQLFlowIT.java:53"
+      ]
+    },
+    {
+      "from": "AssetResolutionResponse",
+      "to": "StaleJobClaimException",
+      "type": "depends_on",
+      "confidence": "medium",
+      "evidence": [
+        "backend/src/test/java/com/vulnflow/PostgreSQLFlowIT.java:43"
+      ]
+    },
+    {
+      "from": "AssetResolutionResponse",
+      "to": "TransientReportStorageException",
+      "type": "reads_from",
+      "confidence": "medium",
+      "evidence": [
+        "backend/src/test/java/com/vulnflow/PostgreSQLFlowIT.java:52"
+      ]
+    },
+    {
+      "from": "AssetResolutionResponse",
+      "to": "VulnerabilityReportParser",
+      "type": "reads_from",
+      "confidence": "medium",
+      "evidence": [
+        "backend/src/test/java/com/vulnflow/PostgreSQLFlowIT.java:47"
+      ]
+    },
+    {
+      "from": "AssetResolutionResponse",
+      "to": "VulnerabilityReportProcessingRequest",
+      "type": "reads_from",
+      "confidence": "medium",
+      "evidence": [
+        "backend/src/test/java/com/vulnflow/PostgreSQLFlowIT.java:48"
+      ]
+    },
+    {
+      "from": "AssetResolutionResponse",
+      "to": "VulnerabilityReportProcessor",
+      "type": "reads_from",
+      "confidence": "medium",
+      "evidence": [
+        "backend/src/test/java/com/vulnflow/PostgreSQLFlowIT.java:49"
+      ]
+    },
+    {
+      "from": "AssetService",
+      "to": "AssetIdentityRepository",
+      "type": "inferred_dependency",
+      "confidence": "low",
+      "evidence": [
+        "backend/src/main/java/com/vulnflow/asset/AssetService.java:11",
+        "backend/src/main/java/com/vulnflow/asset/AssetIdentityRepository.java:10"
+      ],
+      "inferred": true
+    },
+    {
+      "from": "AssetService",
+      "to": "AssetIdentityRepository",
+      "type": "reads_from",
+      "confidence": "medium",
+      "evidence": [
+        "backend/src/main/java/com/vulnflow/asset/AssetService.java:15"
+      ]
+    },
+    {
+      "from": "AssetService",
+      "to": "AssetRepository",
+      "type": "inferred_dependency",
+      "confidence": "low",
+      "evidence": [
+        "backend/src/main/java/com/vulnflow/asset/AssetService.java:11",
+        "backend/src/main/java/com/vulnflow/asset/AssetRepository.java:5"
+      ],
+      "inferred": true
+    },
+    {
+      "from": "AssetService",
+      "to": "AssetRepository",
+      "type": "reads_from",
+      "confidence": "medium",
+      "evidence": [
+        "backend/src/main/java/com/vulnflow/asset/AssetService.java:14"
+      ]
+    },
+    {
+      "from": "AssetService",
+      "to": "AssetResolutionResponse",
+      "type": "inferred_dependency",
+      "confidence": "low",
+      "evidence": [
+        "backend/src/test/java/com/vulnflow/PostgreSQLFlowIT.java:341",
+        "backend/src/main/java/com/vulnflow/asset/AssetService.java:11"
+      ],
+      "inferred": true
+    },
+    {
+      "from": "AwsAdapterConfiguration",
+      "to": "AwsIngestionProperties",
+      "type": "depends_on",
+      "confidence": "medium",
+      "evidence": [
+        "backend/src/main/java/com/vulnflow/config/AwsAdapterConfiguration.java:20"
+      ]
+    },
+    {
+      "from": "AwsAdapterConfiguration",
+      "to": "IngestionMessagePublisher",
+      "type": "depends_on",
+      "confidence": "medium",
+      "evidence": [
+        "backend/src/main/java/com/vulnflow/config/AwsAdapterConfiguration.java:6"
+      ]
+    },
+    {
+      "from": "AwsAdapterConfiguration",
+      "to": "ReportStorage",
+      "type": "reads_from",
+      "confidence": "medium",
+      "evidence": [
+        "backend/src/main/java/com/vulnflow/config/AwsAdapterConfiguration.java:7"
+      ]
+    },
+    {
+      "from": "AwsAdapterConfiguration",
+      "to": "S3ReportStorage",
+      "type": "reads_from",
+      "confidence": "medium",
+      "evidence": [
+        "backend/src/main/java/com/vulnflow/config/AwsAdapterConfiguration.java:4"
+      ]
+    },
+    {
+      "from": "AwsAdapterConfiguration",
+      "to": "SqsIngestionMessagePublisher",
+      "type": "depends_on",
+      "confidence": "medium",
+      "evidence": [
+        "backend/src/main/java/com/vulnflow/config/AwsAdapterConfiguration.java:3"
+      ]
+    },
+    {
+      "from": "AwsAdapterConfigurationTest",
+      "to": "AwsAdapterConfiguration",
+      "type": "uses_client",
+      "confidence": "medium",
+      "evidence": [
+        "backend/src/test/java/com/vulnflow/config/AwsAdapterConfigurationTest.java:16"
+      ]
+    },
+    {
+      "from": "AwsAdapterConfigurationTest",
+      "to": "AwsIngestionProperties",
+      "type": "depends_on",
+      "confidence": "medium",
+      "evidence": [
+        "backend/src/test/java/com/vulnflow/config/AwsAdapterConfigurationTest.java:23"
+      ]
+    },
+    {
+      "from": "AwsAdapterConfigurationTest",
+      "to": "LocalFileReportStorage",
+      "type": "reads_from",
+      "confidence": "medium",
+      "evidence": [
+        "backend/src/test/java/com/vulnflow/config/AwsAdapterConfigurationTest.java:5"
+      ]
+    },
+    {
+      "from": "AwsAdapterConfigurationTest",
+      "to": "ProfileAssertions",
+      "type": "depends_on",
+      "confidence": "medium",
+      "evidence": [
+        "backend/src/test/java/com/vulnflow/config/AwsAdapterConfigurationTest.java:29"
+      ]
+    },
+    {
+      "from": "BlockingClient",
+      "to": "AgentObjectMapper",
+      "type": "reads_from",
+      "confidence": "medium",
+      "evidence": [
+        "agent/src/test/java/com/vulnflow/agent/scheduling/UploadCoordinatorTest.java:13"
+      ]
+    },
+    {
+      "from": "BlockingClient",
+      "to": "ClientFailureKind",
+      "type": "uses_client",
+      "confidence": "medium",
+      "evidence": [
+        "agent/src/test/java/com/vulnflow/agent/scheduling/UploadCoordinatorTest.java:6"
+      ]
+    },
+    {
+      "from": "BlockingClient",
+      "to": "FailingClient",
+      "type": "uses_client",
+      "confidence": "medium",
+      "evidence": [
+        "agent/src/test/java/com/vulnflow/agent/scheduling/UploadCoordinatorTest.java:47"
+      ]
+    },
+    {
+      "from": "BlockingClient",
+      "to": "ReResolvingClient",
+      "type": "uses_client",
+      "confidence": "medium",
+      "evidence": [
+        "agent/src/test/java/com/vulnflow/agent/scheduling/UploadCoordinatorTest.java:34"
+      ]
+    },
+    {
+      "from": "BlockingClient",
+      "to": "VulnFlowClient",
+      "type": "uses_client",
+      "confidence": "medium",
+      "evidence": [
+        "agent/src/test/java/com/vulnflow/agent/scheduling/UploadCoordinatorTest.java:8"
+      ]
+    },
+    {
+      "from": "BlockingClient",
+      "to": "VulnFlowClientException",
+      "type": "uses_client",
+      "confidence": "medium",
+      "evidence": [
+        "agent/src/test/java/com/vulnflow/agent/scheduling/UploadCoordinatorTest.java:9"
+      ]
+    },
+    {
+      "from": "DashboardController",
+      "to": "DashboardService",
+      "type": "depends_on",
+      "confidence": "medium",
+      "evidence": [
+        "backend/src/main/java/com/vulnflow/dashboard/DashboardController.java:11"
+      ]
+    },
+    {
+      "from": "DashboardController",
+      "to": "DashboardService",
+      "type": "inferred_dependency",
+      "confidence": "low",
+      "evidence": [
+        "backend/src/main/java/com/vulnflow/dashboard/DashboardController.java:7",
+        "backend/src/main/java/com/vulnflow/dashboard/DashboardService.java:11"
+      ],
+      "inferred": true
+    },
+    {
+      "from": "DashboardService",
+      "to": "AssetRepository",
+      "type": "reads_from",
+      "confidence": "medium",
+      "evidence": [
+        "backend/src/main/java/com/vulnflow/dashboard/DashboardService.java:3"
+      ]
+    },
+    {
+      "from": "DashboardService",
+      "to": "FindingRepository",
+      "type": "reads_from",
+      "confidence": "medium",
+      "evidence": [
+        "backend/src/main/java/com/vulnflow/dashboard/DashboardService.java:4"
+      ]
+    },
+    {
+      "from": "DashboardService",
+      "to": "ScanRepository",
+      "type": "reads_from",
+      "confidence": "medium",
+      "evidence": [
+        "backend/src/main/java/com/vulnflow/dashboard/DashboardService.java:7"
+      ]
+    },
+    {
+      "from": "DefaultScanIngestionService",
+      "to": "AssetService",
+      "type": "depends_on",
+      "confidence": "medium",
+      "evidence": [
+        "backend/src/main/java/com/vulnflow/ingestion/DefaultScanIngestionService.java:4"
+      ]
+    },
+    {
+      "from": "DefaultScanIngestionService",
+      "to": "DefaultScanIngestionServiceTest",
+      "type": "inferred_dependency",
+      "confidence": "low",
+      "evidence": [
+        "backend/src/main/java/com/vulnflow/ingestion/DefaultScanIngestionService.java:18",
+        "backend/src/test/java/com/vulnflow/ingestion/DefaultScanIngestionServiceTest.java:23"
+      ],
+      "inferred": true
+    },
+    {
+      "from": "DefaultScanIngestionService",
+      "to": "IngestionProperties",
+      "type": "configured_by",
+      "confidence": "medium",
+      "evidence": [
+        "backend/src/main/java/com/vulnflow/ingestion/DefaultScanIngestionService.java:25"
+      ]
+    },
+    {
+      "from": "DefaultScanIngestionService",
+      "to": "InvalidReportException",
+      "type": "reads_from",
+      "confidence": "medium",
+      "evidence": [
+        "backend/src/main/java/com/vulnflow/ingestion/DefaultScanIngestionService.java:5"
+      ]
+    },
+    {
+      "from": "DefaultScanIngestionService",
+      "to": "ReportTooLargeException",
+      "type": "reads_from",
+      "confidence": "medium",
+      "evidence": [
+        "backend/src/main/java/com/vulnflow/ingestion/DefaultScanIngestionService.java:6"
+      ]
+    },
+    {
+      "from": "DefaultScanIngestionService",
+      "to": "ScanIngestionService",
+      "type": "calls",
+      "confidence": "medium",
+      "evidence": [
+        "backend/src/main/java/com/vulnflow/ingestion/DefaultScanIngestionService.java:19"
+      ]
+    },
+    {
+      "from": "DefaultScanIngestionService",
+      "to": "ScanRegistrationService",
+      "type": "depends_on",
+      "confidence": "medium",
+      "evidence": [
+        "backend/src/main/java/com/vulnflow/ingestion/DefaultScanIngestionService.java:24"
+      ]
+    },
+    {
+      "from": "DefaultScanIngestionService",
+      "to": "UnsupportedReportMediaTypeException",
+      "type": "reads_from",
+      "confidence": "medium",
+      "evidence": [
+        "backend/src/main/java/com/vulnflow/ingestion/DefaultScanIngestionService.java:7"
+      ]
+    },
+    {
+      "from": "DefaultScanIngestionServiceTest",
+      "to": "AssetService",
+      "type": "depends_on",
+      "confidence": "medium",
+      "evidence": [
+        "backend/src/test/java/com/vulnflow/ingestion/DefaultScanIngestionServiceTest.java:12"
+      ]
+    },
+    {
+      "from": "DefaultScanIngestionServiceTest",
+      "to": "DefaultScanIngestionService",
+      "type": "depends_on",
+      "confidence": "medium",
+      "evidence": [
+        "backend/src/test/java/com/vulnflow/ingestion/DefaultScanIngestionServiceTest.java:28"
+      ]
+    },
+    {
+      "from": "DefaultScanIngestionServiceTest",
+      "to": "IngestionJobStatus",
+      "type": "depends_on",
+      "confidence": "medium",
+      "evidence": [
+        "backend/src/test/java/com/vulnflow/ingestion/DefaultScanIngestionServiceTest.java:53"
+      ]
+    },
+    {
+      "from": "DefaultScanIngestionServiceTest",
+      "to": "IngestionProperties",
+      "type": "configured_by",
+      "confidence": "medium",
+      "evidence": [
+        "backend/src/test/java/com/vulnflow/ingestion/DefaultScanIngestionServiceTest.java:31"
+      ]
+    },
+    {
+      "from": "DefaultScanIngestionServiceTest",
+      "to": "ScanRegistrationService",
+      "type": "calls",
+      "confidence": "medium",
+      "evidence": [
+        "backend/src/test/java/com/vulnflow/ingestion/DefaultScanIngestionServiceTest.java:26"
+      ]
+    },
+    {
+      "from": "DefaultScanIngestionServiceTest",
+      "to": "UnsupportedReportMediaTypeException",
+      "type": "reads_from",
+      "confidence": "medium",
+      "evidence": [
+        "backend/src/test/java/com/vulnflow/ingestion/DefaultScanIngestionServiceTest.java:15"
+      ]
+    },
+    {
+      "from": "FailingClient",
+      "to": "AgentObjectMapper",
+      "type": "reads_from",
+      "confidence": "medium",
+      "evidence": [
+        "agent/src/test/java/com/vulnflow/agent/scheduling/UploadCoordinatorTest.java:13"
+      ]
+    },
+    {
+      "from": "FailingClient",
+      "to": "BlockingClient",
+      "type": "uses_client",
+      "confidence": "medium",
+      "evidence": [
+        "agent/src/test/java/com/vulnflow/agent/scheduling/UploadCoordinatorTest.java:94"
+      ]
+    },
+    {
+      "from": "FailingClient",
+      "to": "ClientFailureKind",
+      "type": "uses_client",
+      "confidence": "medium",
+      "evidence": [
+        "agent/src/test/java/com/vulnflow/agent/scheduling/UploadCoordinatorTest.java:6"
+      ]
+    },
+    {
+      "from": "FailingClient",
+      "to": "ReResolvingClient",
+      "type": "uses_client",
+      "confidence": "medium",
+      "evidence": [
+        "agent/src/test/java/com/vulnflow/agent/scheduling/UploadCoordinatorTest.java:34"
+      ]
+    },
+    {
+      "from": "FailingClient",
+      "to": "VulnFlowClient",
+      "type": "uses_client",
+      "confidence": "medium",
+      "evidence": [
+        "agent/src/test/java/com/vulnflow/agent/scheduling/UploadCoordinatorTest.java:8"
+      ]
+    },
+    {
+      "from": "FailingClient",
+      "to": "VulnFlowClientException",
+      "type": "uses_client",
+      "confidence": "medium",
+      "evidence": [
+        "agent/src/test/java/com/vulnflow/agent/scheduling/UploadCoordinatorTest.java:9"
+      ]
+    },
+    {
+      "from": "FindingController",
+      "to": "FindingRepository",
+      "type": "inferred_dependency",
+      "confidence": "low",
+      "evidence": [
+        "backend/src/main/java/com/vulnflow/finding/FindingRepository.java:6",
+        "backend/src/main/java/com/vulnflow/finding/FindingController.java:17"
+      ],
+      "inferred": true
+    },
+    {
+      "from": "FindingController",
+      "to": "FindingService",
+      "type": "depends_on",
+      "confidence": "medium",
+      "evidence": [
+        "backend/src/main/java/com/vulnflow/finding/FindingController.java:21"
+      ]
+    },
+    {
+      "from": "FindingController",
+      "to": "FindingService",
+      "type": "inferred_dependency",
+      "confidence": "low",
+      "evidence": [
+        "backend/src/main/java/com/vulnflow/finding/FindingService.java:10",
+        "backend/src/main/java/com/vulnflow/finding/FindingController.java:17"
+      ],
+      "inferred": true
+    },
+    {
+      "from": "FindingService",
+      "to": "FindingRepository",
+      "type": "inferred_dependency",
+      "confidence": "low",
+      "evidence": [
+        "backend/src/main/java/com/vulnflow/finding/FindingRepository.java:6",
+        "backend/src/main/java/com/vulnflow/finding/FindingService.java:10"
+      ],
+      "inferred": true
+    },
+    {
+      "from": "FindingService",
+      "to": "FindingRepository",
+      "type": "reads_from",
+      "confidence": "medium",
+      "evidence": [
+        "backend/src/main/java/com/vulnflow/finding/FindingService.java:13"
+      ]
+    },
+    {
+      "from": "GET /api/v1/dashboard/summary",
+      "to": "DashboardController.summary",
+      "type": "routes_to",
+      "confidence": "high",
+      "evidence": [
+        "backend/src/main/java/com/vulnflow/dashboard/DashboardController.java:17"
+      ]
+    },
+    {
+      "from": "GET /api/v1/ingestion-jobs",
+      "to": "IngestionJobController.findAll",
+      "type": "routes_to",
+      "confidence": "high",
+      "evidence": [
+        "backend/src/main/java/com/vulnflow/ingestion/IngestionJobController.java:30"
+      ]
+    },
+    {
+      "from": "GET /api/v1/ingestion-jobs/{jobId}",
+      "to": "IngestionJobController.findById",
+      "type": "routes_to",
+      "confidence": "high",
+      "evidence": [
+        "backend/src/main/java/com/vulnflow/ingestion/IngestionJobController.java:42"
+      ]
+    },
+    {
+      "from": "GET /api/v1/scans",
+      "to": "ScanController.findAll",
+      "type": "routes_to",
+      "confidence": "high",
+      "evidence": [
+        "backend/src/main/java/com/vulnflow/scan/ScanController.java:23"
+      ]
+    },
+    {
+      "from": "GET /api/v1/scans/{id}",
+      "to": "ScanController.findById",
+      "type": "routes_to",
+      "confidence": "high",
+      "evidence": [
+        "backend/src/main/java/com/vulnflow/scan/ScanController.java:33"
+      ]
+    },
+    {
+      "from": "GlobalExceptionHandler",
+      "to": "InvalidReportException",
+      "type": "reads_from",
+      "confidence": "medium",
+      "evidence": [
+        "backend/src/main/java/com/vulnflow/shared/error/GlobalExceptionHandler.java:4"
+      ]
+    },
+    {
+      "from": "GlobalExceptionHandler",
+      "to": "JobStateConflictException",
+      "type": "depends_on",
+      "confidence": "medium",
+      "evidence": [
+        "backend/src/main/java/com/vulnflow/shared/error/GlobalExceptionHandler.java:8"
+      ]
+    },
+    {
+      "from": "GlobalExceptionHandler",
+      "to": "ReportTooLargeException",
+      "type": "reads_from",
+      "confidence": "medium",
+      "evidence": [
+        "backend/src/main/java/com/vulnflow/shared/error/GlobalExceptionHandler.java:5"
+      ]
+    },
+    {
+      "from": "GlobalExceptionHandler",
+      "to": "UnsupportedReportMediaTypeException",
+      "type": "reads_from",
+      "confidence": "medium",
+      "evidence": [
+        "backend/src/main/java/com/vulnflow/shared/error/GlobalExceptionHandler.java:7"
+      ]
+    },
+    {
+      "from": "IngestionConfigurationContextTest",
+      "to": "IngestionProperties",
+      "type": "configured_by",
+      "confidence": "medium",
+      "evidence": [
+        "backend/src/test/java/com/vulnflow/ingestion/IngestionConfigurationContextTest.java:60"
+      ]
+    },
+    {
+      "from": "IngestionConfigurationContextTest",
+      "to": "ReportStorageProperties",
+      "type": "reads_from",
+      "confidence": "medium",
+      "evidence": [
+        "backend/src/test/java/com/vulnflow/ingestion/IngestionConfigurationContextTest.java:61"
+      ]
+    },
+    {
+      "from": "IngestionConfigurationContextTest",
+      "to": "WorkerProperties",
+      "type": "configured_by",
+      "confidence": "medium",
+      "evidence": [
+        "backend/src/test/java/com/vulnflow/ingestion/IngestionConfigurationContextTest.java:62"
+      ]
+    },
+    {
+      "from": "IngestionConfigurationValidationTest",
+      "to": "IngestionProperties",
+      "type": "configured_by",
+      "confidence": "medium",
+      "evidence": [
+        "backend/src/test/java/com/vulnflow/ingestion/IngestionConfigurationValidationTest.java:23"
+      ]
+    },
+    {
+      "from": "IngestionConfigurationValidationTest",
+      "to": "ReportStorageProperties",
+      "type": "reads_from",
+      "confidence": "medium",
+      "evidence": [
+        "backend/src/test/java/com/vulnflow/ingestion/IngestionConfigurationValidationTest.java:24"
+      ]
+    },
+    {
+      "from": "IngestionConfigurationValidationTest",
+      "to": "WorkerProperties",
+      "type": "configured_by",
+      "confidence": "medium",
+      "evidence": [
+        "backend/src/test/java/com/vulnflow/ingestion/IngestionConfigurationValidationTest.java:19"
+      ]
+    },
+    {
+      "from": "IngestionJobController",
+      "to": "IngestionJobProcessor",
+      "type": "inferred_dependency",
+      "confidence": "low",
+      "evidence": [
+        "backend/src/main/java/com/vulnflow/ingestion/IngestionJobProcessor.java:12",
+        "backend/src/main/java/com/vulnflow/ingestion/IngestionJobController.java:16"
+      ],
+      "inferred": true
+    },
+    {
+      "from": "IngestionJobController",
+      "to": "IngestionJobQueryService",
+      "type": "depends_on",
+      "confidence": "medium",
+      "evidence": [
+        "backend/src/main/java/com/vulnflow/ingestion/IngestionJobController.java:20"
+      ]
+    },
+    {
+      "from": "IngestionJobController",
+      "to": "IngestionJobQueryService",
+      "type": "inferred_dependency",
+      "confidence": "low",
+      "evidence": [
+        "backend/src/main/java/com/vulnflow/ingestion/IngestionJobQueryService.java:10",
+        "backend/src/main/java/com/vulnflow/ingestion/IngestionJobController.java:16"
+      ],
+      "inferred": true
+    },
+    {
+      "from": "IngestionJobController",
+      "to": "IngestionJobRecoveryService",
+      "type": "inferred_dependency",
+      "confidence": "low",
+      "evidence": [
+        "backend/src/main/java/com/vulnflow/ingestion/IngestionJobController.java:16",
+        "backend/src/main/java/com/vulnflow/ingestion/IngestionJobRecoveryService.java:12"
+      ],
+      "inferred": true
+    },
+    {
+      "from": "IngestionJobController",
+      "to": "IngestionJobRedriveService",
+      "type": "depends_on",
+      "confidence": "medium",
+      "evidence": [
+        "backend/src/main/java/com/vulnflow/ingestion/IngestionJobController.java:21"
+      ]
+    },
+    {
+      "from": "IngestionJobController",
+      "to": "IngestionJobRedriveService",
+      "type": "inferred_dependency",
+      "confidence": "low",
+      "evidence": [
+        "backend/src/main/java/com/vulnflow/ingestion/IngestionJobRedriveService.java:12",
+        "backend/src/main/java/com/vulnflow/ingestion/IngestionJobController.java:16"
+      ],
+      "inferred": true
+    },
+    {
+      "from": "IngestionJobController",
+      "to": "IngestionJobRepository",
+      "type": "inferred_dependency",
+      "confidence": "low",
+      "evidence": [
+        "backend/src/main/java/com/vulnflow/ingestion/IngestionJobRepository.java:10",
+        "backend/src/main/java/com/vulnflow/ingestion/IngestionJobController.java:16"
+      ],
+      "inferred": true
+    },
+    {
+      "from": "IngestionJobController",
+      "to": "IngestionJobResponse",
+      "type": "depends_on",
+      "confidence": "medium",
+      "evidence": [
+        "backend/src/main/java/com/vulnflow/ingestion/IngestionJobController.java:31"
+      ]
+    },
+    {
+      "from": "IngestionJobController",
+      "to": "IngestionJobStatus",
+      "type": "depends_on",
+      "confidence": "medium",
+      "evidence": [
+        "backend/src/main/java/com/vulnflow/ingestion/IngestionJobController.java:32"
+      ]
+    },
+    {
+      "from": "IngestionJobProcessor",
+      "to": "IngestionPersistenceService",
+      "type": "depends_on",
+      "confidence": "medium",
+      "evidence": [
+        "backend/src/main/java/com/vulnflow/ingestion/IngestionJobProcessor.java:18"
+      ]
+    },
+    {
+      "from": "IngestionJobProcessor",
+      "to": "JobClaim",
+      "type": "depends_on",
+      "confidence": "medium",
+      "evidence": [
+        "backend/src/main/java/com/vulnflow/ingestion/IngestionJobProcessor.java:38"
+      ]
+    },
+    {
+      "from": "IngestionJobProcessor",
+      "to": "JobFailureClassification",
+      "type": "depends_on",
+      "confidence": "medium",
+      "evidence": [
+        "backend/src/main/java/com/vulnflow/ingestion/IngestionJobProcessor.java:63"
+      ]
+    },
+    {
+      "from": "IngestionJobProcessor",
+      "to": "JobFailureClassifier",
+      "type": "depends_on",
+      "confidence": "medium",
+      "evidence": [
+        "backend/src/main/java/com/vulnflow/ingestion/IngestionJobProcessor.java:20"
+      ]
+    },
+    {
+      "from": "IngestionJobProcessor",
+      "to": "JobFailureService",
+      "type": "depends_on",
+      "confidence": "medium",
+      "evidence": [
+        "backend/src/main/java/com/vulnflow/ingestion/IngestionJobProcessor.java:19"
+      ]
+    },
+    {
+      "from": "IngestionJobProcessor",
+      "to": "ProcessedVulnerabilityReport",
+      "type": "reads_from",
+      "confidence": "medium",
+      "evidence": [
+        "backend/src/main/java/com/vulnflow/ingestion/IngestionJobProcessor.java:3"
+      ]
+    },
+    {
+      "from": "IngestionJobProcessor",
+      "to": "ReportStorage",
+      "type": "reads_from",
+      "confidence": "medium",
+      "evidence": [
+        "backend/src/main/java/com/vulnflow/ingestion/IngestionJobProcessor.java:6"
+      ]
+    },
+    {
+      "from": "IngestionJobProcessor",
+      "to": "StaleJobClaimException",
+      "type": "depends_on",
+      "confidence": "medium",
+      "evidence": [
+        "backend/src/main/java/com/vulnflow/ingestion/IngestionJobProcessor.java:50"
+      ]
+    },
+    {
+      "from": "IngestionJobProcessor",
+      "to": "VulnerabilityReportProcessingRequest",
+      "type": "reads_from",
+      "confidence": "medium",
+      "evidence": [
+        "backend/src/main/java/com/vulnflow/ingestion/IngestionJobProcessor.java:4"
+      ]
+    },
+    {
+      "from": "IngestionJobProcessor",
+      "to": "VulnerabilityReportProcessor",
+      "type": "reads_from",
+      "confidence": "medium",
+      "evidence": [
+        "backend/src/main/java/com/vulnflow/ingestion/IngestionJobProcessor.java:5"
+      ]
+    },
+    {
+      "from": "IngestionJobQueryService",
+      "to": "IngestionJobRepository",
+      "type": "reads_from",
+      "confidence": "medium",
+      "evidence": [
+        "backend/src/main/java/com/vulnflow/ingestion/IngestionJobQueryService.java:13"
+      ]
+    },
+    {
+      "from": "IngestionJobQueryService",
+      "to": "IngestionJobResponse",
+      "type": "depends_on",
+      "confidence": "medium",
+      "evidence": [
+        "backend/src/main/java/com/vulnflow/ingestion/IngestionJobQueryService.java:20"
+      ]
+    },
+    {
+      "from": "IngestionJobQueryService",
+      "to": "IngestionJobStatus",
+      "type": "depends_on",
+      "confidence": "medium",
+      "evidence": [
+        "backend/src/main/java/com/vulnflow/ingestion/IngestionJobQueryService.java:21"
+      ]
+    },
+    {
+      "from": "IngestionJobRecoveryService",
+      "to": "IngestionJobRepository",
+      "type": "reads_from",
+      "confidence": "medium",
+      "evidence": [
+        "backend/src/main/java/com/vulnflow/ingestion/IngestionJobRecoveryService.java:17"
+      ]
+    },
+    {
+      "from": "IngestionJobRecoveryService",
+      "to": "ScanRepository",
+      "type": "reads_from",
+      "confidence": "medium",
+      "evidence": [
+        "backend/src/main/java/com/vulnflow/ingestion/IngestionJobRecoveryService.java:4"
+      ]
+    },
+    {
+      "from": "IngestionJobRecoveryService",
+      "to": "WorkerProperties",
+      "type": "configured_by",
+      "confidence": "medium",
+      "evidence": [
+        "backend/src/main/java/com/vulnflow/ingestion/IngestionJobRecoveryService.java:19"
+      ]
+    },
+    {
+      "from": "IngestionJobRedriveService",
+      "to": "IngestionJobRepository",
+      "type": "reads_from",
+      "confidence": "medium",
+      "evidence": [
+        "backend/src/main/java/com/vulnflow/ingestion/IngestionJobRedriveService.java:15"
+      ]
+    },
+    {
+      "from": "IngestionJobRedriveService",
+      "to": "IngestionJobResponse",
+      "type": "depends_on",
+      "confidence": "medium",
+      "evidence": [
+        "backend/src/main/java/com/vulnflow/ingestion/IngestionJobRedriveService.java:29"
+      ]
+    },
+    {
+      "from": "IngestionJobRedriveService",
+      "to": "IngestionJobStatus",
+      "type": "depends_on",
+      "confidence": "medium",
+      "evidence": [
+        "backend/src/main/java/com/vulnflow/ingestion/IngestionJobRedriveService.java:32"
+      ]
+    },
+    {
+      "from": "IngestionJobRedriveService",
+      "to": "JobStateConflictException",
+      "type": "depends_on",
+      "confidence": "medium",
+      "evidence": [
+        "backend/src/main/java/com/vulnflow/ingestion/IngestionJobRedriveService.java:33"
+      ]
+    },
+    {
+      "from": "IngestionJobRedriveService",
+      "to": "ReportStorage",
+      "type": "reads_from",
+      "confidence": "medium",
+      "evidence": [
+        "backend/src/main/java/com/vulnflow/ingestion/IngestionJobRedriveService.java:3"
+      ]
+    },
+    {
+      "from": "IngestionJobRedriveService",
+      "to": "ScanRepository",
+      "type": "reads_from",
+      "confidence": "medium",
+      "evidence": [
+        "backend/src/main/java/com/vulnflow/ingestion/IngestionJobRedriveService.java:5"
+      ]
+    },
+    {
+      "from": "IngestionJobRepository",
+      "to": "IngestionJobStatus",
+      "type": "depends_on",
+      "confidence": "medium",
+      "evidence": [
+        "backend/src/main/java/com/vulnflow/ingestion/IngestionJobRepository.java:57"
+      ]
+    },
+    {
+      "from": "IngestionJobResponse",
+      "to": "IngestionJobStatus",
+      "type": "depends_on",
+      "confidence": "medium",
+      "evidence": [
+        "backend/src/main/java/com/vulnflow/ingestion/IngestionJobResponse.java:10"
+      ]
+    },
+    {
+      "from": "IngestionPersistenceService",
+      "to": "FindingRepository",
+      "type": "reads_from",
+      "confidence": "medium",
+      "evidence": [
+        "backend/src/main/java/com/vulnflow/ingestion/IngestionPersistenceService.java:4"
+      ]
+    },
+    {
+      "from": "IngestionPersistenceService",
+      "to": "IngestionJobRepository",
+      "type": "reads_from",
+      "confidence": "medium",
+      "evidence": [
+        "backend/src/main/java/com/vulnflow/ingestion/IngestionPersistenceService.java:27"
+      ]
+    },
+    {
+      "from": "IngestionPersistenceService",
+      "to": "IngestionJobStatus",
+      "type": "depends_on",
+      "confidence": "medium",
+      "evidence": [
+        "backend/src/main/java/com/vulnflow/ingestion/IngestionPersistenceService.java:45"
+      ]
+    },
+    {
+      "from": "IngestionPersistenceService",
+      "to": "ProcessedVulnerabilityReport",
+      "type": "reads_from",
+      "confidence": "medium",
+      "evidence": [
+        "backend/src/main/java/com/vulnflow/ingestion/IngestionPersistenceService.java:7"
+      ]
+    },
+    {
+      "from": "IngestionPersistenceService",
+      "to": "ScanRepository",
+      "type": "reads_from",
+      "confidence": "medium",
+      "evidence": [
+        "backend/src/main/java/com/vulnflow/ingestion/IngestionPersistenceService.java:11"
+      ]
+    },
+    {
+      "from": "IngestionPersistenceService",
+      "to": "StaleJobClaimException",
+      "type": "depends_on",
+      "confidence": "medium",
+      "evidence": [
+        "backend/src/main/java/com/vulnflow/ingestion/IngestionPersistenceService.java:47"
+      ]
+    },
+    {
+      "from": "JobClaim",
+      "to": "JobClaimService",
+      "type": "inferred_dependency",
+      "confidence": "low",
+      "evidence": [
+        "backend/src/main/java/com/vulnflow/ingestion/JobClaimService.java:13",
+        "backend/src/main/java/com/vulnflow/ingestion/JobClaim.java:5"
+      ],
+      "inferred": true
+    },
+    {
+      "from": "JobClaimService",
+      "to": "IngestionJobRepository",
+      "type": "reads_from",
+      "confidence": "medium",
+      "evidence": [
+        "backend/src/main/java/com/vulnflow/ingestion/JobClaimService.java:16"
+      ]
+    },
+    {
+      "from": "JobClaimService",
+      "to": "JobClaim",
+      "type": "depends_on",
+      "confidence": "medium",
+      "evidence": [
+        "backend/src/main/java/com/vulnflow/ingestion/JobClaimService.java:27"
+      ]
+    },
+    {
+      "from": "JobClaimService",
+      "to": "ScanRepository",
+      "type": "reads_from",
+      "confidence": "medium",
+      "evidence": [
+        "backend/src/main/java/com/vulnflow/ingestion/JobClaimService.java:4"
+      ]
+    },
+    {
+      "from": "JobFailureClassifier",
+      "to": "InvalidReportException",
+      "type": "reads_from",
+      "confidence": "medium",
+      "evidence": [
+        "backend/src/main/java/com/vulnflow/ingestion/JobFailureClassifier.java:3"
+      ]
+    },
+    {
+      "from": "JobFailureClassifier",
+      "to": "JobFailureClassification",
+      "type": "depends_on",
+      "confidence": "medium",
+      "evidence": [
+        "backend/src/main/java/com/vulnflow/ingestion/JobFailureClassifier.java:26"
+      ]
+    },
+    {
+      "from": "JobFailureClassifier",
+      "to": "ReportStorageException",
+      "type": "reads_from",
+      "confidence": "medium",
+      "evidence": [
+        "backend/src/main/java/com/vulnflow/ingestion/JobFailureClassifier.java:6"
+      ]
+    },
+    {
+      "from": "JobFailureClassifier",
+      "to": "TransientReportStorageException",
+      "type": "reads_from",
+      "confidence": "medium",
+      "evidence": [
+        "backend/src/main/java/com/vulnflow/ingestion/JobFailureClassifier.java:7"
+      ]
+    },
+    {
+      "from": "JobFailureClassifierTest",
+      "to": "InvalidReportException",
+      "type": "reads_from",
+      "confidence": "medium",
+      "evidence": [
+        "backend/src/test/java/com/vulnflow/ingestion/JobFailureClassifierTest.java:5"
+      ]
+    },
+    {
+      "from": "JobFailureClassifierTest",
+      "to": "JobFailureClassification",
+      "type": "depends_on",
+      "confidence": "medium",
+      "evidence": [
+        "backend/src/test/java/com/vulnflow/ingestion/JobFailureClassifierTest.java:57"
+      ]
+    },
+    {
+      "from": "JobFailureClassifierTest",
+      "to": "JobFailureClassifier",
+      "type": "depends_on",
+      "confidence": "medium",
+      "evidence": [
+        "backend/src/test/java/com/vulnflow/ingestion/JobFailureClassifierTest.java:19"
+      ]
+    },
+    {
+      "from": "JobFailureClassifierTest",
+      "to": "ReportStorageException",
+      "type": "reads_from",
+      "confidence": "medium",
+      "evidence": [
+        "backend/src/test/java/com/vulnflow/ingestion/JobFailureClassifierTest.java:8"
+      ]
+    },
+    {
+      "from": "JobFailureClassifierTest",
+      "to": "TransientReportStorageException",
+      "type": "reads_from",
+      "confidence": "medium",
+      "evidence": [
+        "backend/src/test/java/com/vulnflow/ingestion/JobFailureClassifierTest.java:9"
+      ]
+    },
+    {
+      "from": "JobFailureService",
+      "to": "IngestionJobRepository",
+      "type": "reads_from",
+      "confidence": "medium",
+      "evidence": [
+        "backend/src/main/java/com/vulnflow/ingestion/JobFailureService.java:16"
+      ]
+    },
+    {
+      "from": "JobFailureService",
+      "to": "IngestionJobStatus",
+      "type": "depends_on",
+      "confidence": "medium",
+      "evidence": [
+        "backend/src/main/java/com/vulnflow/ingestion/JobFailureService.java:37"
+      ]
+    },
+    {
+      "from": "JobFailureService",
+      "to": "ScanRepository",
+      "type": "reads_from",
+      "confidence": "medium",
+      "evidence": [
+        "backend/src/main/java/com/vulnflow/ingestion/JobFailureService.java:4"
+      ]
+    },
+    {
+      "from": "JobFailureService",
+      "to": "WorkerProperties",
+      "type": "configured_by",
+      "confidence": "medium",
+      "evidence": [
+        "backend/src/main/java/com/vulnflow/ingestion/JobFailureService.java:18"
+      ]
+    },
+    {
+      "from": "LoadingStorage",
+      "to": "ProcessedVulnerabilityReport",
+      "type": "reads_from",
+      "confidence": "medium",
+      "evidence": [
+        "aws/lambda-processor/src/test/java/com/vulnflow/aws/lambda/SqsVulnerabilityReportHandlerTest.java:12"
+      ]
+    },
+    {
+      "from": "LoadingStorage",
+      "to": "ReportStorage",
+      "type": "reads_from",
+      "confidence": "medium",
+      "evidence": [
+        "aws/lambda-processor/src/test/java/com/vulnflow/aws/lambda/SqsVulnerabilityReportHandlerTest.java:17"
+      ]
+    },
+    {
+      "from": "LoadingStorage",
+      "to": "TrivyVulnerabilityReportParser",
+      "type": "reads_from",
+      "confidence": "medium",
+      "evidence": [
+        "aws/lambda-processor/src/test/java/com/vulnflow/aws/lambda/SqsVulnerabilityReportHandlerTest.java:13"
+      ]
+    },
+    {
+      "from": "LoadingStorage",
+      "to": "VulnerabilityReportProcessor",
+      "type": "reads_from",
+      "confidence": "medium",
+      "evidence": [
+        "aws/lambda-processor/src/test/java/com/vulnflow/aws/lambda/SqsVulnerabilityReportHandlerTest.java:14"
+      ]
+    },
+    {
+      "from": "LocalFileReportStorage",
+      "to": "ReportStorage",
+      "type": "reads_from",
+      "confidence": "medium",
+      "evidence": [
+        "backend/src/main/java/com/vulnflow/ingestion/LocalFileReportStorage.java:4"
+      ]
+    },
+    {
+      "from": "LocalFileReportStorage",
+      "to": "ReportStorageException",
+      "type": "reads_from",
+      "confidence": "medium",
+      "evidence": [
+        "backend/src/main/java/com/vulnflow/ingestion/LocalFileReportStorage.java:5"
+      ]
+    },
+    {
+      "from": "LocalFileReportStorage",
+      "to": "ReportStorageProperties",
+      "type": "reads_from",
+      "confidence": "medium",
+      "evidence": [
+        "backend/src/main/java/com/vulnflow/ingestion/LocalFileReportStorage.java:25"
+      ]
+    },
+    {
+      "from": "LocalFileReportStorage",
+      "to": "TransientReportStorageException",
+      "type": "reads_from",
+      "confidence": "medium",
+      "evidence": [
+        "backend/src/main/java/com/vulnflow/ingestion/LocalFileReportStorage.java:6"
+      ]
+    },
+    {
+      "from": "LocalFileReportStorageTest",
+      "to": "LocalFileReportStorage",
+      "type": "reads_from",
+      "confidence": "medium",
+      "evidence": [
+        "backend/src/test/java/com/vulnflow/ingestion/LocalFileReportStorageTest.java:20"
+      ]
+    },
+    {
+      "from": "LocalFileReportStorageTest",
+      "to": "ReportStorageProperties",
+      "type": "reads_from",
+      "confidence": "medium",
+      "evidence": [
+        "backend/src/test/java/com/vulnflow/ingestion/LocalFileReportStorageTest.java:42"
+      ]
+    },
+    {
+      "from": "LocalIngestionWorker",
+      "to": "IngestionJobProcessor",
+      "type": "depends_on",
+      "confidence": "medium",
+      "evidence": [
+        "backend/src/main/java/com/vulnflow/ingestion/LocalIngestionWorker.java:17"
+      ]
+    },
+    {
+      "from": "LocalIngestionWorker",
+      "to": "IngestionJobRecoveryService",
+      "type": "depends_on",
+      "confidence": "medium",
+      "evidence": [
+        "backend/src/main/java/com/vulnflow/ingestion/LocalIngestionWorker.java:15"
+      ]
+    },
+    {
+      "from": "LocalIngestionWorker",
+      "to": "JobClaim",
+      "type": "depends_on",
+      "confidence": "medium",
+      "evidence": [
+        "backend/src/main/java/com/vulnflow/ingestion/LocalIngestionWorker.java:49"
+      ]
+    },
+    {
+      "from": "LocalIngestionWorker",
+      "to": "JobClaimService",
+      "type": "depends_on",
+      "confidence": "medium",
+      "evidence": [
+        "backend/src/main/java/com/vulnflow/ingestion/LocalIngestionWorker.java:16"
+      ]
+    },
+    {
+      "from": "LocalIngestionWorker",
+      "to": "WorkerProperties",
+      "type": "configured_by",
+      "confidence": "medium",
+      "evidence": [
+        "backend/src/main/java/com/vulnflow/ingestion/LocalIngestionWorker.java:14"
+      ]
+    },
+    {
+      "from": "NoOpClient",
+      "to": "AgentObjectMapper",
+      "type": "reads_from",
+      "confidence": "medium",
+      "evidence": [
+        "agent/src/test/java/com/vulnflow/agent/scheduling/AgentSchedulerTest.java:12"
+      ]
+    },
+    {
+      "from": "NoOpClient",
+      "to": "AgentScheduler",
+      "type": "depends_on",
+      "confidence": "medium",
+      "evidence": [
+        "agent/src/test/java/com/vulnflow/agent/scheduling/AgentSchedulerTest.java:45"
+      ]
+    },
+    {
+      "from": "NoOpClient",
+      "to": "AgentSchedulerTest",
+      "type": "depends_on",
+      "confidence": "medium",
+      "evidence": [
+        "agent/src/test/java/com/vulnflow/agent/scheduling/AgentSchedulerTest.java:26"
+      ]
+    },
+    {
+      "from": "NoOpClient",
+      "to": "VulnFlowClient",
+      "type": "uses_client",
+      "confidence": "medium",
+      "evidence": [
+        "agent/src/test/java/com/vulnflow/agent/scheduling/AgentSchedulerTest.java:8"
+      ]
+    },
+    {
+      "from": "POST /api/v1/ingestion-jobs/{jobId}/redrive",
+      "to": "IngestionJobController.redrive",
+      "type": "routes_to",
+      "confidence": "high",
+      "evidence": [
+        "backend/src/main/java/com/vulnflow/ingestion/IngestionJobController.java:47"
+      ]
+    },
+    {
+      "from": "POST /api/v1/scans/trivy",
+      "to": "ScanIngestionController.ingestTrivy",
+      "type": "routes_to",
+      "confidence": "high",
+      "evidence": [
+        "backend/src/main/java/com/vulnflow/ingestion/ScanIngestionController.java:23"
+      ]
+    },
+    {
+      "from": "PostgreSQLFlowIT",
+      "to": "AssetRepository",
+      "type": "reads_from",
+      "confidence": "medium",
+      "evidence": [
+        "backend/src/test/java/com/vulnflow/PostgreSQLFlowIT.java:23"
+      ]
+    },
+    {
+      "from": "PostgreSQLFlowIT",
+      "to": "FindingRepository",
+      "type": "reads_from",
+      "confidence": "medium",
+      "evidence": [
+        "backend/src/test/java/com/vulnflow/PostgreSQLFlowIT.java:25"
+      ]
+    },
+    {
+      "from": "PostgreSQLFlowIT",
+      "to": "IngestionJobRecoveryService",
+      "type": "depends_on",
+      "confidence": "medium",
+      "evidence": [
+        "backend/src/test/java/com/vulnflow/PostgreSQLFlowIT.java:30"
+      ]
+    },
+    {
+      "from": "PostgreSQLFlowIT",
+      "to": "IngestionJobRedriveService",
+      "type": "depends_on",
+      "confidence": "medium",
+      "evidence": [
+        "backend/src/test/java/com/vulnflow/PostgreSQLFlowIT.java:31"
+      ]
+    },
+    {
+      "from": "PostgreSQLFlowIT",
+      "to": "IngestionJobRepository",
+      "type": "reads_from",
+      "confidence": "medium",
+      "evidence": [
+        "backend/src/test/java/com/vulnflow/PostgreSQLFlowIT.java:32"
+      ]
+    },
+    {
+      "from": "PostgreSQLFlowIT",
+      "to": "IngestionJobStatus",
+      "type": "depends_on",
+      "confidence": "medium",
+      "evidence": [
+        "backend/src/test/java/com/vulnflow/PostgreSQLFlowIT.java:33"
+      ]
+    },
+    {
+      "from": "PostgreSQLFlowIT",
+      "to": "IngestionPersistenceService",
+      "type": "depends_on",
+      "confidence": "medium",
+      "evidence": [
+        "backend/src/test/java/com/vulnflow/PostgreSQLFlowIT.java:34"
+      ]
+    },
+    {
+      "from": "PostgreSQLFlowIT",
+      "to": "JobClaim",
+      "type": "depends_on",
+      "confidence": "medium",
+      "evidence": [
+        "backend/src/test/java/com/vulnflow/PostgreSQLFlowIT.java:35"
+      ]
+    },
+    {
+      "from": "PostgreSQLFlowIT",
+      "to": "JobClaimService",
+      "type": "depends_on",
+      "confidence": "medium",
+      "evidence": [
+        "backend/src/test/java/com/vulnflow/PostgreSQLFlowIT.java:36"
+      ]
+    },
+    {
+      "from": "PostgreSQLFlowIT",
+      "to": "JobFailureService",
+      "type": "depends_on",
+      "confidence": "medium",
+      "evidence": [
+        "backend/src/test/java/com/vulnflow/PostgreSQLFlowIT.java:37"
+      ]
+    },
+    {
+      "from": "PostgreSQLFlowIT",
+      "to": "LocalFileReportStorage",
+      "type": "reads_from",
+      "confidence": "medium",
+      "evidence": [
+        "backend/src/test/java/com/vulnflow/PostgreSQLFlowIT.java:38"
+      ]
+    },
+    {
+      "from": "PostgreSQLFlowIT",
+      "to": "LocalIngestionWorker",
+      "type": "depends_on",
+      "confidence": "medium",
+      "evidence": [
+        "backend/src/test/java/com/vulnflow/PostgreSQLFlowIT.java:39"
+      ]
+    },
+    {
+      "from": "PostgreSQLFlowIT",
+      "to": "ParsedVulnerabilityReport",
+      "type": "reads_from",
+      "confidence": "medium",
+      "evidence": [
+        "backend/src/test/java/com/vulnflow/PostgreSQLFlowIT.java:45"
+      ]
+    },
+    {
+      "from": "PostgreSQLFlowIT",
+      "to": "ProcessedVulnerabilityReport",
+      "type": "reads_from",
+      "confidence": "medium",
+      "evidence": [
+        "backend/src/test/java/com/vulnflow/PostgreSQLFlowIT.java:46"
+      ]
+    },
+    {
+      "from": "PostgreSQLFlowIT",
+      "to": "ReportStorage",
+      "type": "reads_from",
+      "confidence": "medium",
+      "evidence": [
+        "backend/src/test/java/com/vulnflow/PostgreSQLFlowIT.java:50"
+      ]
+    },
+    {
+      "from": "PostgreSQLFlowIT",
+      "to": "ReportStorageException",
+      "type": "reads_from",
+      "confidence": "medium",
+      "evidence": [
+        "backend/src/test/java/com/vulnflow/PostgreSQLFlowIT.java:51"
+      ]
+    },
+    {
+      "from": "PostgreSQLFlowIT",
+      "to": "ReportStorageProperties",
+      "type": "reads_from",
+      "confidence": "medium",
+      "evidence": [
+        "backend/src/test/java/com/vulnflow/PostgreSQLFlowIT.java:42"
+      ]
+    },
+    {
+      "from": "PostgreSQLFlowIT",
+      "to": "ScanRepository",
+      "type": "reads_from",
+      "confidence": "medium",
+      "evidence": [
+        "backend/src/test/java/com/vulnflow/PostgreSQLFlowIT.java:53"
+      ]
+    },
+    {
+      "from": "PostgreSQLFlowIT",
+      "to": "StaleJobClaimException",
+      "type": "depends_on",
+      "confidence": "medium",
+      "evidence": [
+        "backend/src/test/java/com/vulnflow/PostgreSQLFlowIT.java:43"
+      ]
+    },
+    {
+      "from": "PostgreSQLFlowIT",
+      "to": "TransientReportStorageException",
+      "type": "reads_from",
+      "confidence": "medium",
+      "evidence": [
+        "backend/src/test/java/com/vulnflow/PostgreSQLFlowIT.java:52"
+      ]
+    },
+    {
+      "from": "PostgreSQLFlowIT",
+      "to": "VulnerabilityReportParser",
+      "type": "reads_from",
+      "confidence": "medium",
+      "evidence": [
+        "backend/src/test/java/com/vulnflow/PostgreSQLFlowIT.java:47"
+      ]
+    },
+    {
+      "from": "PostgreSQLFlowIT",
+      "to": "VulnerabilityReportProcessingRequest",
+      "type": "reads_from",
+      "confidence": "medium",
+      "evidence": [
+        "backend/src/test/java/com/vulnflow/PostgreSQLFlowIT.java:48"
+      ]
+    },
+    {
+      "from": "PostgreSQLFlowIT",
+      "to": "VulnerabilityReportProcessor",
+      "type": "reads_from",
+      "confidence": "medium",
+      "evidence": [
+        "backend/src/test/java/com/vulnflow/PostgreSQLFlowIT.java:49"
+      ]
+    },
+    {
+      "from": "ProcessingConfiguration",
+      "to": "IngestionProperties",
+      "type": "configured_by",
+      "confidence": "medium",
+      "evidence": [
+        "backend/src/main/java/com/vulnflow/config/ProcessingConfiguration.java:4"
+      ]
+    },
+    {
+      "from": "ProcessingConfiguration",
+      "to": "TrivyVulnerabilityReportParser",
+      "type": "reads_from",
+      "confidence": "medium",
+      "evidence": [
+        "backend/src/main/java/com/vulnflow/config/ProcessingConfiguration.java:7"
+      ]
+    },
+    {
+      "from": "ProcessingConfiguration",
+      "to": "VulnerabilityReportParser",
+      "type": "reads_from",
+      "confidence": "medium",
+      "evidence": [
+        "backend/src/main/java/com/vulnflow/config/ProcessingConfiguration.java:8"
+      ]
+    },
+    {
+      "from": "ProcessingConfiguration",
+      "to": "VulnerabilityReportProcessor",
+      "type": "reads_from",
+      "confidence": "medium",
+      "evidence": [
+        "backend/src/main/java/com/vulnflow/config/ProcessingConfiguration.java:9"
+      ]
+    },
+    {
+      "from": "ProfileAssertions",
+      "to": "AwsAdapterConfiguration",
+      "type": "uses_client",
+      "confidence": "medium",
+      "evidence": [
+        "backend/src/test/java/com/vulnflow/config/AwsAdapterConfigurationTest.java:16"
+      ]
+    },
+    {
+      "from": "ProfileAssertions",
+      "to": "AwsAdapterConfigurationTest",
+      "type": "uses_client",
+      "confidence": "medium",
+      "evidence": [
+        "backend/src/test/java/com/vulnflow/config/AwsAdapterConfigurationTest.java:13"
+      ]
+    },
+    {
+      "from": "ProfileAssertions",
+      "to": "AwsIngestionProperties",
+      "type": "depends_on",
+      "confidence": "medium",
+      "evidence": [
+        "backend/src/test/java/com/vulnflow/config/AwsAdapterConfigurationTest.java:23"
+      ]
+    },
+    {
+      "from": "ProfileAssertions",
+      "to": "LocalFileReportStorage",
+      "type": "reads_from",
+      "confidence": "medium",
+      "evidence": [
+        "backend/src/test/java/com/vulnflow/config/AwsAdapterConfigurationTest.java:5"
+      ]
+    },
+    {
+      "from": "PropertiesConfiguration",
+      "to": "IngestionProperties",
+      "type": "configured_by",
+      "confidence": "medium",
+      "evidence": [
+        "backend/src/test/java/com/vulnflow/ingestion/IngestionConfigurationContextTest.java:60"
+      ]
+    },
+    {
+      "from": "PropertiesConfiguration",
+      "to": "ReportStorageProperties",
+      "type": "reads_from",
+      "confidence": "medium",
+      "evidence": [
+        "backend/src/test/java/com/vulnflow/ingestion/IngestionConfigurationContextTest.java:61"
+      ]
+    },
+    {
+      "from": "PropertiesConfiguration",
+      "to": "WorkerProperties",
+      "type": "configured_by",
+      "confidence": "medium",
+      "evidence": [
+        "backend/src/test/java/com/vulnflow/ingestion/IngestionConfigurationContextTest.java:62"
+      ]
+    },
+    {
+      "from": "ReResolvingClient",
+      "to": "AgentObjectMapper",
+      "type": "reads_from",
+      "confidence": "medium",
+      "evidence": [
+        "agent/src/test/java/com/vulnflow/agent/scheduling/UploadCoordinatorTest.java:13"
+      ]
+    },
+    {
+      "from": "ReResolvingClient",
+      "to": "BlockingClient",
+      "type": "uses_client",
+      "confidence": "medium",
+      "evidence": [
+        "agent/src/test/java/com/vulnflow/agent/scheduling/UploadCoordinatorTest.java:94"
+      ]
+    },
+    {
+      "from": "ReResolvingClient",
+      "to": "ClientFailureKind",
+      "type": "uses_client",
+      "confidence": "medium",
+      "evidence": [
+        "agent/src/test/java/com/vulnflow/agent/scheduling/UploadCoordinatorTest.java:6"
+      ]
+    },
+    {
+      "from": "ReResolvingClient",
+      "to": "FailingClient",
+      "type": "uses_client",
+      "confidence": "medium",
+      "evidence": [
+        "agent/src/test/java/com/vulnflow/agent/scheduling/UploadCoordinatorTest.java:47"
+      ]
+    },
+    {
+      "from": "ReResolvingClient",
+      "to": "VulnFlowClient",
+      "type": "uses_client",
+      "confidence": "medium",
+      "evidence": [
+        "agent/src/test/java/com/vulnflow/agent/scheduling/UploadCoordinatorTest.java:8"
+      ]
+    },
+    {
+      "from": "ReResolvingClient",
+      "to": "VulnFlowClientException",
+      "type": "uses_client",
+      "confidence": "medium",
+      "evidence": [
+        "agent/src/test/java/com/vulnflow/agent/scheduling/UploadCoordinatorTest.java:9"
+      ]
+    },
+    {
+      "from": "RecordingStore",
+      "to": "ProcessedVulnerabilityReport",
+      "type": "reads_from",
+      "confidence": "medium",
+      "evidence": [
+        "aws/lambda-processor/src/test/java/com/vulnflow/aws/lambda/SqsVulnerabilityReportHandlerTest.java:12"
+      ]
+    },
+    {
+      "from": "RecordingStore",
+      "to": "ReportStorage",
+      "type": "reads_from",
+      "confidence": "medium",
+      "evidence": [
+        "aws/lambda-processor/src/test/java/com/vulnflow/aws/lambda/SqsVulnerabilityReportHandlerTest.java:17"
+      ]
+    },
+    {
+      "from": "RecordingStore",
+      "to": "TrivyVulnerabilityReportParser",
+      "type": "reads_from",
+      "confidence": "medium",
+      "evidence": [
+        "aws/lambda-processor/src/test/java/com/vulnflow/aws/lambda/SqsVulnerabilityReportHandlerTest.java:13"
+      ]
+    },
+    {
+      "from": "RecordingStore",
+      "to": "VulnerabilityReportProcessor",
+      "type": "reads_from",
+      "confidence": "medium",
+      "evidence": [
+        "aws/lambda-processor/src/test/java/com/vulnflow/aws/lambda/SqsVulnerabilityReportHandlerTest.java:14"
+      ]
+    },
+    {
+      "from": "S3ReportStorage",
+      "to": "ReportStorage",
+      "type": "reads_from",
+      "confidence": "medium",
+      "evidence": [
+        "aws/aws-adapters/src/main/java/com/vulnflow/aws/storage/S3ReportStorage.java:4"
+      ]
+    },
+    {
+      "from": "S3ReportStorage",
+      "to": "ReportStorageException",
+      "type": "reads_from",
+      "confidence": "medium",
+      "evidence": [
+        "aws/aws-adapters/src/main/java/com/vulnflow/aws/storage/S3ReportStorage.java:5"
+      ]
+    },
+    {
+      "from": "S3ReportStorage",
+      "to": "TransientReportStorageException",
+      "type": "reads_from",
+      "confidence": "medium",
+      "evidence": [
+        "aws/aws-adapters/src/main/java/com/vulnflow/aws/storage/S3ReportStorage.java:6"
+      ]
+    },
+    {
+      "from": "S3ReportStorageTest",
+      "to": "S3ReportStorage",
+      "type": "reads_from",
+      "confidence": "medium",
+      "evidence": [
+        "aws/aws-adapters/src/test/java/com/vulnflow/aws/storage/S3ReportStorageTest.java:27"
+      ]
+    },
+    {
+      "from": "S3ReportStorageTest",
+      "to": "TransientReportStorageException",
+      "type": "reads_from",
+      "confidence": "medium",
+      "evidence": [
+        "aws/aws-adapters/src/test/java/com/vulnflow/aws/storage/S3ReportStorageTest.java:11"
+      ]
+    },
+    {
+      "from": "ScanController",
+      "to": "DefaultScanIngestionService",
+      "type": "inferred_dependency",
+      "confidence": "low",
+      "evidence": [
+        "backend/src/main/java/com/vulnflow/ingestion/DefaultScanIngestionService.java:18",
+        "backend/src/main/java/com/vulnflow/scan/ScanController.java:13"
+      ],
+      "inferred": true
+    },
+    {
+      "from": "ScanController",
+      "to": "DefaultScanIngestionServiceTest",
+      "type": "inferred_dependency",
+      "confidence": "low",
+      "evidence": [
+        "backend/src/test/java/com/vulnflow/ingestion/DefaultScanIngestionServiceTest.java:23",
+        "backend/src/main/java/com/vulnflow/scan/ScanController.java:13"
+      ],
+      "inferred": true
+    },
+    {
+      "from": "ScanController",
+      "to": "ScanIngestionService",
+      "type": "inferred_dependency",
+      "confidence": "low",
+      "evidence": [
+        "backend/src/main/java/com/vulnflow/ingestion/ScanIngestionService.java:6",
+        "backend/src/main/java/com/vulnflow/scan/ScanController.java:13"
+      ],
+      "inferred": true
+    },
+    {
+      "from": "ScanController",
+      "to": "ScanQueryService",
+      "type": "depends_on",
+      "confidence": "medium",
+      "evidence": [
+        "backend/src/main/java/com/vulnflow/scan/ScanController.java:17"
+      ]
+    },
+    {
+      "from": "ScanController",
+      "to": "ScanQueryService",
+      "type": "inferred_dependency",
+      "confidence": "low",
+      "evidence": [
+        "backend/src/main/java/com/vulnflow/scan/ScanQueryService.java:10",
+        "backend/src/main/java/com/vulnflow/scan/ScanController.java:13"
+      ],
+      "inferred": true
+    },
+    {
+      "from": "ScanController",
+      "to": "ScanRegistrationService",
+      "type": "inferred_dependency",
+      "confidence": "low",
+      "evidence": [
+        "backend/src/main/java/com/vulnflow/ingestion/ScanRegistrationService.java:18",
+        "backend/src/main/java/com/vulnflow/scan/ScanController.java:13"
+      ],
+      "inferred": true
+    },
+    {
+      "from": "ScanController",
+      "to": "ScanRepository",
+      "type": "inferred_dependency",
+      "confidence": "low",
+      "evidence": [
+        "backend/src/main/java/com/vulnflow/scan/ScanRepository.java:7",
+        "backend/src/main/java/com/vulnflow/scan/ScanController.java:13"
+      ],
+      "inferred": true
+    },
+    {
+      "from": "ScanIngestionController",
+      "to": "DefaultScanIngestionService",
+      "type": "inferred_dependency",
+      "confidence": "low",
+      "evidence": [
+        "backend/src/main/java/com/vulnflow/ingestion/DefaultScanIngestionService.java:18",
+        "backend/src/main/java/com/vulnflow/ingestion/ScanIngestionController.java:13"
+      ],
+      "inferred": true
+    },
+    {
+      "from": "ScanIngestionController",
+      "to": "DefaultScanIngestionServiceTest",
+      "type": "inferred_dependency",
+      "confidence": "low",
+      "evidence": [
+        "backend/src/test/java/com/vulnflow/ingestion/DefaultScanIngestionServiceTest.java:23",
+        "backend/src/main/java/com/vulnflow/ingestion/ScanIngestionController.java:13"
+      ],
+      "inferred": true
+    },
+    {
+      "from": "ScanIngestionController",
+      "to": "ScanIngestionService",
+      "type": "depends_on",
+      "confidence": "medium",
+      "evidence": [
+        "backend/src/main/java/com/vulnflow/ingestion/ScanIngestionController.java:17"
+      ]
+    },
+    {
+      "from": "ScanIngestionController",
+      "to": "ScanIngestionService",
+      "type": "inferred_dependency",
+      "confidence": "low",
+      "evidence": [
+        "backend/src/main/java/com/vulnflow/ingestion/ScanIngestionService.java:6",
+        "backend/src/main/java/com/vulnflow/ingestion/ScanIngestionController.java:13"
+      ],
+      "inferred": true
+    },
+    {
+      "from": "ScanIngestionService",
+      "to": "DefaultScanIngestionService",
+      "type": "inferred_dependency",
+      "confidence": "low",
+      "evidence": [
+        "backend/src/main/java/com/vulnflow/ingestion/ScanIngestionService.java:6",
+        "backend/src/main/java/com/vulnflow/ingestion/DefaultScanIngestionService.java:18"
+      ],
+      "inferred": true
+    },
+    {
+      "from": "ScanIngestionService",
+      "to": "DefaultScanIngestionServiceTest",
+      "type": "inferred_dependency",
+      "confidence": "low",
+      "evidence": [
+        "backend/src/main/java/com/vulnflow/ingestion/ScanIngestionService.java:6",
+        "backend/src/test/java/com/vulnflow/ingestion/DefaultScanIngestionServiceTest.java:23"
+      ],
+      "inferred": true
+    },
+    {
+      "from": "ScanQueryService",
+      "to": "ScanRepository",
+      "type": "reads_from",
+      "confidence": "medium",
+      "evidence": [
+        "backend/src/main/java/com/vulnflow/scan/ScanQueryService.java:13"
+      ]
+    },
+    {
+      "from": "ScanRegistrationService",
+      "to": "IngestionJobRepository",
+      "type": "reads_from",
+      "confidence": "medium",
+      "evidence": [
+        "backend/src/main/java/com/vulnflow/ingestion/ScanRegistrationService.java:24"
+      ]
+    },
+    {
+      "from": "ScanRegistrationService",
+      "to": "IngestionJobStatus",
+      "type": "depends_on",
+      "confidence": "medium",
+      "evidence": [
+        "backend/src/main/java/com/vulnflow/ingestion/ScanRegistrationService.java:85"
+      ]
+    },
+    {
+      "from": "ScanRegistrationService",
+      "to": "ReportStorage",
+      "type": "reads_from",
+      "confidence": "medium",
+      "evidence": [
+        "backend/src/main/java/com/vulnflow/ingestion/ScanRegistrationService.java:3"
+      ]
+    },
+    {
+      "from": "ScanRegistrationService",
+      "to": "ScanRepository",
+      "type": "reads_from",
+      "confidence": "medium",
+      "evidence": [
+        "backend/src/main/java/com/vulnflow/ingestion/ScanRegistrationService.java:6"
+      ]
+    },
+    {
+      "from": "ScanRegistrationService",
+      "to": "WorkerProperties",
+      "type": "configured_by",
+      "confidence": "medium",
+      "evidence": [
+        "backend/src/main/java/com/vulnflow/ingestion/ScanRegistrationService.java:26"
+      ]
+    },
+    {
+      "from": "SqsIngestionMessagePublisher",
+      "to": "IngestionMessagePublisher",
+      "type": "depends_on",
+      "confidence": "medium",
+      "evidence": [
+        "aws/aws-adapters/src/main/java/com/vulnflow/aws/messaging/SqsIngestionMessagePublisher.java:5"
+      ]
+    },
+    {
+      "from": "SqsIngestionMessagePublisherTest",
+      "to": "SqsIngestionMessagePublisher",
+      "type": "depends_on",
+      "confidence": "medium",
+      "evidence": [
+        "aws/aws-adapters/src/test/java/com/vulnflow/aws/messaging/SqsIngestionMessagePublisherTest.java:25"
+      ]
+    },
+    {
+      "from": "SqsVulnerabilityReportHandler",
+      "to": "ProcessedVulnerabilityReport",
+      "type": "reads_from",
+      "confidence": "medium",
+      "evidence": [
+        "aws/lambda-processor/src/main/java/com/vulnflow/aws/lambda/SqsVulnerabilityReportHandler.java:9"
+      ]
+    },
+    {
+      "from": "SqsVulnerabilityReportHandler",
+      "to": "ReportStorage",
+      "type": "reads_from",
+      "confidence": "medium",
+      "evidence": [
+        "aws/lambda-processor/src/main/java/com/vulnflow/aws/lambda/SqsVulnerabilityReportHandler.java:13"
+      ]
+    },
+    {
+      "from": "SqsVulnerabilityReportHandler",
+      "to": "VulnerabilityReportProcessingRequest",
+      "type": "reads_from",
+      "confidence": "medium",
+      "evidence": [
+        "aws/lambda-processor/src/main/java/com/vulnflow/aws/lambda/SqsVulnerabilityReportHandler.java:10"
+      ]
+    },
+    {
+      "from": "SqsVulnerabilityReportHandler",
+      "to": "VulnerabilityReportProcessor",
+      "type": "reads_from",
+      "confidence": "medium",
+      "evidence": [
+        "aws/lambda-processor/src/main/java/com/vulnflow/aws/lambda/SqsVulnerabilityReportHandler.java:11"
+      ]
+    },
+    {
+      "from": "SqsVulnerabilityReportHandlerTest",
+      "to": "ProcessedVulnerabilityReport",
+      "type": "reads_from",
+      "confidence": "medium",
+      "evidence": [
+        "aws/lambda-processor/src/test/java/com/vulnflow/aws/lambda/SqsVulnerabilityReportHandlerTest.java:12"
+      ]
+    },
+    {
+      "from": "SqsVulnerabilityReportHandlerTest",
+      "to": "ReportStorage",
+      "type": "reads_from",
+      "confidence": "medium",
+      "evidence": [
+        "aws/lambda-processor/src/test/java/com/vulnflow/aws/lambda/SqsVulnerabilityReportHandlerTest.java:17"
+      ]
+    },
+    {
+      "from": "SqsVulnerabilityReportHandlerTest",
+      "to": "TrivyVulnerabilityReportParser",
+      "type": "reads_from",
+      "confidence": "medium",
+      "evidence": [
+        "aws/lambda-processor/src/test/java/com/vulnflow/aws/lambda/SqsVulnerabilityReportHandlerTest.java:13"
+      ]
+    },
+    {
+      "from": "SqsVulnerabilityReportHandlerTest",
+      "to": "VulnerabilityReportProcessor",
+      "type": "reads_from",
+      "confidence": "medium",
+      "evidence": [
+        "aws/lambda-processor/src/test/java/com/vulnflow/aws/lambda/SqsVulnerabilityReportHandlerTest.java:14"
+      ]
+    },
+    {
+      "from": "TrivyVulnerabilityReportParser",
+      "to": "InvalidReportException",
+      "type": "reads_from",
+      "confidence": "medium",
+      "evidence": [
+        "processing-core/src/main/java/com/vulnflow/processing/TrivyVulnerabilityReportParser.java:26"
+      ]
+    },
+    {
+      "from": "TrivyVulnerabilityReportParser",
+      "to": "ParsedVulnerabilityReport",
+      "type": "reads_from",
+      "confidence": "medium",
+      "evidence": [
+        "processing-core/src/main/java/com/vulnflow/processing/TrivyVulnerabilityReportParser.java:22"
+      ]
+    },
+    {
+      "from": "TrivyVulnerabilityReportParserTest",
+      "to": "InvalidReportException",
+      "type": "reads_from",
+      "confidence": "medium",
+      "evidence": [
+        "backend/src/test/java/com/vulnflow/ingestion/TrivyVulnerabilityReportParserTest.java:8"
+      ]
+    },
+    {
+      "from": "TrivyVulnerabilityReportParserTest",
+      "to": "ParsedVulnerabilityReport",
+      "type": "reads_from",
+      "confidence": "medium",
+      "evidence": [
+        "backend/src/test/java/com/vulnflow/ingestion/TrivyVulnerabilityReportParserTest.java:9"
+      ]
+    },
+    {
+      "from": "TrivyVulnerabilityReportParserTest",
+      "to": "TrivyVulnerabilityReportParser",
+      "type": "reads_from",
+      "confidence": "medium",
+      "evidence": [
+        "backend/src/test/java/com/vulnflow/ingestion/TrivyVulnerabilityReportParserTest.java:10"
+      ]
+    },
+    {
+      "from": "VulnFlowClientException",
+      "to": "ClientFailureKind",
+      "type": "uses_client",
+      "confidence": "medium",
+      "evidence": [
+        "agent/src/main/java/com/vulnflow/agent/client/VulnFlowClientException.java:5"
+      ]
+    },
+    {
+      "from": "VulnFlowHttpClient",
+      "to": "ClientFailureKind",
+      "type": "uses_client",
+      "confidence": "medium",
+      "evidence": [
+        "agent/src/main/java/com/vulnflow/agent/client/VulnFlowHttpClient.java:68"
+      ]
+    },
+    {
+      "from": "VulnFlowHttpClient",
+      "to": "VulnFlowClientException",
+      "type": "uses_client",
+      "confidence": "medium",
+      "evidence": [
+        "agent/src/main/java/com/vulnflow/agent/client/VulnFlowHttpClient.java:67"
+      ]
+    },
+    {
+      "from": "VulnFlowHttpClientTest",
+      "to": "AcceptedResponse",
+      "type": "depends_on",
+      "confidence": "medium",
+      "evidence": [
+        "agent/src/test/java/com/vulnflow/agent/client/VulnFlowHttpClientTest.java:92"
+      ]
+    },
+    {
+      "from": "VulnFlowHttpClientTest",
+      "to": "AgentObjectMapper",
+      "type": "reads_from",
+      "confidence": "medium",
+      "evidence": [
+        "agent/src/test/java/com/vulnflow/agent/client/VulnFlowHttpClientTest.java:8"
+      ]
+    },
+    {
+      "from": "VulnFlowHttpClientTest",
+      "to": "ClientFailureKind",
+      "type": "uses_client",
+      "confidence": "medium",
+      "evidence": [
+        "agent/src/test/java/com/vulnflow/agent/client/VulnFlowHttpClientTest.java:123"
+      ]
+    },
+    {
+      "from": "VulnFlowHttpClientTest",
+      "to": "VulnFlowClientException",
+      "type": "uses_client",
+      "confidence": "medium",
+      "evidence": [
+        "agent/src/test/java/com/vulnflow/agent/client/VulnFlowHttpClientTest.java:145"
+      ]
+    },
+    {
+      "from": "VulnFlowHttpClientTest",
+      "to": "VulnFlowHttpClient",
+      "type": "uses_client",
+      "confidence": "medium",
+      "evidence": [
+        "agent/src/test/java/com/vulnflow/agent/client/VulnFlowHttpClientTest.java:65"
+      ]
+    },
+    {
+      "from": "VulnerabilityReportParser",
+      "to": "ParsedVulnerabilityReport",
+      "type": "reads_from",
+      "confidence": "medium",
+      "evidence": [
+        "processing-core/src/main/java/com/vulnflow/processing/VulnerabilityReportParser.java:4"
+      ]
+    },
+    {
+      "from": "VulnerabilityReportProcessor",
+      "to": "ParsedVulnerabilityReport",
+      "type": "reads_from",
+      "confidence": "medium",
+      "evidence": [
+        "processing-core/src/main/java/com/vulnflow/processing/VulnerabilityReportProcessor.java:22"
+      ]
+    },
+    {
+      "from": "VulnerabilityReportProcessor",
+      "to": "ProcessedVulnerabilityReport",
+      "type": "reads_from",
+      "confidence": "medium",
+      "evidence": [
+        "processing-core/src/main/java/com/vulnflow/processing/VulnerabilityReportProcessor.java:19"
+      ]
+    },
+    {
+      "from": "VulnerabilityReportProcessor",
+      "to": "VulnerabilityReportParser",
+      "type": "reads_from",
+      "confidence": "medium",
+      "evidence": [
+        "processing-core/src/main/java/com/vulnflow/processing/VulnerabilityReportProcessor.java:7"
+      ]
+    },
+    {
+      "from": "VulnerabilityReportProcessor",
+      "to": "VulnerabilityReportProcessingRequest",
+      "type": "reads_from",
+      "confidence": "medium",
+      "evidence": [
+        "processing-core/src/main/java/com/vulnflow/processing/VulnerabilityReportProcessor.java:19"
+      ]
+    },
+    {
+      "from": "VulnerabilityReportProcessorTest",
+      "to": "ProcessedVulnerabilityReport",
+      "type": "reads_from",
+      "confidence": "medium",
+      "evidence": [
+        "processing-core/src/test/java/com/vulnflow/processing/VulnerabilityReportProcessorTest.java:28"
+      ]
+    },
+    {
+      "from": "VulnerabilityReportProcessorTest",
+      "to": "TrivyVulnerabilityReportParser",
+      "type": "reads_from",
+      "confidence": "medium",
+      "evidence": [
+        "processing-core/src/test/java/com/vulnflow/processing/VulnerabilityReportProcessorTest.java:16"
+      ]
+    },
+    {
+      "from": "VulnerabilityReportProcessorTest",
+      "to": "VulnerabilityReportProcessingRequest",
+      "type": "reads_from",
+      "confidence": "medium",
+      "evidence": [
+        "processing-core/src/test/java/com/vulnflow/processing/VulnerabilityReportProcessorTest.java:28"
+      ]
+    },
+    {
+      "from": "VulnerabilityReportProcessorTest",
+      "to": "VulnerabilityReportProcessor",
+      "type": "reads_from",
+      "confidence": "medium",
+      "evidence": [
+        "processing-core/src/test/java/com/vulnflow/processing/VulnerabilityReportProcessorTest.java:14"
+      ]
+    }
+  ],
+  "endpoints": [
+    {
+      "method": "GET",
+      "path": "/api/v1/dashboard/summary",
+      "handler": "DashboardController.summary",
+      "file": "backend/src/main/java/com/vulnflow/dashboard/DashboardController.java",
+      "line": 17,
+      "confidence": "high",
+      "evidence": [
+        "backend/src/main/java/com/vulnflow/dashboard/DashboardController.java:17"
+      ]
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/ingestion-jobs",
+      "handler": "IngestionJobController.findAll",
+      "file": "backend/src/main/java/com/vulnflow/ingestion/IngestionJobController.java",
+      "line": 30,
+      "confidence": "high",
+      "evidence": [
+        "backend/src/main/java/com/vulnflow/ingestion/IngestionJobController.java:30"
+      ]
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/ingestion-jobs/{jobId}",
+      "handler": "IngestionJobController.findById",
+      "file": "backend/src/main/java/com/vulnflow/ingestion/IngestionJobController.java",
+      "line": 42,
+      "confidence": "high",
+      "evidence": [
+        "backend/src/main/java/com/vulnflow/ingestion/IngestionJobController.java:42"
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/ingestion-jobs/{jobId}/redrive",
+      "handler": "IngestionJobController.redrive",
+      "file": "backend/src/main/java/com/vulnflow/ingestion/IngestionJobController.java",
+      "line": 47,
+      "confidence": "high",
+      "evidence": [
+        "backend/src/main/java/com/vulnflow/ingestion/IngestionJobController.java:47"
+      ]
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/scans",
+      "handler": "ScanController.findAll",
+      "file": "backend/src/main/java/com/vulnflow/scan/ScanController.java",
+      "line": 23,
+      "confidence": "high",
+      "evidence": [
+        "backend/src/main/java/com/vulnflow/scan/ScanController.java:23"
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/scans/trivy",
+      "handler": "ScanIngestionController.ingestTrivy",
+      "file": "backend/src/main/java/com/vulnflow/ingestion/ScanIngestionController.java",
+      "line": 23,
+      "confidence": "high",
+      "evidence": [
+        "backend/src/main/java/com/vulnflow/ingestion/ScanIngestionController.java:23"
+      ]
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/scans/{id}",
+      "handler": "ScanController.findById",
+      "file": "backend/src/main/java/com/vulnflow/scan/ScanController.java",
+      "line": 33,
+      "confidence": "high",
+      "evidence": [
+        "backend/src/main/java/com/vulnflow/scan/ScanController.java:33"
+      ]
+    }
+  ],
+  "findings": [
+    {
+      "severity": "low",
+      "message": "Added 29 low-confidence inferred dependencies based on co-located naming patterns.",
+      "evidence": []
+    },
+    {
+      "severity": "info",
+      "message": "Detected 7 endpoints and 203 nodes.",
+      "evidence": []
+    },
+    {
+      "severity": "info",
+      "message": "Node inventory: config=15, controller=8, dao=1, endpoint=7, external_client=11, handler=9, job=13, model=7, queue=9, repository=24, service=15, unknown=84",
+      "evidence": []
+    },
+    {
+      "severity": "low",
+      "message": "138 nodes are low-confidence, usually naming-based detections.",
+      "evidence": []
+    },
+    {
+      "severity": "low",
+      "message": "29 edges are explicit low-confidence inferred dependencies.",
+      "evidence": []
+    }
+  ],
+  "limitations": [
+    {
+      "type": "reflection",
+      "message": "Static analysis may be incomplete because reflection was detected.",
+      "evidence": [
+        "agent/src/main/java/com/vulnflow/agent/client/VulnFlowHttpClient.java:61"
+      ]
+    },
+    {
+      "type": "ambiguous_di",
+      "message": "Static analysis may be incomplete because ambiguous di was detected.",
+      "evidence": [
+        "agent/src/main/java/com/vulnflow/agent/client/VulnFlowHttpClient.java:170"
+      ]
+    },
+    {
+      "type": "ambiguous_di",
+      "message": "Static analysis may be incomplete because ambiguous di was detected.",
+      "evidence": [
+        "agent/src/main/java/com/vulnflow/agent/config/AgentConfigLoader.java:34"
+      ]
+    },
+    {
+      "type": "ambiguous_di",
+      "message": "Static analysis may be incomplete because ambiguous di was detected.",
+      "evidence": [
+        "agent/src/main/java/com/vulnflow/agent/outbox/FileAgentOutbox.java:34"
+      ]
+    },
+    {
+      "type": "ambiguous_di",
+      "message": "Static analysis may be incomplete because ambiguous di was detected.",
+      "evidence": [
+        "agent/src/main/java/com/vulnflow/agent/scheduling/AgentStateStore.java:18"
+      ]
+    },
+    {
+      "type": "ambiguous_di",
+      "message": "Static analysis may be incomplete because ambiguous di was detected.",
+      "evidence": [
+        "agent/src/main/java/com/vulnflow/agent/scheduling/AssetCache.java:23"
+      ]
+    },
+    {
+      "type": "ambiguous_di",
+      "message": "Static analysis may be incomplete because ambiguous di was detected.",
+      "evidence": [
+        "agent/src/main/java/com/vulnflow/agent/shared/AtomicFiles.java:23"
+      ]
+    },
+    {
+      "type": "ambiguous_di",
+      "message": "Static analysis may be incomplete because ambiguous di was detected.",
+      "evidence": [
+        "agent/src/test/java/com/vulnflow/agent/AgentApplicationTest.java:21"
+      ]
+    },
+    {
+      "type": "ambiguous_di",
+      "message": "Static analysis may be incomplete because ambiguous di was detected.",
+      "evidence": [
+        "agent/src/test/java/com/vulnflow/agent/client/VulnFlowHttpClientTest.java:68"
+      ]
+    },
+    {
+      "type": "ambiguous_di",
+      "message": "Static analysis may be incomplete because ambiguous di was detected.",
+      "evidence": [
+        "agent/src/test/java/com/vulnflow/agent/config/AgentConfigLoaderTest.java:78"
+      ]
+    },
+    {
+      "type": "ambiguous_di",
+      "message": "Static analysis may be incomplete because ambiguous di was detected.",
+      "evidence": [
+        "agent/src/test/java/com/vulnflow/agent/outbox/FileAgentOutboxTest.java:39"
+      ]
+    },
+    {
+      "type": "ambiguous_di",
+      "message": "Static analysis may be incomplete because ambiguous di was detected.",
+      "evidence": [
+        "agent/src/test/java/com/vulnflow/agent/scanner/TrivyImageScannerTest.java:74"
+      ]
+    },
+    {
+      "type": "ambiguous_di",
+      "message": "Static analysis may be incomplete because ambiguous di was detected.",
+      "evidence": [
+        "agent/src/test/java/com/vulnflow/agent/scheduling/AgentSchedulerTest.java:67"
+      ]
+    },
+    {
+      "type": "ambiguous_di",
+      "message": "Static analysis may be incomplete because ambiguous di was detected.",
+      "evidence": [
+        "agent/src/test/java/com/vulnflow/agent/scheduling/ScanCoordinatorTest.java:99"
+      ]
+    },
+    {
+      "type": "ambiguous_di",
+      "message": "Static analysis may be incomplete because ambiguous di was detected.",
+      "evidence": [
+        "agent/src/test/java/com/vulnflow/agent/scheduling/UploadCoordinatorTest.java:84"
+      ]
+    },
+    {
+      "type": "ambiguous_di",
+      "message": "Static analysis may be incomplete because ambiguous di was detected.",
+      "evidence": [
+        "backend/src/main/java/com/vulnflow/asset/AssetController.java:36"
+      ]
+    },
+    {
+      "type": "ambiguous_di",
+      "message": "Static analysis may be incomplete because ambiguous di was detected.",
+      "evidence": [
+        "backend/src/main/java/com/vulnflow/asset/AssetService.java:37"
+      ]
+    },
+    {
+      "type": "ambiguous_di",
+      "message": "Static analysis may be incomplete because ambiguous di was detected.",
+      "evidence": [
+        "backend/src/main/java/com/vulnflow/ingestion/LocalFileReportStorage.java:41"
+      ]
+    },
+    {
+      "type": "ambiguous_di",
+      "message": "Static analysis may be incomplete because ambiguous di was detected.",
+      "evidence": [
+        "backend/src/test/java/com/vulnflow/PostgreSQLFlowIT.java:275"
+      ]
+    }
+  ]
+}
