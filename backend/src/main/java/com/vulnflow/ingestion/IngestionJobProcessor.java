@@ -1,5 +1,9 @@
 package com.vulnflow.ingestion;
 
+import com.vulnflow.processing.ProcessedVulnerabilityReport;
+import com.vulnflow.processing.VulnerabilityReportProcessingRequest;
+import com.vulnflow.processing.VulnerabilityReportProcessor;
+import com.vulnflow.processing.port.ReportStorage;
 import io.micrometer.core.instrument.Timer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -10,8 +14,7 @@ public class IngestionJobProcessor {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(IngestionJobProcessor.class);
     private final ReportStorage reportStorage;
-    private final PayloadIntegrityVerifier integrityVerifier;
-    private final VulnerabilityReportParser reportParser;
+    private final VulnerabilityReportProcessor reportProcessor;
     private final IngestionPersistenceService persistenceService;
     private final JobFailureService failureService;
     private final JobFailureClassifier failureClassifier;
@@ -19,15 +22,13 @@ public class IngestionJobProcessor {
 
     public IngestionJobProcessor(
             ReportStorage reportStorage,
-            PayloadIntegrityVerifier integrityVerifier,
-            VulnerabilityReportParser reportParser,
+            VulnerabilityReportProcessor reportProcessor,
             IngestionPersistenceService persistenceService,
             JobFailureService failureService,
             JobFailureClassifier failureClassifier,
             IngestionMetrics metrics) {
         this.reportStorage = reportStorage;
-        this.integrityVerifier = integrityVerifier;
-        this.reportParser = reportParser;
+        this.reportProcessor = reportProcessor;
         this.persistenceService = persistenceService;
         this.failureService = failureService;
         this.failureClassifier = failureClassifier;
@@ -38,9 +39,10 @@ public class IngestionJobProcessor {
         Timer.Sample timer = metrics.startProcessing();
         try {
             byte[] content = reportStorage.load(claim.payloadKey());
-            integrityVerifier.verify(content, claim.contentHash());
-            ParsedVulnerabilityReport report = reportParser.parse(content);
-            persistenceService.complete(claim.jobId(), claim.claimToken(), report);
+            ProcessedVulnerabilityReport report = reportProcessor.process(
+                    new VulnerabilityReportProcessingRequest(
+                            claim.scanId(), claim.assetId(), claim.contentHash(), content));
+            persistenceService.store(new LocalCompletionContext(claim.jobId(), claim.claimToken()), report);
             metrics.jobCompleted();
             LOGGER.info(
                     "Trabajo de ingesta completado: jobId={}, scanId={}, assetId={}, intento={}, resultado=COMPLETED",

@@ -2,10 +2,11 @@
 
 ## Current position
 
-VulnFlow 0.3.1 remains entirely VPS-local at runtime. PostgreSQL supplies the backend job
+VulnFlow 0.4.0 remains entirely local/VPS at runtime by default. PostgreSQL supplies the backend job
 queue, named volumes store backend payloads, and an independent Linux agent
-uses a filesystem outbox for continuous scans. No AWS SDK, credentials, API
-calls, or resources are part of this release.
+uses a filesystem outbox for continuous scans. AWS SDK adapters and a Lambda
+artifact are compiled but inactive by default; no credentials, AWS API calls,
+or resources are used by this release.
 
 The local design now proves the behavior needed before cloud migration:
 
@@ -50,19 +51,22 @@ suite. It must not introduce two simultaneous processing paths.
 
 ## Recommended phases
 
-### Phase 1: contracts and retention
+### Phase 1: contracts and processor boundaries (completed in 0.4.0)
 
 - Define a versioned event envelope with scan ID, payload key, checksum, and
-  scanner type.
+  scanner type. Completed as `IngestionEventV1`.
+- Extract integrity, parsing, normalization, and risk into one shared processor.
+- Add mock-tested S3/SQS adapters and a partial-batch Lambda handler.
 - Define payload retention and deletion behavior locally.
 - Add storage capacity metrics and an administrative cleanup policy.
 - Decide how legacy completed and failed scans without 0.2 jobs are represented.
 
-### Phase 2: temporary ingestion slice
+### Phase 2: authorized temporary ingestion slice
 
-- Implement an S3 `ReportStorage` adapter.
-- Add encrypted SQS and DLQ resources with bounded retention and redrive.
-- Package the existing processor boundary as a Lambda handler.
+- Accept and implement the PostgreSQL result-store provider with event-id
+  idempotency; keep the Terraform apply safety gate closed until then.
+- Manually apply the prepared encrypted S3, SQS/DLQ, Lambda, IAM, logs, and
+  event-source modules under the temporary deployment runbook.
 - Apply least-privilege object read, queue consume, and database write access.
 - Add queue age, DLQ depth, error, throttle, and cost alarms.
 
@@ -84,5 +88,5 @@ Before any future deployment:
 4. Configure budgets, retention, and alarms.
 5. Run `terraform destroy`, verify deletion, and inspect for orphaned resources.
 
-Terraform in 0.3.1 remains a non-deploying skeleton and is only formatted,
+Terraform in 0.4.0 describes the first S3/SQS/Lambda slice and is only formatted,
 initialized without a backend, and validated.

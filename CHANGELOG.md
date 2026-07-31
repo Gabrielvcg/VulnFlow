@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.4.0 - 2026-07-31
+
+- Extracted the infrastructure-neutral report processor and versioned V1 ingestion event into a shared Maven module used by both the local worker and the SQS Lambda handler.
+- Added explicit `ReportStorage`, `ProcessingResultStore`, and `IngestionMessagePublisher` ports plus disabled-by-default, mock-tested S3 and SQS AWS SDK adapters.
+- Added a separately packaged Java Lambda batch handler with per-record failures and result-store idempotency boundaries, without local polling, SQL claim locks, application backoff, or manual dead-letter routing.
+- Added conservative Terraform modules for private encrypted S3, SQS/DLQ, Lambda, least-privilege IAM, bounded CloudWatch retention, and the SQS event source mapping, with a fail-closed result-store readiness gate.
+- Expanded CI to verify all Java modules, contracts, PostgreSQL integration tests, container artifacts, and Terraform formatting/validation without AWS credentials or AWS deployment.
+- Added AWS coupling assessment, event contract, architecture/cost/runbook guidance, result-storage analysis, and ADRs for the shared core and runtime adapter boundaries.
+
 ## 0.3.1 - 2026-07-31
 
 - Added a gated GitHub Actions CI/CD flow that verifies backend and agent,
