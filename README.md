@@ -1,251 +1,240 @@
 # VulnFlow
 
-VulnFlow 0.1.1 is a local-first Spring Boot platform for receiving, normalizing,
-storing, and querying Trivy vulnerability reports. The current implementation is
-a synchronous modular monolith backed by PostgreSQL. No AWS resource, frontend,
-queue, worker, Syft integration, or cross-scan reconciliation exists yet.
+VulnFlow 0.2.0 is a local-first Spring Boot API that accepts Trivy reports,
+stores them durably, and processes them asynchronously through a PostgreSQL job
+queue. PostgreSQL remains the source of truth for assets, scans, jobs, and
+findings; report bytes live behind the `ReportStorage` abstraction.
 
 ## Current architecture
 
 ```text
-Trivy JSON
-    |
-    | multipart/form-data + X-API-Key
-    v
-Spring Boot
-    |-- validate size, media type, and Trivy structure
-    |-- hash and serialize registration by asset/hash
-    |-- parse and calculate risk
-    |-- persist findings and completion atomically
-    v
-PostgreSQL + Flyway
+Client
+  | POST /api/v1/scans/trivy
+  v
+API key filter -> validation -> SHA-256
+  | short registration transaction
+  +-> Scan(RECEIVED)
+  +-> LocalFileReportStorage
+  +-> IngestionJob(PENDING)
+  v
+202 Accepted
+
+Scheduled local worker
+  | FOR UPDATE SKIP LOCKED, short claim transaction
+  v
+Job(PROCESSING, claimToken) + Scan(PROCESSING)
+  | no database lock held
+  +-> load payload -> verify SHA-256 -> Trivy parser -> risk calculation
+  | atomic completion transaction
+  v
+Findings + Scan(COMPLETED) + Job(COMPLETED)
+  or RETRY_WAIT / DEAD_LETTER
 ```
 
-The application uses Java 17, Spring Boot 3.5, Spring MVC, Spring Security,
-Validation, Data JPA, Actuator, PostgreSQL 16, Flyway, Jackson, springdoc,
-Maven, JUnit, Mockito, Testcontainers, Docker Compose, and a validation-only
-Terraform skeleton.
+The backend is one modular monolith. No AWS service, message broker, frontend,
+or additional runtime container is required.
 
-## Start locally
+## Run locally
 
-Requirements: Docker Desktop or Docker Engine with Compose v2.
-
-```bash
-cp .env.example .env
-docker compose up --build -d
-docker compose ps
-curl http://localhost:8080/actuator/health
-```
-
-PowerShell:
+Requirements: Docker Desktop or Docker Engine with Compose.
 
 ```powershell
 Copy-Item .env.example .env
+# Change VULNFLOW_API_KEY in .env for anything beyond an isolated demo.
 docker compose up --build -d
 docker compose ps
-Invoke-RestMethod http://localhost:8080/actuator/health
 ```
 
-Compose binds both services to `127.0.0.1` by default. PostgreSQL is not
-published on all network interfaces. Values in `.env.example` are local-only
-examples, not production secrets.
+Default local endpoints:
 
-Useful local URLs:
+- API: `http://127.0.0.1:8080`
+- Swagger UI: `http://127.0.0.1:8080/swagger-ui.html`
+- Health: `http://127.0.0.1:8080/actuator/health`
+- Metrics catalog: `http://127.0.0.1:8080/actuator/metrics`
+- PostgreSQL: `127.0.0.1:5432`
 
-- API: `http://localhost:8080/api/v1`
-- Swagger UI: `http://localhost:8080/swagger-ui.html`
-- OpenAPI JSON: `http://localhost:8080/v3/api-docs`
-- Health: `http://localhost:8080/actuator/health`
+Only health, metrics, OpenAPI, and Swagger are public. Every `/api/v1/**`
+endpoint requires `X-API-Key`.
 
-Health and Swagger are public for local developer use. Every `/api/v1/**`
-request requires:
+## Configuration
+
+| Environment variable | Default | Purpose |
+| --- | --- | --- |
+| `VULNFLOW_API_KEY` | local demo value in Compose | Machine-to-machine API authentication |
+| `VULNFLOW_MAX_FILE_SIZE` | `10MB` | Multipart and ingestion byte limit |
+| `VULNFLOW_MAX_DESCRIPTION_LENGTH` | `8000` | Maximum imported description length |
+| `VULNFLOW_REPORT_STORAGE_DIRECTORY` | `./data/reports` | Local payload root; Docker uses a named volume |
+| `VULNFLOW_WORKER_ENABLED` | `true` | Enables scheduled polling; set `false` for debugging |
+| `VULNFLOW_WORKER_POLL_INTERVAL` | `2s` | Delay between polling cycles |
+| `VULNFLOW_WORKER_BATCH_SIZE` | `5` | Maximum claims per cycle |
+| `VULNFLOW_WORKER_MAX_ATTEMPTS` | `3` | Maximum processing attempts |
+| `VULNFLOW_WORKER_STALE_TIMEOUT` | `15m` | Processing lease timeout |
+| `VULNFLOW_WORKER_BACKOFF` | `5s,30s,2m` | Deterministic retry delays |
+
+The API key is provisional. A future human-facing interface should use OIDC or
+JWT with explicit authorization.
+
+## Asynchronous ingestion
 
 ```http
-X-API-Key: value-from-VULNFLOW_API_KEY
+POST /api/v1/scans/trivy?assetId={assetId}
+X-API-Key: configured-value
+Content-Type: multipart/form-data
 ```
 
-The API key authentication is provisional machine-to-machine protection. It
-does not provide users, roles, ownership, or tenant isolation. A future human
-interface must use OIDC or JWT with explicit authorization.
-
-## Run the demo
-
-The script reads the API key from the environment and never embeds or logs it:
-
-```bash
-export VULNFLOW_API_KEY=local-development-only-api-key
-sh scripts/demo.sh
-```
-
-PowerShell with Git Bash or another POSIX shell:
-
-```powershell
-$env:VULNFLOW_API_KEY = "local-development-only-api-key"
-sh scripts/demo.sh
-```
-
-The demo creates an asset, uploads `sample-data/trivy-multiple.json`, lists its
-findings, and reads the dashboard summary.
-
-## API
-
-All paginated endpoints accept `page`, `size`, and `sort`, cap page size at 100,
-and use stable default ordering:
-
-- Assets: `createdAt DESC, id DESC`
-- Scans: `receivedAt DESC, id DESC`
-- Findings: `detectedAt DESC, id DESC`
-
-| Method | Path | Purpose |
-|---|---|---|
-| `POST` | `/api/v1/assets` | Create an asset |
-| `GET` | `/api/v1/assets` | List assets |
-| `GET` | `/api/v1/assets/{id}` | Get an asset |
-| `POST` | `/api/v1/scans/trivy` | Ingest or retry a Trivy report |
-| `GET` | `/api/v1/scans` | List scans |
-| `GET` | `/api/v1/scans/{id}` | Get a scan |
-| `GET` | `/api/v1/findings` | Filter finding summaries |
-| `GET` | `/api/v1/findings/{id}` | Get a finding with full description |
-| `PATCH` | `/api/v1/findings/{id}/status` | Change finding workflow status |
-| `GET` | `/api/v1/dashboard/summary` | Read aggregate counts |
-| `GET` | `/actuator/health` | Public health status |
-
-Finding filters are `severity`, `status`, `assetId`, and `knownExploited`.
-Finding lists omit descriptions; detail responses include the bounded full
-description.
-
-### Ingestion example
-
-```bash
-asset_response=$(curl --fail --silent \
-  -X POST http://localhost:8080/api/v1/assets \
-  -H "X-API-Key: ${VULNFLOW_API_KEY}" \
-  -H "Content-Type: application/json" \
-  -d '{"name":"demo","type":"CONTAINER_IMAGE","externalReference":"demo:1.0"}')
-
-curl --fail \
-  -X POST "http://localhost:8080/api/v1/scans/trivy?assetId=${ASSET_ID}" \
-  -H "X-API-Key: ${VULNFLOW_API_KEY}" \
-  -F "file=@sample-data/trivy-small.json;type=application/json"
-```
-
-An imported response includes both the number created by this request and the
-total currently associated with the scan:
+A new report returns immediately after durable registration:
 
 ```json
 {
-  "scanId": "7fc9b7e1-b1d7-4b86-a360-31acbf6a5ab5",
-  "assetId": "5e26984f-76e9-40c1-a5cd-96397e542deb",
-  "status": "COMPLETED",
-  "outcome": "IMPORTED",
-  "findingsImported": 1,
-  "totalFindings": 1,
-  "criticalFindings": 0,
-  "highFindings": 1,
-  "duplicate": false
+  "scanId": "uuid",
+  "jobId": "uuid",
+  "assetId": "uuid",
+  "scanStatus": "RECEIVED",
+  "jobStatus": "PENDING",
+  "outcome": "ACCEPTED"
 }
 ```
 
-## Scan lifecycle and deduplication
+Response semantics:
 
-The database keeps `UNIQUE (asset_id, content_hash)`. The hash covers the exact
-uploaded bytes; filename does not affect deduplication.
+| Existing state | HTTP | Outcome | Action |
+| --- | --- | --- | --- |
+| No matching scan | `202` | `ACCEPTED` | Store one payload and create one job |
+| `PENDING` or `RETRY_WAIT` | `202` | `ALREADY_QUEUED` | Reuse scan and job |
+| `PROCESSING` | `202` | `ALREADY_PROCESSING` | Reuse scan and job |
+| `COMPLETED` | `200` | `DUPLICATE` | No payload, job, or finding is added |
+| `FAILED` with `DEAD_LETTER` job | `200` | `DEAD_LETTER` | No automatic retry; use redrive |
+| Non-completed legacy scan without job | `202` | `ACCEPTED` | Store the re-uploaded payload and create one job |
+
+Deduplication remains enforced by `UNIQUE(asset_id, content_hash)`. One job per
+scan is enforced by `UNIQUE(scan_id)`.
+
+## Scan and job states
+
+Scans describe domain processing state:
 
 ```text
-new content       -> PROCESSING -> COMPLETED
-                              \-> FAILED
-FAILED retry      -> PROCESSING -> COMPLETED or FAILED
-COMPLETED repeat  -> DUPLICATE, HTTP 200, findingsImported=0
-PROCESSING repeat -> ALREADY_PROCESSING, HTTP 202, no second processor
+RECEIVED -> PROCESSING -> COMPLETED
+    ^             |
+    |             +-> FAILED when the job reaches DEAD_LETTER
+    +---- retry or redrive
 ```
 
-`ScanRegistrationService.registerProcessing()` runs in `REQUIRES_NEW`, uses
-PostgreSQL `ON CONFLICT` and a pessimistic row lock, and safely claims a new or
-failed scan. A retry reuses the `scanId` and removes incompatible old findings.
+Jobs describe queue execution state:
 
-`IngestionPersistenceService.complete()` runs in another `REQUIRES_NEW`
-transaction. All findings and the transition to `COMPLETED` commit together or
-roll back together.
+```text
+PENDING -> PROCESSING -> COMPLETED
+              |
+              +-> RETRY_WAIT -> PROCESSING
+              +-> DEAD_LETTER -> PENDING (manual redrive)
+```
 
-`ScanFailureService.markFailed()` runs in a third `REQUIRES_NEW` transaction.
-Only parsing and transactional persistence errors call it. Failures while
-building or serializing the later response cannot change a completed scan to
-`FAILED`. If failure recording also fails, the original exception is preserved
-and the second error is attached as suppressed.
+Invalid JSON, invalid Trivy structure, invalid required fields, and a missing
+payload, payload-integrity failures, deterministic processing failures, and
+unknown runtime failures are non-retryable. Explicitly transient storage and
+database availability failures use the configured backoff without
+`Thread.sleep`. At exhaustion the job becomes `DEAD_LETTER` and its scan becomes
+`FAILED`.
 
-`ScanRecoveryService.recoverStaleProcessingScans()` is an idempotent local
-operation prepared for a future scheduler. It changes scans older than
-`VULNFLOW_PROCESSING_TIMEOUT` to `FAILED` with a generic technical reason. No
-permanent scheduled job is enabled in 0.1.1.
+## Job API
 
-## Trivy validation and limits
+- `GET /api/v1/ingestion-jobs?status=&scanId=&page=&size=`
+- `GET /api/v1/ingestion-jobs/{jobId}`
+- `POST /api/v1/ingestion-jobs/{jobId}/redrive`
 
-A report must have an object root and an explicit array `Results`. Empty
-`Results` and `Vulnerabilities: null` are valid. Null/non-array `Results`,
-non-object results, non-array vulnerabilities, non-object vulnerabilities, and
-entries without `VulnerabilityID` or `PkgName` are rejected with `422`.
+Redrive accepts only `DEAD_LETTER`, verifies that the payload exists, invalidates
+the previous claim token, resets the attempt counter, sets the job to `PENDING`
+and the scan to `RECEIVED`, and returns `202`. The next claim always creates a
+new UUID token. Any other state returns `409`.
 
-Limits:
+Job responses never expose payload keys, physical paths, report content,
+credentials, or stack traces. Lists use `createdAt DESC, id DESC` by default.
 
-- Multipart request/file: `VULNFLOW_MAX_FILE_SIZE`, default `10MB`
-- Finding description: `VULNFLOW_MAX_DESCRIPTION_LENGTH`, default 8000
-- Processing timeout: `VULNFLOW_PROCESSING_TIMEOUT`, default `15m`
+## Transaction and locking boundaries
 
-Descriptions and non-critical display fields may be bounded. Oversized
-`VulnerabilityID` and package identifiers are rejected rather than silently
-truncated. Uploaded filenames are stored only as bounded metadata after path
-components and control characters are removed; they are never used as a write
-path.
+1. Registration serializes matching hashes, stores the payload, creates the
+   `RECEIVED` scan and `PENDING` job, and commits before returning `202`.
+2. Claim uses `FOR UPDATE SKIP LOCKED`, increments the attempt and updates the
+   scan to `PROCESSING` while generating a new claim-token UUID in a short
+   transaction.
+3. The payload is loaded, checked against the scan SHA-256, and parsed after the
+   claim transaction has committed.
+4. Findings, `Scan(COMPLETED)`, and `Job(COMPLETED)` commit atomically.
+5. Failure and stale recovery transitions use independent short transactions.
 
-## Errors
+Every detached claim carries both an attempt number and a claim token.
+`attemptCount` is a retry counter and may reset on manual redrive; `claimToken`
+is a non-reusable fencing generation. Completion and failure require the current
+token, so a stale worker remains rejected even when attempt numbers match. This
+provides at-least-once processing with idempotent finalization.
 
-The API uses a common error DTO and does not return stack traces:
+## Upgrade policy
 
-- Unreadable JSON, missing fields/parts, invalid UUID/enums: `400`
-- Invalid API key: `401`
-- Missing asset: `404`
-- Unsupported media type: `415`
-- Oversized report: `413`
-- Invalid Trivy report: `422`
-- Unexpected internal error: `500`
+Flyway V4 defines the transition from 0.1.1 and early 0.2.0 databases:
 
-## Tests
+- historical `COMPLETED` scans without jobs remain valid duplicates;
+- historical `RECEIVED` or `PROCESSING` scans without jobs become `FAILED`
+  because their original payload cannot be reconstructed;
+- re-uploading a non-completed legacy scan stores the supplied payload and
+  creates exactly one new job;
+- an early-0.2.0 `PROCESSING` job has its old claim invalidated and moves to
+  `RETRY_WAIT`, or `DEAD_LETTER` when no attempt remains.
 
-Docker must be running for PostgreSQL Testcontainers:
+The migration cannot resume historical work whose report bytes were never
+persisted. See [migration policy](docs/migrations.md).
+
+## Storage
+
+`LocalFileReportStorage` creates internal keys unrelated to the uploaded
+filename, verifies every resolved path remains under its configured root,
+writes a temporary file, and uses an atomic move when supported. The original
+filename is scan metadata only. Before parsing, the worker recomputes SHA-256
+and compares it with the scan hash; altered content dead-letters without being
+parsed.
+
+Completed payloads are intentionally retained in 0.2.0. Retention, cleanup,
+capacity limits, backup, and encryption policies remain future work.
+
+## Metrics
+
+- `vulnflow.ingestion.jobs.accepted`
+- `vulnflow.ingestion.jobs.completed`
+- `vulnflow.ingestion.jobs.retried`
+- `vulnflow.ingestion.jobs.dead_letter`
+- `vulnflow.ingestion.processing.duration`
+- `vulnflow.ingestion.jobs.pending`
+- `vulnflow.ingestion.jobs.retry`
+- `vulnflow.ingestion.jobs.dead_letter.current`
+
+## Verification and demo
 
 ```powershell
 Set-Location backend
+.\mvnw.cmd test
 .\mvnw.cmd verify
+Set-Location ..
+
+$env:VULNFLOW_API_KEY = "local-development-only-api-key"
+& "C:\Program Files\Git\bin\bash.exe" -lc `
+  'cd /c/Users/GabrielVG/Desktop/PROYECTOS/secscan && ./scripts/demo.sh'
 ```
 
-The suite covers parsing, transaction failure, retry, concurrent upload,
-completed and processing deduplication, separate assets, filename independence,
-API-key enforcement, client errors, description projection, Flyway, recovery,
-and end-to-end PostgreSQL behavior.
+`mvn test` runs the Docker-independent unit suite. `mvn verify` is the required
+release/CI command: it starts PostgreSQL with Testcontainers and fails if Docker
+is unavailable. The demo polls with a timeout, shows a completed report,
+verifies a duplicate, waits for an invalid report, alters that retained payload,
+redrives it, and verifies integrity dead-lettering.
 
-## Terraform
+## Documentation
 
-`infrastructure/aws` defines zero AWS resources. Validation does not require AWS
-credentials:
+- [Architecture](docs/architecture.md)
+- [Security](docs/security.md)
+- [Migration policy](docs/migrations.md)
+- [AWS roadmap](docs/aws-roadmap.md)
+- [ADR-007 PostgreSQL queue](docs/decisions/ADR-007-postgresql-persistent-job-queue.md)
+- [ADR-008 local storage](docs/decisions/ADR-008-local-report-storage.md)
+- [ADR-009 at-least-once processing](docs/decisions/ADR-009-at-least-once-processing.md)
 
-```bash
-make terraform-format
-make terraform-validate
-```
-
-Do not run `terraform apply`. AWS, S3, SQS, Lambda, DynamoDB, EventBridge, SNS,
-and cloud authentication are intentionally outside version 0.1.1.
-
-## Current limitations
-
-- Ingestion remains synchronous and supports Trivy vulnerability JSON only.
-- The full uploaded JSON is materialized in memory after the size gate.
-- API-key authentication has no per-client identity, roles, ownership, rotation
-  protocol, throttling, or TLS termination.
-- Swagger is intentionally public on the localhost-only development binding.
-- No scheduler invokes stale-scan recovery automatically.
-- Findings are snapshots; reconciliation between scans is not implemented.
-- Terraform contains no deployable resources and no AWS contact is required.
-
-See [architecture](docs/architecture.md), [security](docs/security.md), and
-[architecture decisions](docs/decisions/).
+AWS remains intentionally deferred. The local `ReportStorage`, persistent job
+queue, and worker boundaries are preparation for later S3, SQS, and Lambda
+adapters, not cloud integrations in this release.

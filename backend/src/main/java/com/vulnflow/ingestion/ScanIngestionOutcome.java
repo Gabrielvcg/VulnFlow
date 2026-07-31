@@ -1,8 +1,9 @@
 package com.vulnflow.ingestion;
 
 public enum ScanIngestionOutcome {
-    IMPORTED,
-    RETRIED,
+    ACCEPTED,
     DUPLICATE,
-    ALREADY_PROCESSING
+    ALREADY_QUEUED,
+    ALREADY_PROCESSING,
+    DEAD_LETTER
 }

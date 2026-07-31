@@ -37,7 +37,7 @@ management:
   endpoints:
     web:
       exposure:
-        include: health,info
+        include: health,info,metrics
   endpoint:
     health:
       probes:
@@ -51,8 +51,16 @@ springdoc:
 vulnflow:
   ingestion:
     max-file-size: ${VULNFLOW_MAX_FILE_SIZE:10MB}
-    processing-timeout: ${VULNFLOW_PROCESSING_TIMEOUT:15m}
     max-description-length: ${VULNFLOW_MAX_DESCRIPTION_LENGTH:8000}
+  report-storage:
+    directory: ${VULNFLOW_REPORT_STORAGE_DIRECTORY:./data/reports}
+  worker:
+    enabled: ${VULNFLOW_WORKER_ENABLED:true}
+    poll-interval: ${VULNFLOW_WORKER_POLL_INTERVAL:2s}
+    batch-size: ${VULNFLOW_WORKER_BATCH_SIZE:5}
+    max-attempts: ${VULNFLOW_WORKER_MAX_ATTEMPTS:3}
+    stale-timeout: ${VULNFLOW_WORKER_STALE_TIMEOUT:15m}
+    backoff: ${VULNFLOW_WORKER_BACKOFF:5s,30s,2m}
   security:
     api-key:
       value: ${VULNFLOW_API_KEY:}
