@@ -47,6 +47,9 @@ public class IngestionJob {
     @Column(name = "locked_at")
     private Instant lockedAt;
 
+    @Column(name = "claim_token")
+    private UUID claimToken;
+
     @Column(name = "completed_at")
     private Instant completedAt;
 
@@ -82,7 +85,7 @@ public class IngestionJob {
         updatedAt = Instant.now();
     }
 
-    public void claim(Instant now) {
+    public UUID claim(Instant now) {
         if (status != IngestionJobStatus.PENDING && status != IngestionJobStatus.RETRY_WAIT) {
             throw new IllegalStateException("Only an available job can be claimed");
         }
@@ -92,8 +95,10 @@ public class IngestionJob {
         status = IngestionJobStatus.PROCESSING;
         attemptCount++;
         lockedAt = now;
+        claimToken = UUID.randomUUID();
         completedAt = null;
         lastError = null;
+        return claimToken;
     }
 
     public void markCompleted(Instant now) {
@@ -101,6 +106,7 @@ public class IngestionJob {
         status = IngestionJobStatus.COMPLETED;
         completedAt = now;
         lockedAt = null;
+        claimToken = null;
         lastError = null;
     }
 
@@ -109,6 +115,7 @@ public class IngestionJob {
         status = IngestionJobStatus.RETRY_WAIT;
         availableAt = now.plus(backoff);
         lockedAt = null;
+        claimToken = null;
         completedAt = null;
         lastError = limitError(safeError);
     }
@@ -118,6 +125,7 @@ public class IngestionJob {
         status = IngestionJobStatus.DEAD_LETTER;
         completedAt = now;
         lockedAt = null;
+        claimToken = null;
         lastError = limitError(safeError);
     }
 
@@ -133,6 +141,7 @@ public class IngestionJob {
         attemptCount = 0;
         availableAt = now;
         lockedAt = null;
+        claimToken = null;
         completedAt = null;
         lastError = null;
     }
@@ -158,6 +167,7 @@ public class IngestionJob {
     public int getMaxAttempts() { return maxAttempts; }
     public Instant getAvailableAt() { return availableAt; }
     public Instant getLockedAt() { return lockedAt; }
+    public UUID getClaimToken() { return claimToken; }
     public Instant getCompletedAt() { return completedAt; }
     public String getLastError() { return lastError; }
     public Instant getCreatedAt() { return createdAt; }

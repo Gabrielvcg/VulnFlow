@@ -62,7 +62,7 @@ public class LocalFileReportStorage implements ReportStorage {
         } catch (NoSuchFileException exception) {
             throw new PayloadNotFoundException("The stored report payload does not exist");
         } catch (IOException exception) {
-            throw new ReportStorageException("The report payload could not be read", exception);
+            throw new TransientReportStorageException("The report payload could not be read", exception);
         }
     }
 

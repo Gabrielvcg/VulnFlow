@@ -1,11 +1,15 @@
 package com.vulnflow;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyBoolean;
+import static org.mockito.Mockito.clearInvocations;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doCallRealMethod;
+import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -18,19 +22,28 @@ import com.vulnflow.asset.Asset;
 import com.vulnflow.asset.AssetRepository;
 import com.vulnflow.asset.AssetType;
 import com.vulnflow.finding.FindingRepository;
-import com.vulnflow.finding.FindingRiskCalculator;
+import com.vulnflow.finding.Finding;
+import com.vulnflow.finding.FindingSeverity;
+import com.vulnflow.ingestion.FailureDisposition;
 import com.vulnflow.ingestion.IngestionJob;
 import com.vulnflow.ingestion.IngestionJobRecoveryService;
+import com.vulnflow.ingestion.IngestionJobRedriveService;
 import com.vulnflow.ingestion.IngestionJobRepository;
 import com.vulnflow.ingestion.IngestionJobStatus;
+import com.vulnflow.ingestion.IngestionPersistenceService;
 import com.vulnflow.ingestion.JobClaim;
 import com.vulnflow.ingestion.JobClaimService;
+import com.vulnflow.ingestion.JobFailureService;
 import com.vulnflow.ingestion.LocalFileReportStorage;
 import com.vulnflow.ingestion.LocalIngestionWorker;
+import com.vulnflow.ingestion.ParsedVulnerability;
+import com.vulnflow.ingestion.ParsedVulnerabilityReport;
 import com.vulnflow.ingestion.RecoveryResult;
 import com.vulnflow.ingestion.ReportStorage;
 import com.vulnflow.ingestion.ReportStorageException;
 import com.vulnflow.ingestion.ReportStorageProperties;
+import com.vulnflow.ingestion.StaleJobClaimException;
+import com.vulnflow.ingestion.TransientReportStorageException;
 import com.vulnflow.ingestion.VulnerabilityReportParser;
 import com.vulnflow.scan.ScanRepository;
 import com.vulnflow.scan.ScanStatus;
@@ -40,8 +53,11 @@ import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.security.MessageDigest;
 import java.time.Instant;
+import java.time.ZoneOffset;
 import java.util.Comparator;
+import java.util.HexFormat;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CountDownLatch;
@@ -49,7 +65,6 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicInteger;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -80,7 +95,7 @@ import org.testcontainers.junit.jupiter.Testcontainers;
     "vulnflow.worker.backoff=5s,30s,2m"
 })
 @AutoConfigureMockMvc
-@Testcontainers(disabledWithoutDocker = true)
+@Testcontainers
 class PostgreSQLFlowIT {
 
     private static final String API_KEY = "test-api-key";
@@ -105,12 +120,14 @@ class PostgreSQLFlowIT {
     @Autowired LocalIngestionWorker worker;
     @Autowired JobClaimService claimService;
     @Autowired IngestionJobRecoveryService recoveryService;
+    @Autowired IngestionJobRedriveService redriveService;
+    @Autowired IngestionPersistenceService persistenceService;
+    @Autowired JobFailureService failureService;
     @Autowired JdbcTemplate jdbcTemplate;
     @Autowired PlatformTransactionManager transactionManager;
 
     @MockitoSpyBean ReportStorage reportStorage;
     @MockitoSpyBean VulnerabilityReportParser reportParser;
-    @MockitoSpyBean FindingRiskCalculator riskCalculator;
 
     @BeforeEach
     void cleanState() throws Exception {
@@ -174,6 +191,34 @@ class PostgreSQLFlowIT {
     }
 
     @Test
+    void modifiedPayloadFailsIntegrityBeforeParsingWithoutRetry() throws Exception {
+        JsonNode accepted = upload(createAsset("integrity"), readReport(), "integrity.json", 202);
+        UUID jobId = UUID.fromString(accepted.path("jobId").asText());
+        UUID scanId = UUID.fromString(accepted.path("scanId").asText());
+        IngestionJob job = jobRepository.findById(jobId).orElseThrow();
+        Files.write(
+                REPORT_DIRECTORY.resolve(job.getPayloadKey()),
+                "{\"Results\":[]}".getBytes(StandardCharsets.UTF_8));
+        clearInvocations(reportParser);
+
+        worker.pollOnce();
+
+        IngestionJob failed = jobRepository.findById(jobId).orElseThrow();
+        assertThat(failed.getStatus()).isEqualTo(IngestionJobStatus.DEAD_LETTER);
+        assertThat(failed.getAttemptCount()).isOne();
+        assertThat(failed.getLastError()).isEqualTo("Stored report payload integrity verification failed");
+        assertThat(scanRepository.findById(scanId).orElseThrow().getStatus()).isEqualTo(ScanStatus.FAILED);
+        assertThat(findingRepository.countByScanId(scanId)).isZero();
+        verify(reportParser, never()).parse(any());
+        mockMvc.perform(get("/api/v1/ingestion-jobs/{id}", jobId)
+                        .header(ApiKeyAuthenticationFilter.HEADER_NAME, API_KEY))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.payloadKey").doesNotExist())
+                .andExpect(jsonPath("$.content").doesNotExist())
+                .andExpect(jsonPath("$.contentHash").doesNotExist());
+    }
+
+    @Test
     void queuedDuplicateAndConcurrentUploadsCreateOnlyOneJobAndPayload() throws Exception {
         UUID assetId = createAsset("concurrent-upload");
         byte[] report = readReport();
@@ -204,6 +249,59 @@ class PostgreSQLFlowIT {
     }
 
     @Test
+    void completedLegacyScanWithoutJobRemainsADuplicate() throws Exception {
+        UUID assetId = createAsset("legacy-completed");
+        byte[] report = readReport();
+        UUID scanId = insertLegacyScan(assetId, report, "COMPLETED");
+
+        JsonNode duplicate = upload(assetId, report, "legacy-completed.json", 200);
+
+        assertThat(duplicate.path("outcome").asText()).isEqualTo("DUPLICATE");
+        assertThat(duplicate.path("scanId").asText()).isEqualTo(scanId.toString());
+        assertThat(duplicate.path("jobId").isNull()).isTrue();
+        assertThat(jobRepository.count()).isZero();
+    }
+
+    @Test
+    void failedLegacyScanWithoutJobCanBeQueuedAndProcessed() throws Exception {
+        UUID assetId = createAsset("legacy-failed");
+        byte[] report = readReport();
+        UUID scanId = insertLegacyScan(assetId, report, "FAILED");
+
+        JsonNode accepted = upload(assetId, report, "legacy-failed.json", 202);
+
+        assertThat(accepted.path("outcome").asText()).isEqualTo("ACCEPTED");
+        assertThat(accepted.path("scanId").asText()).isEqualTo(scanId.toString());
+        assertThat(jobRepository.count()).isOne();
+        IngestionJob job = jobRepository.findByScanId(scanId).orElseThrow();
+        assertThat(reportStorage.exists(job.getPayloadKey())).isTrue();
+        assertThat(worker.pollOnce()).isOne();
+        assertThat(jobRepository.findById(job.getId()).orElseThrow().getStatus())
+                .isEqualTo(IngestionJobStatus.COMPLETED);
+    }
+
+    @Test
+    void activeLegacyScansWithoutJobsCanBeRequeuedWithoutServerError() throws Exception {
+        byte[] report = readReport();
+        UUID receivedAssetId = createAsset("legacy-received");
+        UUID processingAssetId = createAsset("legacy-processing");
+        UUID receivedScanId = insertLegacyScan(receivedAssetId, report, "RECEIVED");
+        UUID processingScanId = insertLegacyScan(processingAssetId, report, "PROCESSING");
+
+        JsonNode received = upload(receivedAssetId, report, "received.json", 202);
+        JsonNode processing = upload(processingAssetId, report, "processing.json", 202);
+
+        assertThat(received.path("outcome").asText()).isEqualTo("ACCEPTED");
+        assertThat(processing.path("outcome").asText()).isEqualTo("ACCEPTED");
+        assertThat(jobRepository.findByScanId(receivedScanId)).isPresent();
+        assertThat(jobRepository.findByScanId(processingScanId)).isPresent();
+        assertThat(scanRepository.findById(receivedScanId).orElseThrow().getStatus())
+                .isEqualTo(ScanStatus.RECEIVED);
+        assertThat(scanRepository.findById(processingScanId).orElseThrow().getStatus())
+                .isEqualTo(ScanStatus.RECEIVED);
+    }
+
+    @Test
     void invalidReportGoesDirectlyToDeadLetter() throws Exception {
         JsonNode accepted = upload(createAsset("invalid"), "{}".getBytes(StandardCharsets.UTF_8), "bad.json", 202);
 
@@ -231,7 +329,7 @@ class PostgreSQLFlowIT {
         JsonNode accepted = upload(createAsset("retry"), readReport(), "retry.json", 202);
         UUID jobId = UUID.fromString(accepted.path("jobId").asText());
         String payloadKey = jobRepository.findById(jobId).orElseThrow().getPayloadKey();
-        doThrow(new ReportStorageException("temporary", new IOException("temporary")))
+        doThrow(new TransientReportStorageException("temporary", new IOException("temporary")))
                 .doCallRealMethod()
                 .when(reportStorage).load(payloadKey);
         Instant before = Instant.now();
@@ -241,7 +339,7 @@ class PostgreSQLFlowIT {
         IngestionJob waiting = jobRepository.findById(jobId).orElseThrow();
         assertThat(waiting.getStatus()).isEqualTo(IngestionJobStatus.RETRY_WAIT);
         assertThat(waiting.getAvailableAt()).isAfterOrEqualTo(before.plusSeconds(4));
-        assertThat(waiting.getLastError()).isEqualTo("Temporary processing failure");
+        assertThat(waiting.getLastError()).isEqualTo("Temporary report storage failure");
         jdbcTemplate.update("UPDATE ingestion_jobs SET available_at = now() - interval '1 second' WHERE id = ?", jobId);
 
         worker.pollOnce();
@@ -254,7 +352,7 @@ class PostgreSQLFlowIT {
     void exhaustedTransientFailuresBecomeDeadLetter() throws Exception {
         JsonNode accepted = upload(createAsset("exhausted"), readReport(), "retry.json", 202);
         UUID jobId = UUID.fromString(accepted.path("jobId").asText());
-        doThrow(new ReportStorageException("temporary", new IOException("temporary")))
+        doThrow(new TransientReportStorageException("temporary", new IOException("temporary")))
                 .when(reportStorage).load(any());
 
         for (int attempt = 1; attempt <= 3; attempt++) {
@@ -313,6 +411,41 @@ class PostgreSQLFlowIT {
         assertThat(scanRepository.findById(UUID.fromString(accepted.path("scanId").asText())).orElseThrow().getStatus())
                 .isEqualTo(ScanStatus.RECEIVED);
         assertThat(jobRepository.count()).isEqualTo(2);
+    }
+
+    @Test
+    void claimTokenRejectsAnOldWorkerAfterRedriveEvenWhenAttemptNumbersMatch() throws Exception {
+        byte[] reportBytes = readReport();
+        JsonNode accepted = upload(createAsset("claim-token-aba"), reportBytes, "aba.json", 202);
+        UUID jobId = UUID.fromString(accepted.path("jobId").asText());
+        JobClaim workerA = claimService.claimAvailable(1).get(0);
+        jdbcTemplate.update("""
+                UPDATE ingestion_jobs
+                SET attempt_count = max_attempts,
+                    locked_at = now() - interval '1 hour'
+                WHERE id = ?
+                """, jobId);
+
+        assertThat(recoveryService.recoverStaleJobs()).isEqualTo(new RecoveryResult(0, 1));
+        assertThat(jobRepository.findById(jobId).orElseThrow().getClaimToken()).isNull();
+        redriveService.redrive(jobId);
+        JobClaim workerB = claimService.claimAvailable(1).get(0);
+        ParsedVulnerabilityReport report = reportParser.parse(reportBytes);
+
+        assertThat(workerA.attempt()).isEqualTo(workerB.attempt());
+        assertThat(workerA.claimToken()).isNotEqualTo(workerB.claimToken());
+        assertThatThrownBy(() -> persistenceService.complete(jobId, workerA.claimToken(), report))
+                .isInstanceOf(StaleJobClaimException.class);
+        assertThat(failureService.handleFailure(
+                jobId, workerA.claimToken(), true, "obsolete failure"))
+                .isEqualTo(FailureDisposition.IGNORED_STALE_CLAIM);
+
+        persistenceService.complete(jobId, workerB.claimToken(), report);
+
+        assertThat(jobRepository.findById(jobId).orElseThrow().getStatus())
+                .isEqualTo(IngestionJobStatus.COMPLETED);
+        assertThat(scanRepository.findById(workerB.scanId()).orElseThrow().getStatus())
+                .isEqualTo(ScanStatus.COMPLETED);
     }
 
     @Test
@@ -410,6 +543,34 @@ class PostgreSQLFlowIT {
     }
 
     @Test
+    void concurrentRecoveriesRecoverAStaleJobOnlyOnce() throws Exception {
+        JsonNode accepted = upload(createAsset("concurrent-recovery"), readReport(), "recovery.json", 202);
+        UUID jobId = UUID.fromString(accepted.path("jobId").asText());
+        assertThat(claimService.claimAvailable(1)).hasSize(1);
+        jdbcTemplate.update(
+                "UPDATE ingestion_jobs SET locked_at = now() - interval '1 hour' WHERE id = ?",
+                jobId);
+        CountDownLatch start = new CountDownLatch(1);
+        ExecutorService executor = Executors.newFixedThreadPool(2);
+        try {
+            Future<RecoveryResult> first = executor.submit(() -> recoverAfter(start));
+            Future<RecoveryResult> second = executor.submit(() -> recoverAfter(start));
+            start.countDown();
+            List<RecoveryResult> results = List.of(
+                    first.get(10, TimeUnit.SECONDS),
+                    second.get(10, TimeUnit.SECONDS));
+
+            assertThat(results.stream().mapToInt(RecoveryResult::retried).sum()).isOne();
+            assertThat(results.stream().mapToInt(RecoveryResult::deadLettered).sum()).isZero();
+        } finally {
+            executor.shutdownNow();
+        }
+        IngestionJob recovered = jobRepository.findById(jobId).orElseThrow();
+        assertThat(recovered.getStatus()).isEqualTo(IngestionJobStatus.RETRY_WAIT);
+        assertThat(recovered.getClaimToken()).isNull();
+    }
+
+    @Test
     void staleRecoveryDeadLettersAJobWithoutAttempts() throws Exception {
         JsonNode accepted = upload(createAsset("recovery-dead"), readReport(), "recovery.json", 202);
         UUID jobId = UUID.fromString(accepted.path("jobId").asText());
@@ -455,22 +616,58 @@ class PostgreSQLFlowIT {
     }
 
     @Test
-    void persistenceFailureLeavesNoPartialFindingsAndSchedulesRetry() throws Exception {
+    void databaseConstraintFailureRollsBackFindingReplacementAndCompletion() throws Exception {
         JsonNode accepted = upload(createAsset("atomic"), readReport(), "atomic.json", 202);
         UUID jobId = UUID.fromString(accepted.path("jobId").asText());
-        AtomicInteger calculations = new AtomicInteger();
-        doAnswer(invocation -> {
-            if (calculations.incrementAndGet() == 2) {
-                throw new IllegalStateException("temporary database-side calculation failure");
-            }
-            return invocation.callRealMethod();
-        }).when(riskCalculator).calculate(any(), anyBoolean());
+        UUID scanId = UUID.fromString(accepted.path("scanId").asText());
+        UUID assetId = UUID.fromString(accepted.path("assetId").asText());
+        Finding previous = findingRepository.saveAndFlush(new Finding(
+                scanRepository.findById(scanId).orElseThrow(),
+                assetRepository.findById(assetId).orElseThrow(),
+                "CVE-PREVIOUS",
+                "previous-package",
+                "1.0",
+                null,
+                FindingSeverity.LOW,
+                "Previous finding",
+                null,
+                false,
+                20));
+        ParsedVulnerabilityReport invalidPersistenceReport = new ParsedVulnerabilityReport(
+                "test",
+                List.of(
+                        new ParsedVulnerability(
+                                "CVE-VALID", "valid-package", "1", null,
+                                FindingSeverity.HIGH, null, null),
+                        new ParsedVulnerability(
+                                "CVE-INVALID", null, "1", null,
+                                FindingSeverity.HIGH, null, null)));
+        doReturn(invalidPersistenceReport).when(reportParser).parse(any());
 
         worker.pollOnce();
 
-        assertThat(findingRepository.count()).isZero();
+        assertThat(findingRepository.findAll())
+                .singleElement()
+                .extracting(Finding::getId)
+                .isEqualTo(previous.getId());
         assertThat(jobRepository.findById(jobId).orElseThrow().getStatus())
-                .isEqualTo(IngestionJobStatus.RETRY_WAIT);
+                .isEqualTo(IngestionJobStatus.DEAD_LETTER);
+        assertThat(scanRepository.findById(scanId).orElseThrow().getStatus())
+                .isEqualTo(ScanStatus.FAILED);
+    }
+
+    @Test
+    void unknownRuntimeFailureIsPermanentAndIsNotRetried() throws Exception {
+        JsonNode accepted = upload(createAsset("unknown-failure"), readReport(), "unknown.json", 202);
+        UUID jobId = UUID.fromString(accepted.path("jobId").asText());
+        doThrow(new IllegalStateException("deterministic bug")).when(reportParser).parse(any());
+
+        worker.pollOnce();
+
+        IngestionJob failed = jobRepository.findById(jobId).orElseThrow();
+        assertThat(failed.getStatus()).isEqualTo(IngestionJobStatus.DEAD_LETTER);
+        assertThat(failed.getAttemptCount()).isOne();
+        assertThat(failed.getLastError()).isEqualTo("Permanent processing failure");
     }
 
     @Test
@@ -512,6 +709,39 @@ class PostgreSQLFlowIT {
     private List<JobClaim> claimAfter(CountDownLatch start) throws Exception {
         start.await();
         return claimService.claimAvailable(1);
+    }
+
+    private RecoveryResult recoverAfter(CountDownLatch start) throws Exception {
+        start.await();
+        return recoveryService.recoverStaleJobs();
+    }
+
+    private UUID insertLegacyScan(UUID assetId, byte[] report, String status) throws Exception {
+        UUID scanId = UUID.randomUUID();
+        Instant now = Instant.now();
+        Instant startedAt = status.equals("PROCESSING") ? now : null;
+        Instant completedAt = status.equals("COMPLETED") || status.equals("FAILED") ? now : null;
+        String failureReason = status.equals("FAILED") ? "Legacy failure" : null;
+        jdbcTemplate.update("""
+                INSERT INTO scans (
+                    id, asset_id, scanner, status, started_at, completed_at,
+                    received_at, source_file_name, content_hash, failure_reason
+                )
+                VALUES (?, ?, 'TRIVY', ?, ?, ?, ?, 'legacy-report.json', ?, ?)
+                """,
+                scanId,
+                assetId,
+                status,
+                startedAt == null ? null : startedAt.atOffset(ZoneOffset.UTC),
+                completedAt == null ? null : completedAt.atOffset(ZoneOffset.UTC),
+                now.atOffset(ZoneOffset.UTC),
+                sha256(report),
+                failureReason);
+        return scanId;
+    }
+
+    private String sha256(byte[] content) throws Exception {
+        return HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(content));
     }
 
     private UUID createAsset(String name) {
