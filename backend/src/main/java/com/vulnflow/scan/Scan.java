@@ -50,6 +50,9 @@ public class Scan {
     @Column(name = "content_hash", nullable = false, length = 64)
     private String contentHash;
 
+    @Column(name = "failure_reason", length = 500)
+    private String failureReason;
+
     protected Scan() {
     }
 
@@ -66,17 +69,27 @@ public class Scan {
     public void markProcessing() {
         status = ScanStatus.PROCESSING;
         startedAt = Instant.now();
+        completedAt = null;
+        failureReason = null;
+    }
+
+    public void retryProcessing(String sourceFileName) {
+        this.sourceFileName = sourceFileName;
+        scannerVersion = null;
+        markProcessing();
     }
 
     public void markCompleted(String scannerVersion) {
         this.scannerVersion = scannerVersion;
         status = ScanStatus.COMPLETED;
         completedAt = Instant.now();
+        failureReason = null;
     }
 
-    public void markFailed() {
+    public void markFailed(String failureReason) {
         status = ScanStatus.FAILED;
         completedAt = Instant.now();
+        this.failureReason = failureReason;
     }
 
     public UUID getId() {
@@ -118,5 +131,8 @@ public class Scan {
     public String getContentHash() {
         return contentHash;
     }
-}
 
+    public String getFailureReason() {
+        return failureReason;
+    }
+}

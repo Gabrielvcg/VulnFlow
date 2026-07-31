@@ -7,9 +7,10 @@ public record ScanIngestionResponse(
         UUID scanId,
         UUID assetId,
         ScanStatus status,
+        ScanIngestionOutcome outcome,
         long findingsImported,
+        long totalFindings,
         long criticalFindings,
         long highFindings,
         boolean duplicate) {
 }
-

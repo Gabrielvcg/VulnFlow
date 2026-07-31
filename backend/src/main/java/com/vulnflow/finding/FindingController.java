@@ -4,6 +4,7 @@ import jakarta.validation.Valid;
 import java.util.UUID;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -24,12 +25,16 @@ public class FindingController {
     }
 
     @GetMapping
-    public Page<FindingDtos.Response> findAll(
+    public Page<FindingDtos.SummaryResponse> findAll(
             @RequestParam(required = false) FindingSeverity severity,
             @RequestParam(required = false) FindingStatus status,
             @RequestParam(required = false) UUID assetId,
             @RequestParam(required = false) Boolean knownExploited,
-            @PageableDefault(size = 20) Pageable pageable) {
+            @PageableDefault(
+                    size = 20,
+                    sort = {"detectedAt", "id"},
+                    direction = Sort.Direction.DESC)
+            Pageable pageable) {
         return findingService.findAll(severity, status, assetId, knownExploited, pageable);
     }
 
@@ -45,4 +50,3 @@ public class FindingController {
         return findingService.updateStatus(id, request);
     }
 }
-

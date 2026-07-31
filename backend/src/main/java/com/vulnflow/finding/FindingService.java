@@ -17,14 +17,14 @@ public class FindingService {
     }
 
     @Transactional(readOnly = true)
-    public Page<FindingDtos.Response> findAll(
+    public Page<FindingDtos.SummaryResponse> findAll(
             FindingSeverity severity,
             FindingStatus status,
             UUID assetId,
             Boolean knownExploited,
             Pageable pageable) {
         return findingRepository.findFiltered(severity, status, assetId, knownExploited, pageable)
-                .map(FindingDtos.Response::from);
+                .map(FindingDtos.SummaryResponse::from);
     }
 
     @Transactional(readOnly = true)
@@ -44,4 +44,3 @@ public class FindingService {
                 .orElseThrow(() -> new ResourceNotFoundException("Finding", id));
     }
 }
-

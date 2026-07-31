@@ -13,7 +13,8 @@ public record ScanResponse(
         Instant completedAt,
         Instant receivedAt,
         String sourceFileName,
-        String contentHash) {
+        String contentHash,
+        String failureReason) {
 
     public static ScanResponse from(Scan scan) {
         return new ScanResponse(
@@ -26,7 +27,7 @@ public record ScanResponse(
                 scan.getCompletedAt(),
                 scan.getReceivedAt(),
                 scan.getSourceFileName(),
-                scan.getContentHash());
+                scan.getContentHash(),
+                scan.getFailureReason());
     }
 }
-

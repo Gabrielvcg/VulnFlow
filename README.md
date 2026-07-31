@@ -1,308 +1,251 @@
 # VulnFlow
 
-VulnFlow is a local-first, event-ready platform for receiving, normalizing,
-storing, and querying vulnerability scan results. This portfolio project starts
-with synchronous Trivy JSON ingestion in a modular Spring Boot backend and is
-designed to evolve toward a temporary, reproducible serverless AWS deployment.
+VulnFlow 0.1.1 is a local-first Spring Boot platform for receiving, normalizing,
+storing, and querying Trivy vulnerability reports. The current implementation is
+a synchronous modular monolith backed by PostgreSQL. No AWS resource, frontend,
+queue, worker, Syft integration, or cross-scan reconciliation exists yet.
 
-The project demonstrates Java and Spring Boot, PostgreSQL persistence,
-asynchronous architecture boundaries, Docker/Linux workflows, infrastructure as
-code, DevSecOps controls, observability, and cost-aware cloud design.
-
-## Current local architecture
+## Current architecture
 
 ```text
 Trivy JSON
     |
-    | multipart/form-data
+    | multipart/form-data + X-API-Key
     v
-Spring Boot modular monolith
-    |-- validate, hash, deduplicate
+Spring Boot
+    |-- validate size, media type, and Trivy structure
+    |-- hash and serialize registration by asset/hash
     |-- parse and calculate risk
-    |-- persist scan and findings
+    |-- persist findings and completion atomically
     v
-PostgreSQL
-    ^
-    |
-REST query API + Swagger + Actuator
+PostgreSQL + Flyway
 ```
 
-The ingestion controller delegates to `ScanIngestionService`. Parsing is behind
-`VulnerabilityReportParser`, and scoring is behind `FindingRiskCalculator`.
-These boundaries allow a later SQS/Lambda consumer to reuse the domain behavior
-without placing queue concerns in the HTTP layer.
+The application uses Java 17, Spring Boot 3.5, Spring MVC, Spring Security,
+Validation, Data JPA, Actuator, PostgreSQL 16, Flyway, Jackson, springdoc,
+Maven, JUnit, Mockito, Testcontainers, Docker Compose, and a validation-only
+Terraform skeleton.
 
-## Target AWS architecture
+## Start locally
 
-```text
-Agent on VPS or workstation
-    |
-    | Trivy JSON + Syft SBOM
-    v
-Amazon S3
-    |
-    v
-Amazon SQS + DLQ
-    |
-    v
-AWS Lambda (Java)
-    |
-    | normalize, deduplicate, prioritize
-    v
-Amazon DynamoDB
-    |
-    v
-API Gateway + Lambda
-    |
-    v
-Simple dashboard
-```
-
-EventBridge Scheduler, SNS, and CloudWatch are planned. They are not simulated
-locally and no AWS resources are defined in this phase.
-
-## Technology
-
-- Java 17 and Spring Boot 3.5
-- Spring MVC, Validation, Data JPA, and Actuator
-- PostgreSQL 16 and Flyway
-- Jackson and springdoc OpenAPI/Swagger UI
-- Maven Wrapper, JUnit 5, Mockito, and Testcontainers
-- Docker Compose and multi-stage container builds
-- Terraform configuration skeleton
-- GitHub Actions verification and container build
-
-## Start from scratch
-
-Requirements: Docker Desktop or Docker Engine with Compose v2. No local Java,
-Maven, PostgreSQL, Terraform, or AWS credentials are required for the Compose
-workflow.
+Requirements: Docker Desktop or Docker Engine with Compose v2.
 
 ```bash
 cp .env.example .env
-docker compose up --build
-```
-
-PowerShell equivalent:
-
-```powershell
-Copy-Item .env.example .env
-docker compose up --build
-```
-
-Wait until both services are healthy:
-
-```bash
+docker compose up --build -d
 docker compose ps
 curl http://localhost:8080/actuator/health
 ```
 
-Useful URLs:
+PowerShell:
+
+```powershell
+Copy-Item .env.example .env
+docker compose up --build -d
+docker compose ps
+Invoke-RestMethod http://localhost:8080/actuator/health
+```
+
+Compose binds both services to `127.0.0.1` by default. PostgreSQL is not
+published on all network interfaces. Values in `.env.example` are local-only
+examples, not production secrets.
+
+Useful local URLs:
 
 - API: `http://localhost:8080/api/v1`
 - Swagger UI: `http://localhost:8080/swagger-ui.html`
 - OpenAPI JSON: `http://localhost:8080/v3/api-docs`
 - Health: `http://localhost:8080/actuator/health`
 
-Stop the services with `docker compose down`. Add `--volumes` only when you
-intentionally want to delete local PostgreSQL data.
+Health and Swagger are public for local developer use. Every `/api/v1/**`
+request requires:
+
+```http
+X-API-Key: value-from-VULNFLOW_API_KEY
+```
+
+The API key authentication is provisional machine-to-machine protection. It
+does not provide users, roles, ownership, or tenant isolation. A future human
+interface must use OIDC or JWT with explicit authorization.
 
 ## Run the demo
 
-After `docker compose up --build` reports a healthy backend:
+The script reads the API key from the environment and never embeds or logs it:
 
 ```bash
+export VULNFLOW_API_KEY=local-development-only-api-key
 sh scripts/demo.sh
 ```
 
-or:
-
-```bash
-make demo
-```
-
-The script creates a container-image asset, uploads
-`sample-data/trivy-multiple.json`, lists the stored findings, and prints the
-dashboard summary. Set `API_URL` to target a different local port.
-
-## Run tests
-
-Docker must be running for the PostgreSQL Testcontainers integration tests.
-
-```bash
-cd backend
-./mvnw verify
-```
-
-PowerShell:
+PowerShell with Git Bash or another POSIX shell:
 
 ```powershell
-Set-Location backend
-.\mvnw.cmd verify
+$env:VULNFLOW_API_KEY = "local-development-only-api-key"
+sh scripts/demo.sh
 ```
 
-`mvn test` runs the unit tests. `mvn verify` also packages the application and
-runs the `PostgreSQLFlowIT` integration suite. When Docker is unavailable,
-Testcontainers tests are explicitly reported as skipped.
-
-Build only the runtime image:
-
-```bash
-docker build -t vulnflow-backend:local backend
-```
+The demo creates an asset, uploads `sample-data/trivy-multiple.json`, lists its
+findings, and reads the dashboard summary.
 
 ## API
 
-All list endpoints use Spring pagination parameters such as `page`, `size`, and
-`sort`; page size is capped at 100.
+All paginated endpoints accept `page`, `size`, and `sort`, cap page size at 100,
+and use stable default ordering:
+
+- Assets: `createdAt DESC, id DESC`
+- Scans: `receivedAt DESC, id DESC`
+- Findings: `detectedAt DESC, id DESC`
 
 | Method | Path | Purpose |
 |---|---|---|
 | `POST` | `/api/v1/assets` | Create an asset |
 | `GET` | `/api/v1/assets` | List assets |
 | `GET` | `/api/v1/assets/{id}` | Get an asset |
-| `POST` | `/api/v1/scans/trivy` | Ingest a Trivy JSON report |
+| `POST` | `/api/v1/scans/trivy` | Ingest or retry a Trivy report |
 | `GET` | `/api/v1/scans` | List scans |
 | `GET` | `/api/v1/scans/{id}` | Get a scan |
-| `GET` | `/api/v1/findings` | Filter and list findings |
-| `GET` | `/api/v1/findings/{id}` | Get a finding |
+| `GET` | `/api/v1/findings` | Filter finding summaries |
+| `GET` | `/api/v1/findings/{id}` | Get a finding with full description |
 | `PATCH` | `/api/v1/findings/{id}/status` | Change finding workflow status |
-| `GET` | `/api/v1/dashboard/summary` | Get aggregate counts |
-| `GET` | `/actuator/health` | Readiness/health status |
+| `GET` | `/api/v1/dashboard/summary` | Read aggregate counts |
+| `GET` | `/actuator/health` | Public health status |
 
-Finding filters can be combined:
+Finding filters are `severity`, `status`, `assetId`, and `knownExploited`.
+Finding lists omit descriptions; detail responses include the bounded full
+description.
 
-```text
-GET /api/v1/findings?severity=CRITICAL
-GET /api/v1/findings?status=OPEN
-GET /api/v1/findings?assetId={uuid}
-GET /api/v1/findings?knownExploited=true
-```
-
-### Example ingestion
+### Ingestion example
 
 ```bash
 asset_response=$(curl --fail --silent \
   -X POST http://localhost:8080/api/v1/assets \
+  -H "X-API-Key: ${VULNFLOW_API_KEY}" \
   -H "Content-Type: application/json" \
   -d '{"name":"demo","type":"CONTAINER_IMAGE","externalReference":"demo:1.0"}')
 
-# Copy the UUID from asset_response into ASSET_ID.
 curl --fail \
   -X POST "http://localhost:8080/api/v1/scans/trivy?assetId=${ASSET_ID}" \
+  -H "X-API-Key: ${VULNFLOW_API_KEY}" \
   -F "file=@sample-data/trivy-small.json;type=application/json"
 ```
 
-Example response:
+An imported response includes both the number created by this request and the
+total currently associated with the scan:
 
 ```json
 {
   "scanId": "7fc9b7e1-b1d7-4b86-a360-31acbf6a5ab5",
   "assetId": "5e26984f-76e9-40c1-a5cd-96397e542deb",
   "status": "COMPLETED",
+  "outcome": "IMPORTED",
   "findingsImported": 1,
+  "totalFindings": 1,
   "criticalFindings": 0,
   "highFindings": 1,
   "duplicate": false
 }
 ```
 
-Re-uploading identical bytes for the same asset returns the original scan with
-`duplicate: true`. Deduplication is enforced by a database unique constraint on
-`(asset_id, content_hash)`, not only by an application-level check.
+## Scan lifecycle and deduplication
 
-## Risk calculation
+The database keeps `UNIQUE (asset_id, content_hash)`. The hash covers the exact
+uploaded bytes; filename does not affect deduplication.
 
-The initial deterministic score is:
+```text
+new content       -> PROCESSING -> COMPLETED
+                              \-> FAILED
+FAILED retry      -> PROCESSING -> COMPLETED or FAILED
+COMPLETED repeat  -> DUPLICATE, HTTP 200, findingsImported=0
+PROCESSING repeat -> ALREADY_PROCESSING, HTTP 202, no second processor
+```
 
-| Severity | Base score |
-|---|---:|
-| `UNKNOWN` | 0 |
-| `LOW` | 20 |
-| `MEDIUM` | 40 |
-| `HIGH` | 70 |
-| `CRITICAL` | 90 |
+`ScanRegistrationService.registerProcessing()` runs in `REQUIRES_NEW`, uses
+PostgreSQL `ON CONFLICT` and a pessimistic row lock, and safely claims a new or
+failed scan. A retry reuses the `scanId` and removes incompatible old findings.
 
-Known-exploited findings receive 10 additional points, capped at 100.
-`knownExploited` remains `false` until CISA KEV correlation is implemented.
+`IngestionPersistenceService.complete()` runs in another `REQUIRES_NEW`
+transaction. All findings and the transition to `COMPLETED` commit together or
+roll back together.
 
-## Design decisions
+`ScanFailureService.markFailed()` runs in a third `REQUIRES_NEW` transaction.
+Only parsing and transactional persistence errors call it. Failures while
+building or serializing the later response cannot change a completed scan to
+`FAILED`. If failure recording also fails, the original exception is preserved
+and the second error is attached as suppressed.
 
-- A feature-oriented modular monolith avoids premature distributed systems
-  while preserving replaceable ingestion boundaries.
-- PostgreSQL is the local source of truth; Flyway owns schema changes and
-  Hibernate uses `ddl-auto=validate`.
-- A scan row is persisted before parsing, so malformed reports remain auditable
-  as `FAILED`.
-- Finding persistence and scan completion share a transaction.
-- UUIDs are created in the application, keeping tests and future event payloads
-  database-independent.
-- Logs are structured, lifecycle messages are in Spanish, and uploaded report
-  bodies are never logged.
+`ScanRecoveryService.recoverStaleProcessingScans()` is an idempotent local
+operation prepared for a future scheduler. It changes scans older than
+`VULNFLOW_PROCESSING_TIMEOUT` to `FAILED` with a generic technical reason. No
+permanent scheduled job is enabled in 0.1.1.
 
-See [architecture](docs/architecture.md), [security](docs/security.md), and the
-[architecture decisions](docs/decisions/).
+## Trivy validation and limits
+
+A report must have an object root and an explicit array `Results`. Empty
+`Results` and `Vulnerabilities: null` are valid. Null/non-array `Results`,
+non-object results, non-array vulnerabilities, non-object vulnerabilities, and
+entries without `VulnerabilityID` or `PkgName` are rejected with `422`.
+
+Limits:
+
+- Multipart request/file: `VULNFLOW_MAX_FILE_SIZE`, default `10MB`
+- Finding description: `VULNFLOW_MAX_DESCRIPTION_LENGTH`, default 8000
+- Processing timeout: `VULNFLOW_PROCESSING_TIMEOUT`, default `15m`
+
+Descriptions and non-critical display fields may be bounded. Oversized
+`VulnerabilityID` and package identifiers are rejected rather than silently
+truncated. Uploaded filenames are stored only as bounded metadata after path
+components and control characters are removed; they are never used as a write
+path.
+
+## Errors
+
+The API uses a common error DTO and does not return stack traces:
+
+- Unreadable JSON, missing fields/parts, invalid UUID/enums: `400`
+- Invalid API key: `401`
+- Missing asset: `404`
+- Unsupported media type: `415`
+- Oversized report: `413`
+- Invalid Trivy report: `422`
+- Unexpected internal error: `500`
+
+## Tests
+
+Docker must be running for PostgreSQL Testcontainers:
+
+```powershell
+Set-Location backend
+.\mvnw.cmd verify
+```
+
+The suite covers parsing, transaction failure, retry, concurrent upload,
+completed and processing deduplication, separate assets, filename independence,
+API-key enforcement, client errors, description projection, Flyway, recovery,
+and end-to-end PostgreSQL behavior.
 
 ## Terraform
 
-`infrastructure/aws` currently defines no AWS resources. It can be formatted
-and validated without credentials:
+`infrastructure/aws` defines zero AWS resources. Validation does not require AWS
+credentials:
 
 ```bash
 make terraform-format
 make terraform-validate
 ```
 
-The Make targets use Terraform 1.15.8 in Docker. A local CLI can instead run:
-
-```bash
-cd infrastructure/aws
-terraform fmt -check -recursive
-terraform init -backend=false
-terraform validate
-```
-
-**Do not run `terraform apply` against AWS until the future resources, IAM,
-retention, alarms, and estimated costs have been reviewed.**
-
-## Cost strategy
-
-VulnFlow follows this operating model:
-
-```text
-Permanent local development
-+
-Temporary and reproducible AWS deployment
-+
-terraform destroy after demonstrations
-```
-
-The future design favors request-based serverless services, bounded log and S3
-retention, budget alarms, conservative concurrency, and no NAT Gateway, load
-balancer, EC2, ECS, RDS, or OpenSearch. Cost estimates and teardown verification
-are release gates before any cloud demonstration.
+Do not run `terraform apply`. AWS, S3, SQS, Lambda, DynamoDB, EventBridge, SNS,
+and cloud authentication are intentionally outside version 0.1.1.
 
 ## Current limitations
 
-- Ingestion is synchronous and supports Trivy vulnerability JSON only.
-- Syft SBOM ingestion, queues, retries, DLQ handling, CISA KEV correlation,
-  alerting, authentication, authorization, and a dashboard UI are not yet
-  implemented.
-- The basic API intentionally has no authentication and must not be exposed to
-  an untrusted network.
-- Findings are scan snapshots; cross-scan lifecycle reconciliation is pending.
-- Terraform contains no deployable AWS resources.
+- Ingestion remains synchronous and supports Trivy vulnerability JSON only.
+- The full uploaded JSON is materialized in memory after the size gate.
+- API-key authentication has no per-client identity, roles, ownership, rotation
+  protocol, throttling, or TLS termination.
+- Swagger is intentionally public on the localhost-only development binding.
+- No scheduler invokes stale-scan recovery automatically.
+- Findings are snapshots; reconciliation between scans is not implemented.
+- Terraform contains no deployable resources and no AWS contact is required.
 
-## Roadmap
-
-1. Stabilize the local event contract and add Syft SBOM ingestion.
-2. Introduce an asynchronous local adapter and idempotent retry semantics.
-3. Add authentication and authorization after the basic API contract is stable.
-4. Implement and cost-review S3, SQS/DLQ, and Java Lambda modules.
-5. Add DynamoDB access patterns, query Lambda, and API Gateway.
-6. Add CISA KEV enrichment, SNS alerts, EventBridge schedules, and CloudWatch
-   observability.
-7. Build a small dashboard and a time-boxed AWS demonstration runbook.
-
-More detail is in [the AWS roadmap](docs/aws-roadmap.md).
-
+See [architecture](docs/architecture.md), [security](docs/security.md), and
+[architecture decisions](docs/decisions/).

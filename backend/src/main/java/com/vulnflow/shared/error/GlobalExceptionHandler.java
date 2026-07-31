@@ -1,6 +1,7 @@
 package com.vulnflow.shared.error;
 
 import com.vulnflow.shared.exception.InvalidReportException;
+import com.vulnflow.shared.exception.ReportTooLargeException;
 import com.vulnflow.shared.exception.ResourceNotFoundException;
 import com.vulnflow.shared.exception.UnsupportedReportMediaTypeException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -12,13 +13,16 @@ import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.validation.FieldError;
+import org.springframework.web.HttpMediaTypeNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.multipart.MaxUploadSizeExceededException;
+import org.springframework.web.multipart.support.MissingServletRequestPartException;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
@@ -52,14 +56,53 @@ public class GlobalExceptionHandler {
                 Map.of());
     }
 
-    @ExceptionHandler(MaxUploadSizeExceededException.class)
+    @ExceptionHandler({
+        MaxUploadSizeExceededException.class,
+        ReportTooLargeException.class
+    })
     ResponseEntity<ApiError> handleMaxUploadSize(
-            MaxUploadSizeExceededException exception,
+            RuntimeException exception,
             HttpServletRequest request) {
         return response(
                 HttpStatus.PAYLOAD_TOO_LARGE,
                 "REPORT_TOO_LARGE",
                 "The uploaded report exceeds the configured file size limit",
+                request,
+                Map.of());
+    }
+
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    ResponseEntity<ApiError> handleUnreadableMessage(
+            HttpMessageNotReadableException exception,
+            HttpServletRequest request) {
+        return response(
+                HttpStatus.BAD_REQUEST,
+                "INVALID_REQUEST_BODY",
+                "The request body is missing or invalid",
+                request,
+                Map.of());
+    }
+
+    @ExceptionHandler(MissingServletRequestPartException.class)
+    ResponseEntity<ApiError> handleMissingRequestPart(
+            MissingServletRequestPartException exception,
+            HttpServletRequest request) {
+        return response(
+                HttpStatus.BAD_REQUEST,
+                "MISSING_REQUEST_PART",
+                "A required multipart request part is missing",
+                request,
+                Map.of());
+    }
+
+    @ExceptionHandler(HttpMediaTypeNotSupportedException.class)
+    ResponseEntity<ApiError> handleUnsupportedMediaType(
+            HttpMediaTypeNotSupportedException exception,
+            HttpServletRequest request) {
+        return response(
+                HttpStatus.UNSUPPORTED_MEDIA_TYPE,
+                "UNSUPPORTED_MEDIA_TYPE",
+                "The request media type is not supported",
                 request,
                 Map.of());
     }
@@ -126,4 +169,3 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(status).body(body);
     }
 }
-
