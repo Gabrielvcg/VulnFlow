@@ -1,5 +1,6 @@
 package com.vulnflow.shared.error;
 
+import com.vulnflow.asset.AssetIdentityConflictException;
 import com.vulnflow.shared.exception.InvalidReportException;
 import com.vulnflow.shared.exception.ReportTooLargeException;
 import com.vulnflow.shared.exception.ResourceNotFoundException;
@@ -157,6 +158,13 @@ public class GlobalExceptionHandler {
             JobStateConflictException exception,
             HttpServletRequest request) {
         return response(HttpStatus.CONFLICT, "JOB_STATE_CONFLICT", exception.getMessage(), request, Map.of());
+    }
+
+    @ExceptionHandler(AssetIdentityConflictException.class)
+    ResponseEntity<ApiError> handleAssetIdentityConflict(
+            AssetIdentityConflictException exception,
+            HttpServletRequest request) {
+        return response(HttpStatus.CONFLICT, "ASSET_IDENTITY_CONFLICT", exception.getMessage(), request, Map.of());
     }
 
     private ResponseEntity<ApiError> response(
