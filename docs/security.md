@@ -52,6 +52,42 @@ The top-level Trivy `CreatedAt` generation timestamp is removed before outbox
 storage to provide stable deduplication. This field is not used by backend
 parsing; vulnerability and artifact content are preserved.
 
+## CI/CD and VPS boundary
+
+- Pull requests can verify and build images but cannot publish or deploy.
+- Publication and deployment require `refs/heads/main`; production additionally
+  requires `VPS_DEPLOY_ENABLED=true` in the protected GitHub environment.
+- Workflow permissions default to read-only contents. Only the publishing job
+  receives `packages: write`; the deploy job has no package-write permission.
+- Both deployed image references use the exact 40-character commit SHA. The VPS
+  script rejects mutable-only or malformed release references.
+- SSH uses a dedicated private key, `IdentitiesOnly`, pinned known-hosts data,
+  and `StrictHostKeyChecking=yes`. No runtime `ssh-keyscan` result is trusted.
+- Temporary runner key and known-hosts files are permission-restricted and
+  removed in an unconditional cleanup step.
+- The workflow synchronizes only `deploy/`. API and database secrets remain in
+  a mode-`600` VPS runtime file outside that tree and are not passed as command
+  arguments or workflow outputs.
+- PostgreSQL has no published port. The backend binds only to loopback for host
+  Nginx, and production OpenAPI/Swagger default to disabled.
+- The backend and agent drop Linux capabilities and use read-only root
+  filesystems. The non-root agent has no Docker socket.
+- GitHub and host-side locks prevent overlapping production updates. Deployment
+  never uses `down -v`, volume deletion, or broad image pruning.
+
+The deploy user's access to a conventional Docker daemon remains highly
+privileged even when the user is not `root`. Prefer rootless Docker or a tightly
+restricted command wrapper when operationally feasible. GHCR tokens, when
+needed for private packages, should be read-only and dedicated to deployment.
+Protect the `production` environment with reviewers and restrict who can change
+its variables, secrets, and branch policy.
+
+Container rollback cannot undo a committed Flyway migration. A migration that
+is incompatible with the preceding image can make automatic rollback fail even
+when the old images are available. This is controlled by backward-compatible
+migration design and database backup/recovery procedures, not by pretending the
+deployment script provides a distributed rollback.
+
 ## Local payload storage
 
 `LocalFileReportStorage`:
@@ -100,3 +136,8 @@ exception types remain internal logs; persisted reasons are generic and bounded.
 - One outbox directory does not support multiple agent processes or shared NFS.
 - Registry credentials inherited by Trivy require separate host-level secret
   management and are outside VulnFlow's target YAML.
+- A compromised GitHub Actions dependency, GHCR account, deploy key, or Docker
+  daemon can compromise production; actions are commit-pinned, while image
+  signing/attestation remains future hardening.
+- Automatic rollback has no target on the first deployment and cannot reverse
+  Flyway data or schema changes.

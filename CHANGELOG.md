@@ -1,5 +1,23 @@
 # Changelog
 
+## 0.3.1 - 2026-07-31
+
+- Added a gated GitHub Actions CI/CD flow that verifies backend and agent,
+  requires non-skipped PostgreSQL integration tests, publishes immutable GHCR
+  images by commit SHA, and deploys only from `main`.
+- Added a runtime-only production Compose bundle for private PostgreSQL,
+  loopback-only backend, and a non-root containerized agent without a Docker
+  socket, while preserving explicitly named data volumes.
+- Added strict pinned-host SSH verification, commit-pinned actions, minimum
+  workflow permissions, protected production concurrency, VPS-only runtime
+  secrets, and an explicit deployment enable switch.
+- Added health-gated deployment with bounded diagnostics and automatic rollback
+  to the previous image manifest without promising Flyway database rollback.
+- Added VPS bootstrap, Nginx/TLS, exact-SHA release, emergency recovery, agent,
+  migration, secret, and deployment-pause documentation plus ADR-013.
+- Enforced Linux line endings for shell entry points and normalized the agent
+  Maven wrapper during image builds so Windows worktrees remain reproducible.
+
 ## 0.3.0 - 2026-07-31
 
 - Added an independent Java 17 Linux agent that scans explicit container-image

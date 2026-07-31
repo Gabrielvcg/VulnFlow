@@ -2,7 +2,7 @@
 
 ## Scope
 
-VulnFlow 0.3.0 consists of a Spring Boot modular-monolith backend and an
+VulnFlow 0.3.1 consists of a Spring Boot modular-monolith backend and an
 independent Java 17 scanning agent. PostgreSQL and a local report volume remain
 the backend persistence layer. The agent has its own filesystem outbox and only
 outbound HTTP connectivity.
@@ -155,6 +155,57 @@ claim token before releasing the transaction.
 The default retry sequence is 5 seconds, 30 seconds, and 2 minutes. Retries set
 `availableAt`; no worker sleeps while waiting.
 
+## CI/CD and production runtime
+
+```text
+pull request
+  -> backend mvn verify -> mandatory PostgreSQL integration reports
+  -> agent mvn verify
+  -> local backend and agent image builds
+
+push to main
+  -> the same verification boundary
+  -> GHCR backend:<commit-sha> + agent:<commit-sha>
+  -> protected production environment and enable switch
+  -> pinned-host SSH + deployment-file synchronization
+  -> Docker Compose pull/up -> Flyway startup -> health gate
+  -> accept release or restore previous image manifest
+```
+
+CI owns compilation, tests, and image publication. The VPS is a runtime host;
+it receives only the `deploy/` bundle and immutable image references. Its
+`runtime/.env.prod` and `runtime/targets.yml` remain outside the synchronized
+directory. GitHub Actions does not transmit the VulnFlow API key or PostgreSQL
+password.
+
+The production Compose topology is:
+
+```text
+host Nginx/TLS
+  -> 127.0.0.1:8080 -> backend
+                           -> PostgreSQL (private network, named volume)
+  agent (private network) -> backend
+    -> Trivy -> named outbox/cache volume
+    -> read-only targets file
+```
+
+PostgreSQL has no host port. The backend report store and agent data are named
+volumes. The agent does not receive the Docker socket, so this topology supports
+registry-accessible image targets only. Host-local Docker images require the
+separately documented systemd model and are not silently enabled by CI/CD.
+
+Deployment serialization exists at two levels: GitHub uses the
+`vulnflow-production` concurrency group with cancellation disabled, and the VPS
+uses a non-blocking `flock`. The candidate release manifest must contain the two
+GHCR image references and one matching 40-character commit SHA. The previous
+manifest is retained before Compose is updated.
+
+Rollback restores application image references and repeats the health check; it
+does not reverse PostgreSQL. Flyway runs during normal backend startup, so
+production migrations must remain compatible with the preceding release.
+Explicit volume names let an operator adopt existing VPS volumes without
+recreation. No deployment command invokes `down`, volume deletion, or pruning.
+
 ## Future adapter boundaries
 
 ```text
@@ -169,7 +220,7 @@ The agent's future transport seam is:
 FileAgentOutbox -> presigned S3 uploader -> SQS submission
 ```
 
-These are migration seams only. No AWS SDK or cloud resource is used in 0.3.0.
+These are migration seams only. No AWS SDK or cloud resource is used in 0.3.1.
 SQS will use receipt handles and visibility timeouts rather than copying the
 current PostgreSQL row-locking protocol. S3 calls must not be introduced under
 long-held database locks.

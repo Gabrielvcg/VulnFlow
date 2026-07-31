@@ -12,6 +12,11 @@ agent/data/
 .agent-demo.*
 .agent-demo-tools.*
 
+**/.env.prod
+deploy/runtime/
+/.release*.env
+/.deploy.lock
+
 **/.terraform/
 **/*.tfstate
 **/*.tfstate.*

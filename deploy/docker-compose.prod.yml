@@ -1,0 +1,128 @@
+services:
+  postgres:
+    image: postgres:16.4-alpine@sha256:5660c2cbfea50c7a9127d17dc4e48543eedd3d7a41a595a2dfa572471e37e64c
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:?POSTGRES_DB is required}
+      POSTGRES_USER: ${POSTGRES_USER:?POSTGRES_USER is required}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    networks:
+      - internal
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+      start_period: 10s
+    security_opt:
+      - no-new-privileges:true
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "5"
+
+  backend:
+    image: ${VULNFLOW_BACKEND_IMAGE:?VULNFLOW_BACKEND_IMAGE is required}
+    restart: unless-stopped
+    init: true
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB:?POSTGRES_DB is required}
+      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER:?POSTGRES_USER is required}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}
+      SERVER_FORWARD_HEADERS_STRATEGY: framework
+      SPRINGDOC_API_DOCS_ENABLED: ${SPRINGDOC_API_DOCS_ENABLED:-false}
+      SPRINGDOC_SWAGGER_UI_ENABLED: ${SPRINGDOC_SWAGGER_UI_ENABLED:-false}
+      VULNFLOW_API_KEY: ${VULNFLOW_API_KEY:?VULNFLOW_API_KEY is required}
+      VULNFLOW_MAX_FILE_SIZE: ${VULNFLOW_MAX_FILE_SIZE:-10MB}
+      VULNFLOW_REPORT_STORAGE_DIRECTORY: /var/lib/vulnflow/reports
+      VULNFLOW_WORKER_ENABLED: "true"
+    volumes:
+      - backend-reports:/var/lib/vulnflow/reports
+    ports:
+      - "127.0.0.1:${VULNFLOW_BACKEND_PORT:-8080}:8080"
+    networks:
+      - internal
+    read_only: true
+    tmpfs:
+      - /tmp:size=64m,mode=1777
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O - http://127.0.0.1:8080/actuator/health | grep -q '\"status\":\"UP\"'"]
+      interval: 5s
+      timeout: 5s
+      retries: 24
+      start_period: 20s
+    stop_grace_period: 45s
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "5"
+
+  agent:
+    image: ${VULNFLOW_AGENT_IMAGE:?VULNFLOW_AGENT_IMAGE is required}
+    restart: unless-stopped
+    init: true
+    depends_on:
+      backend:
+        condition: service_healthy
+    environment:
+      VULNFLOW_API_URL: http://backend:8080/
+      VULNFLOW_API_KEY: ${VULNFLOW_API_KEY:?VULNFLOW_API_KEY is required}
+      VULNFLOW_AGENT_ID: ${VULNFLOW_AGENT_ID:?VULNFLOW_AGENT_ID is required}
+      VULNFLOW_SCAN_INTERVAL: ${VULNFLOW_SCAN_INTERVAL:-6h}
+      VULNFLOW_TRIVY_PATH: /usr/local/bin/trivy
+      VULNFLOW_AGENT_DATA_DIR: /var/lib/vulnflow-agent
+      VULNFLOW_AGENT_TEMP_DIR: /var/lib/vulnflow-agent/tmp
+      VULNFLOW_AGENT_MAX_CONCURRENT_SCANS: ${VULNFLOW_AGENT_MAX_CONCURRENT_SCANS:-1}
+      VULNFLOW_AGENT_UPLOAD_RETRY_INTERVAL: ${VULNFLOW_AGENT_UPLOAD_RETRY_INTERVAL:-30s}
+      VULNFLOW_TRIVY_TIMEOUT: ${VULNFLOW_TRIVY_TIMEOUT:-15m}
+      VULNFLOW_AGENT_MAX_REPORT_SIZE: ${VULNFLOW_AGENT_MAX_REPORT_SIZE:-10MB}
+      VULNFLOW_AGENT_MAX_OUTBOX_BYTES: ${VULNFLOW_AGENT_MAX_OUTBOX_BYTES:-1GB}
+      VULNFLOW_AGENT_MAX_OUTBOX_ITEMS: ${VULNFLOW_AGENT_MAX_OUTBOX_ITEMS:-1000}
+      VULNFLOW_AGENT_UPLOADED_RETENTION: ${VULNFLOW_AGENT_UPLOADED_RETENTION:-7d}
+      VULNFLOW_TARGETS_FILE: /etc/vulnflow-agent/targets.yml
+      TRIVY_CACHE_DIR: /var/lib/vulnflow-agent/trivy-cache
+    volumes:
+      - agent-data:/var/lib/vulnflow-agent
+      - type: bind
+        source: ${VULNFLOW_AGENT_TARGETS_FILE:?VULNFLOW_AGENT_TARGETS_FILE is required}
+        target: /etc/vulnflow-agent/targets.yml
+        read_only: true
+    networks:
+      - internal
+    read_only: true
+    tmpfs:
+      - /tmp:size=64m,mode=1777
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    stop_grace_period: 45s
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "5"
+
+networks:
+  internal:
+    driver: bridge
+
+volumes:
+  postgres-data:
+    name: ${VULNFLOW_POSTGRES_VOLUME:?VULNFLOW_POSTGRES_VOLUME is required}
+  backend-reports:
+    name: ${VULNFLOW_REPORTS_VOLUME:?VULNFLOW_REPORTS_VOLUME is required}
+  agent-data:
+    name: ${VULNFLOW_AGENT_VOLUME:?VULNFLOW_AGENT_VOLUME is required}

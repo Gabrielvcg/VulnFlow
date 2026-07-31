@@ -2,7 +2,7 @@
 
 ## Purpose and trust boundary
 
-The 0.3.0 agent completes the path from a configured Docker image to VulnFlow
+The 0.3.1 agent completes the path from a configured Docker image to VulnFlow
 findings without requiring an operator to upload every report manually:
 
 ```text
@@ -109,6 +109,20 @@ pull public or explicitly authenticated registry images using Trivy-supported
 credentials, but it cannot see images available only in the host daemon. A host
 service is the recommended mode for that scenario.
 
+The 0.3.1 production bundle chooses this containerized mode deliberately. The
+agent is a separate Compose service and image, communicates with the backend on
+the private network, reads a VPS-only targets file, and stores its outbox and
+Trivy cache in a named volume. Its image is deployed by the same commit SHA as
+the backend. A backend health dependency prevents normal agent startup before
+Flyway and the API are ready, while the durable outbox handles later API
+interruptions.
+
+CI/CD does not grant host Docker access. If a target is available only in the
+VPS daemon, keep the agent out of this container topology and use the dedicated
+systemd unit after a manual installation and permission review. Do not add the
+Docker socket to Compose as a convenience change: socket possession generally
+allows host-equivalent control.
+
 ## Verification and demos
 
 `scripts/agent-e2e-fake.sh` supplies a deterministic fake Trivy executable and
@@ -128,4 +142,4 @@ Agent -> presigned S3 upload -> SQS -> Lambda
 
 That phase must preserve the outbox and checksum contracts, replace API-key
 handling appropriately, and use SQS receipt handles and visibility timeouts.
-No AWS SDK, upload, queue, credential, or resource exists in 0.3.0.
+No AWS SDK, upload, queue, credential, or resource exists in 0.3.1.
