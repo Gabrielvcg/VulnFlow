@@ -23,6 +23,7 @@ LocalIngestionWorker (@Scheduled)
   -> JobClaimService -> PostgreSQL FOR UPDATE SKIP LOCKED
   -> IngestionJobProcessor
       -> ReportStorage.load
+      -> PayloadIntegrityVerifier
       -> TrivyVulnerabilityReportParser
       -> IngestionPersistenceService
           -> FindingRiskCalculator
@@ -30,6 +31,7 @@ LocalIngestionWorker (@Scheduled)
           -> ScanRepository
           -> IngestionJobRepository
       -> JobFailureService
+      -> JobFailureClassifier
 
 IngestionJobController
   -> IngestionJobQueryService
@@ -49,9 +51,11 @@ IngestionJobController
    request thread.
 7. The scheduler selects available jobs with `FOR UPDATE SKIP LOCKED LIMIT n`.
 8. A short claim transaction sets the job and scan to `PROCESSING`, increments
-   attempts, stores `lockedAt`, and returns a detached `JobClaim`.
-9. After commit, the worker loads and parses the report and calculates findings.
-10. A completion transaction locks job then scan, verifies the attempt number,
+   attempts, stores `lockedAt`, generates a non-reusable claim-token UUID, and
+   returns a detached `JobClaim`.
+9. After commit, the worker loads the report, verifies its SHA-256, parses it,
+   and calculates findings.
+10. A completion transaction locks job then scan, verifies the claim token,
     replaces findings, and marks both records `COMPLETED` atomically.
 11. Functional errors dead-letter immediately. Transient errors schedule a
     future retry or dead-letter after the maximum attempt.
@@ -93,8 +97,9 @@ filesystem and PostgreSQL do not provide a distributed transaction.
 - `UNIQUE(scan_id)` prevents a second job for a scan.
 - `SKIP LOCKED` lets backend instances claim different jobs without waiting.
 - Claim transactions finish before parsing.
-- `attemptCount` acts as a lease generation. An old worker cannot complete a
-  job after recovery or a later claim.
+- `attemptCount` counts retry budget and selects backoff; it is not fencing.
+- `claimToken` is a new UUID for every claim. Completion and failure require the
+  current token, which prevents ABA after recovery and manual redrive.
 - Completion deletes and recreates a scan's findings within one transaction,
   so redelivery cannot leave duplicates or partial findings.
 - Concurrent redrive locks the job row; only the first transition succeeds.
@@ -103,7 +108,8 @@ filesystem and PostgreSQL do not provide a distributed transaction.
 
 Stale `PROCESSING` jobs are selected by `lockedAt`. If attempts remain they move
 to `RETRY_WAIT`, otherwise to `DEAD_LETTER`. Recovery uses row locks and is
-idempotent because the first execution changes the status.
+idempotent because the first execution changes the status. Both paths clear the
+claim token before releasing the transaction.
 
 The default retry sequence is 5 seconds, 30 seconds, and 2 minutes. Retries set
 `availableAt`; no worker sleeps while waiting.
@@ -117,3 +123,6 @@ LocalIngestionWorker -> Lambda handler
 ```
 
 These are migration seams only. No AWS SDK or cloud resource is used in 0.2.0.
+SQS will use receipt handles and visibility timeouts rather than copying the
+current PostgreSQL row-locking protocol. S3 calls must not be introduced under
+long-held database locks.

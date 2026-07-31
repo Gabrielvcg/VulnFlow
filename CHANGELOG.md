@@ -11,6 +11,14 @@
 - Added paginated ingestion-job APIs, Micrometer metrics, and PostgreSQL
   concurrency coverage for `SKIP LOCKED` and claim release.
 - Added Flyway V3 constraints and indexes without modifying existing migrations.
+- Added Flyway V4 with non-reusable UUID claim tokens, state-coherence checks,
+  safe invalidation of existing processing claims, and an explicit 0.1.1 legacy
+  scan policy.
+- Added SHA-256 payload verification before parsing and conservative failure
+  classification for deterministic, unknown, storage, and database errors.
+- Added real flush rollback, ABA redrive, concurrent recovery, payload tamper,
+  configuration validation, and V2-to-V4 Testcontainers coverage.
+- Made PostgreSQL integration tests mandatory in the primary CI workflow.
 
 ## 0.1.1 - 2026-07-29
 

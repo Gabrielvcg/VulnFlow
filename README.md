@@ -22,9 +22,9 @@ API key filter -> validation -> SHA-256
 Scheduled local worker
   | FOR UPDATE SKIP LOCKED, short claim transaction
   v
-Job(PROCESSING) + Scan(PROCESSING)
+Job(PROCESSING, claimToken) + Scan(PROCESSING)
   | no database lock held
-  +-> load payload -> Trivy parser -> risk calculation
+  +-> load payload -> verify SHA-256 -> Trivy parser -> risk calculation
   | atomic completion transaction
   v
 Findings + Scan(COMPLETED) + Job(COMPLETED)
@@ -103,7 +103,8 @@ Response semantics:
 | `PENDING` or `RETRY_WAIT` | `202` | `ALREADY_QUEUED` | Reuse scan and job |
 | `PROCESSING` | `202` | `ALREADY_PROCESSING` | Reuse scan and job |
 | `COMPLETED` | `200` | `DUPLICATE` | No payload, job, or finding is added |
-| `FAILED` / `DEAD_LETTER` | `200` | `DEAD_LETTER` | No automatic retry; use redrive |
+| `FAILED` with `DEAD_LETTER` job | `200` | `DEAD_LETTER` | No automatic retry; use redrive |
+| Non-completed legacy scan without job | `202` | `ACCEPTED` | Store the re-uploaded payload and create one job |
 
 Deduplication remains enforced by `UNIQUE(asset_id, content_hash)`. One job per
 scan is enforced by `UNIQUE(scan_id)`.
@@ -129,9 +130,11 @@ PENDING -> PROCESSING -> COMPLETED
 ```
 
 Invalid JSON, invalid Trivy structure, invalid required fields, and a missing
-payload are non-retryable. Temporary storage or persistence failures use the
-configured backoff without `Thread.sleep`. At exhaustion the job becomes
-`DEAD_LETTER` and its scan becomes `FAILED`.
+payload, payload-integrity failures, deterministic processing failures, and
+unknown runtime failures are non-retryable. Explicitly transient storage and
+database availability failures use the configured backoff without
+`Thread.sleep`. At exhaustion the job becomes `DEAD_LETTER` and its scan becomes
+`FAILED`.
 
 ## Job API
 
@@ -139,9 +142,10 @@ configured backoff without `Thread.sleep`. At exhaustion the job becomes
 - `GET /api/v1/ingestion-jobs/{jobId}`
 - `POST /api/v1/ingestion-jobs/{jobId}/redrive`
 
-Redrive accepts only `DEAD_LETTER`, verifies that the payload exists, resets the
-attempt counter, sets the job to `PENDING` and the scan to `RECEIVED`, and
-returns `202`. Any other state returns `409`.
+Redrive accepts only `DEAD_LETTER`, verifies that the payload exists, invalidates
+the previous claim token, resets the attempt counter, sets the job to `PENDING`
+and the scan to `RECEIVED`, and returns `202`. The next claim always creates a
+new UUID token. Any other state returns `409`.
 
 Job responses never expose payload keys, physical paths, report content,
 credentials, or stack traces. Lists use `createdAt DESC, id DESC` by default.
@@ -151,21 +155,42 @@ credentials, or stack traces. Lists use `createdAt DESC, id DESC` by default.
 1. Registration serializes matching hashes, stores the payload, creates the
    `RECEIVED` scan and `PENDING` job, and commits before returning `202`.
 2. Claim uses `FOR UPDATE SKIP LOCKED`, increments the attempt and updates the
-   scan to `PROCESSING` in a short transaction.
-3. The payload is loaded and parsed after the claim transaction has committed.
+   scan to `PROCESSING` while generating a new claim-token UUID in a short
+   transaction.
+3. The payload is loaded, checked against the scan SHA-256, and parsed after the
+   claim transaction has committed.
 4. Findings, `Scan(COMPLETED)`, and `Job(COMPLETED)` commit atomically.
 5. Failure and stale recovery transitions use independent short transactions.
 
-Every detached claim carries its attempt number. Completion is rejected if the
-job was recovered or reclaimed, preventing a stale worker from committing.
-This provides at-least-once processing with idempotent finalization.
+Every detached claim carries both an attempt number and a claim token.
+`attemptCount` is a retry counter and may reset on manual redrive; `claimToken`
+is a non-reusable fencing generation. Completion and failure require the current
+token, so a stale worker remains rejected even when attempt numbers match. This
+provides at-least-once processing with idempotent finalization.
+
+## Upgrade policy
+
+Flyway V4 defines the transition from 0.1.1 and early 0.2.0 databases:
+
+- historical `COMPLETED` scans without jobs remain valid duplicates;
+- historical `RECEIVED` or `PROCESSING` scans without jobs become `FAILED`
+  because their original payload cannot be reconstructed;
+- re-uploading a non-completed legacy scan stores the supplied payload and
+  creates exactly one new job;
+- an early-0.2.0 `PROCESSING` job has its old claim invalidated and moves to
+  `RETRY_WAIT`, or `DEAD_LETTER` when no attempt remains.
+
+The migration cannot resume historical work whose report bytes were never
+persisted. See [migration policy](docs/migrations.md).
 
 ## Storage
 
 `LocalFileReportStorage` creates internal keys unrelated to the uploaded
 filename, verifies every resolved path remains under its configured root,
 writes a temporary file, and uses an atomic move when supported. The original
-filename is scan metadata only.
+filename is scan metadata only. Before parsing, the worker recomputes SHA-256
+and compares it with the scan hash; altered content dead-letters without being
+parsed.
 
 Completed payloads are intentionally retained in 0.2.0. Retention, cleanup,
 capacity limits, backup, and encryption policies remain future work.
@@ -185,6 +210,7 @@ capacity limits, backup, and encryption policies remain future work.
 
 ```powershell
 Set-Location backend
+.\mvnw.cmd test
 .\mvnw.cmd verify
 Set-Location ..
 
@@ -193,13 +219,17 @@ $env:VULNFLOW_API_KEY = "local-development-only-api-key"
   'cd /c/Users/GabrielVG/Desktop/PROYECTOS/secscan && ./scripts/demo.sh'
 ```
 
-The demo polls with a timeout, shows a completed report, verifies a duplicate,
-and waits for an invalid report to reach `DEAD_LETTER`.
+`mvn test` runs the Docker-independent unit suite. `mvn verify` is the required
+release/CI command: it starts PostgreSQL with Testcontainers and fails if Docker
+is unavailable. The demo polls with a timeout, shows a completed report,
+verifies a duplicate, waits for an invalid report, alters that retained payload,
+redrives it, and verifies integrity dead-lettering.
 
 ## Documentation
 
 - [Architecture](docs/architecture.md)
 - [Security](docs/security.md)
+- [Migration policy](docs/migrations.md)
 - [AWS roadmap](docs/aws-roadmap.md)
 - [ADR-007 PostgreSQL queue](docs/decisions/ADR-007-postgresql-persistent-job-queue.md)
 - [ADR-008 local storage](docs/decisions/ADR-008-local-report-storage.md)
