@@ -2,7 +2,9 @@ FROM eclipse-temurin:17-jdk-jammy AS build
 WORKDIR /workspace
 COPY .mvn .mvn
 COPY mvnw pom.xml ./
-RUN chmod +x mvnw && ./mvnw --batch-mode --no-transfer-progress dependency:go-offline
+RUN sed -i 's/\r$//' mvnw \
+    && chmod +x mvnw \
+    && ./mvnw --batch-mode --no-transfer-progress dependency:go-offline
 COPY src src
 RUN ./mvnw --batch-mode --no-transfer-progress -DskipTests package
 
@@ -16,7 +18,7 @@ RUN groupadd --gid ${AGENT_GID} vulnflow-agent \
     && mkdir -p /var/lib/vulnflow-agent/tmp /etc/vulnflow-agent \
     && chown -R vulnflow-agent:vulnflow-agent /var/lib/vulnflow-agent
 COPY --from=trivy /usr/local/bin/trivy /usr/local/bin/trivy
-COPY --from=build /workspace/target/vulnflow-agent-0.3.0.jar /opt/vulnflow-agent/vulnflow-agent.jar
+COPY --from=build /workspace/target/vulnflow-agent-0.3.1.jar /opt/vulnflow-agent/vulnflow-agent.jar
 USER vulnflow-agent:vulnflow-agent
 VOLUME ["/var/lib/vulnflow-agent"]
 ENTRYPOINT ["java", "-jar", "/opt/vulnflow-agent/vulnflow-agent.jar"]
