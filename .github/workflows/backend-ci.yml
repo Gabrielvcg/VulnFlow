@@ -1,4 +1,4 @@
-name: Backend CI
+name: VulnFlow CI
 
 on:
   push:
@@ -24,7 +24,9 @@ jobs:
           distribution: temurin
           java-version: "17"
           cache: maven
-          cache-dependency-path: backend/pom.xml
+          cache-dependency-path: |
+            backend/pom.xml
+            agent/pom.xml
 
       - name: Verify backend
         working-directory: backend
@@ -51,5 +53,12 @@ jobs:
               sys.exit("PostgreSQL integration tests did not all run")
           PY
 
+      - name: Verify agent
+        working-directory: agent
+        run: ./mvnw --batch-mode --no-transfer-progress verify
+
       - name: Build backend image
         run: docker build --tag vulnflow-backend:ci backend
+
+      - name: Build agent image
+        run: docker build --tag vulnflow-agent:ci agent

@@ -1,0 +1,4 @@
+targets:
+  - name: alpine-demo
+    type: CONTAINER_IMAGE
+    reference: alpine:3.15
