@@ -1,9 +1,12 @@
 # ADR-006: Isolate scan lifecycle transactions
 
-- Status: Accepted
+- Status: Superseded by ADR-009 for asynchronous ingestion
 - Date: 2026-07-29
 
 ## Context
+
+This record describes the synchronous 0.1.1 implementation. The asynchronous
+transaction boundaries are defined by ADR-009 and `docs/architecture.md`.
 
 Scan registration must survive parser failure, findings and completion must be
 atomic, and failure recording must not roll back with the original operation.

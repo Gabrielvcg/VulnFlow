@@ -1,74 +1,75 @@
 # AWS roadmap
 
-## Operating principle
+## Current position
 
-VulnFlow uses:
+VulnFlow 0.2.0 remains entirely local. PostgreSQL supplies the persistent job
+queue, a named Docker volume stores report payloads, and an in-process scheduled
+worker performs ingestion. No AWS SDK, credentials, API calls, or resources are
+part of this release.
+
+The local design now proves the behavior needed before cloud migration:
+
+- durable job and payload registration;
+- at-least-once execution with idempotent completion;
+- bounded retries, dead letter, redrive, and stale lease recovery;
+- concurrency safety against PostgreSQL;
+- storage and queue adapter boundaries.
+
+RabbitMQ was not added because it would create another runtime and operational
+model while PostgreSQL already provides the required local persistence and
+locking semantics.
+
+## Proposed migration
 
 ```text
-Permanent local development
-+
-Temporary and reproducible AWS deployment
-+
-terraform destroy after demonstrations
+0.2 local                         Future AWS adapter
+-----------------------------    ------------------------------
+ReportStorage payload key     -> encrypted private S3 object key
+PostgreSQL IngestionJob       -> SQS message plus DLQ
+@Scheduled local worker       -> Lambda event handler
+availableAt/backoff           -> SQS visibility/delay behavior
+DEAD_LETTER + redrive API     -> DLQ inspection/redrive workflow
+Micrometer local metrics      -> CloudWatch metrics and alarms
 ```
 
-No AWS resources are part of phase one. The Terraform root is intentionally a
-provider/variable skeleton.
+Cloud migration must preserve scan/job state semantics and the same acceptance
+suite. It must not introduce two simultaneous processing paths.
 
-## Phase 1: event contract
+## Recommended phases
 
-- Define and version the report-received event.
-- Add Syft parsing and local SBOM persistence.
-- Establish retry-safe idempotency and poison-message behavior in tests.
-- Decide object naming, content-type, checksum, and maximum report size.
+### Phase 1: contracts and retention
 
-Exit criterion: a local adapter can redeliver events without duplicate findings.
+- Define a versioned event envelope with scan ID, payload key, checksum, and
+  scanner type.
+- Define payload retention and deletion behavior locally.
+- Add storage capacity metrics and an administrative cleanup policy.
+- Decide how legacy completed and failed scans without 0.2 jobs are represented.
 
-## Phase 2: ingestion slice
+### Phase 2: temporary ingestion slice
 
-- Create one encrypted private S3 bucket with short lifecycle retention.
-- Create one encrypted SQS queue and DLQ with a reviewed redrive count.
-- Package the Java ingestion Lambda with timeouts, memory, and reserved
-  concurrency.
-- Grant only object-read, queue-consume, and required data-write permissions.
-- Add queue age/depth, DLQ, Lambda error/throttle, and cost alarms.
+- Implement an S3 `ReportStorage` adapter.
+- Add encrypted SQS and DLQ resources with bounded retention and redrive.
+- Package the existing processor boundary as a Lambda handler.
+- Apply least-privilege object read, queue consume, and database write access.
+- Add queue age, DLQ depth, error, throttle, and cost alarms.
 
-Exit criterion: a synthetic report reaches a temporary persistence target and
-all resources are destroyed successfully.
+### Phase 3: query and identity
 
-## Phase 3: query storage and API
+- Select a cloud query persistence model from demonstrated access patterns.
+- Add API Gateway and a separate query boundary only if operationally justified.
+- Replace the shared API key with an appropriate identity and authorization
+  model before exposing a human-facing interface.
 
-- Derive DynamoDB partition/sort keys and GSIs from endpoint access patterns.
-- Use on-demand capacity initially and enable point-in-time recovery only after
-  cost review.
-- Add a separate least-privilege query Lambda and API Gateway.
-- Add identity, authorization, throttling, and stable public error contracts.
+## Cost and safety gates
 
-Exit criterion: the local and cloud API contracts pass the same acceptance suite.
+Before any future deployment:
 
-## Phase 4: enrichment and operations
+1. Review `terraform plan` and list every billable service.
+2. Confirm no NAT Gateway, EC2, ECS, RDS, load balancer, or OpenSearch unless a
+   later ADR explicitly justifies it.
+3. Define a fixed teardown time and owner.
+4. Configure budgets, retention, and alarms.
+5. Run `terraform destroy`, verify deletion, and inspect for orphaned resources.
 
-- Correlate with a versioned CISA KEV data source.
-- Add SNS alerts with controlled subscriptions and severity thresholds.
-- Add EventBridge schedules only for concrete periodic work.
-- Add CloudWatch dashboards, bounded log retention, tracing, and runbooks.
-- Build a small read-only dashboard.
-
-## Cost gates
-
-Before each temporary deployment:
-
-1. Review the Terraform plan and list every billable service.
-2. Estimate request, storage, data transfer, log, and alarm volume.
-3. Confirm no NAT Gateway, EC2, ECS, RDS, load balancer, or OpenSearch.
-4. Configure AWS Budgets and operational alarms where appropriate.
-5. Set an owner and fixed teardown time.
-
-After the demonstration:
-
-1. Run `terraform destroy`.
-2. Verify S3 cleanup behavior and that no retained data blocks destruction.
-3. Inspect the region for orphaned resources.
-4. Review Cost Explorer after billing data becomes available.
-5. Record actual cost and update estimates.
-
+Terraform in 0.2.0 remains a non-deploying skeleton and is only formatted,
+initialized without a backend, and validated.
