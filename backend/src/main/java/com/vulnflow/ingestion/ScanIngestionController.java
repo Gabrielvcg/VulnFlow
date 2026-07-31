@@ -2,6 +2,7 @@ package com.vulnflow.ingestion;
 
 import java.util.UUID;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -20,10 +21,13 @@ public class ScanIngestionController {
     }
 
     @PostMapping(value = "/trivy", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ScanIngestionResponse ingestTrivy(
+    public ResponseEntity<ScanIngestionResponse> ingestTrivy(
             @RequestParam UUID assetId,
             @RequestPart("file") MultipartFile file) {
-        return scanIngestionService.ingestTrivy(assetId, file);
+        ScanIngestionResponse response = scanIngestionService.ingestTrivy(assetId, file);
+        if (response.outcome() == ScanIngestionOutcome.ALREADY_PROCESSING) {
+            return ResponseEntity.accepted().body(response);
+        }
+        return ResponseEntity.ok(response);
     }
 }
-
