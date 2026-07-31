@@ -3,6 +3,7 @@ package com.vulnflow.scan;
 import java.util.UUID;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -20,7 +21,12 @@ public class ScanController {
     }
 
     @GetMapping
-    public Page<ScanResponse> findAll(@PageableDefault(size = 20) Pageable pageable) {
+    public Page<ScanResponse> findAll(
+            @PageableDefault(
+                    size = 20,
+                    sort = {"receivedAt", "id"},
+                    direction = Sort.Direction.DESC)
+            Pageable pageable) {
         return scanQueryService.findAll(pageable);
     }
 
@@ -29,4 +35,3 @@ public class ScanController {
         return scanQueryService.findById(id);
     }
 }
-

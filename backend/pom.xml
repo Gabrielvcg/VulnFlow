@@ -13,7 +13,7 @@
 
     <groupId>com.vulnflow</groupId>
     <artifactId>vulnflow-backend</artifactId>
-    <version>0.1.0</version>
+    <version>0.1.1</version>
     <name>vulnflow-backend</name>
     <description>Local-first vulnerability scan ingestion and query API</description>
 
@@ -39,6 +39,10 @@
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-actuator</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-security</artifactId>
         </dependency>
         <dependency>
             <groupId>org.flywaydb</groupId>
@@ -104,4 +108,3 @@
         </plugins>
     </build>
 </project>
-

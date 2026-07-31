@@ -4,7 +4,7 @@ spring:
   datasource:
     url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/vulnflow}
     username: ${SPRING_DATASOURCE_USERNAME:vulnflow}
-    password: ${SPRING_DATASOURCE_PASSWORD:change-me}
+    password: ${SPRING_DATASOURCE_PASSWORD:local-vulnflow-password}
     hikari:
       connection-timeout: 5000
       validation-timeout: 3000
@@ -51,6 +51,11 @@ springdoc:
 vulnflow:
   ingestion:
     max-file-size: ${VULNFLOW_MAX_FILE_SIZE:10MB}
+    processing-timeout: ${VULNFLOW_PROCESSING_TIMEOUT:15m}
+    max-description-length: ${VULNFLOW_MAX_DESCRIPTION_LENGTH:8000}
+  security:
+    api-key:
+      value: ${VULNFLOW_API_KEY:}
 
 logging:
   structured:
