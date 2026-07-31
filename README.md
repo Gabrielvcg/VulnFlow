@@ -1,10 +1,10 @@
 # VulnFlow
 
-VulnFlow 0.3.0 adds a standalone continuous-scanning agent to the local-first
-Spring Boot API. A Linux host can scan only its explicitly configured Docker
-images with Trivy, retain reports through outages, and submit them to the
-existing PostgreSQL-backed asynchronous ingestion flow. The agent and backend
-are independent Maven/Java 17 applications.
+VulnFlow 0.3.1 adds a gated CI/CD path from `main` to a single production VPS.
+GitHub Actions verifies the independent Java 17 backend and agent, publishes
+immutable commit-SHA images to GHCR, and can update PostgreSQL, backend, and
+agent with health-gated automatic container rollback. Runtime secrets and
+persistent data remain on the VPS.
 
 ## Current architecture
 
@@ -100,9 +100,9 @@ $env:VULNFLOW_API_URL = "http://127.0.0.1:8080/"
 $env:VULNFLOW_API_KEY = "configured-value"
 $env:VULNFLOW_AGENT_ID = "developer-machine"
 $env:VULNFLOW_TARGETS_FILE = (Resolve-Path targets.yml)
-java -jar target/vulnflow-agent-0.3.0.jar --check
-java -jar target/vulnflow-agent-0.3.0.jar --once
-java -jar target/vulnflow-agent-0.3.0.jar --status
+java -jar target/vulnflow-agent-0.3.1.jar --check
+java -jar target/vulnflow-agent-0.3.1.jar --once
+java -jar target/vulnflow-agent-0.3.1.jar --status
 ```
 
 The default daemon mode schedules isolated scan, upload, and cleanup cycles.
@@ -250,8 +250,27 @@ filename is scan metadata only. Before parsing, the worker recomputes SHA-256
 and compares it with the scan hash; altered content dead-letters without being
 parsed.
 
-Backend-completed payloads are intentionally retained in 0.3.0. Retention, cleanup,
+Backend-completed payloads are intentionally retained in 0.3.1. Retention, cleanup,
 capacity limits, backup, and encryption policies remain future work.
+
+## Production VPS delivery
+
+Pull requests run backend and agent verification plus local image builds. A
+successful push to `main` additionally publishes both images to GHCR under the
+exact 40-character commit SHA. Deployment remains gated by the protected
+GitHub `production` environment and `VPS_DEPLOY_ENABLED=true`.
+
+The production Compose bundle runs PostgreSQL, backend, and agent as separate
+services. PostgreSQL is private, the backend binds only to VPS loopback, and
+the non-root agent has no Docker socket. The workflow verifies a pinned SSH host
+key, synchronizes only versioned deployment files, and never overwrites the
+VPS-only runtime environment or target file. Named PostgreSQL, report, and
+agent-outbox volumes are preserved.
+
+See [the VPS deployment runbook](docs/operations/vps-deployment.md) for one-time preparation,
+GitHub variables and secrets, Nginx/TLS, exact-SHA deployment, health checks,
+automatic rollback, emergency recovery, and the deployment pause switch. No
+real VPS deployment is required to validate this repository configuration.
 
 ## Metrics
 
@@ -301,6 +320,7 @@ vulnerability count.
 - [Architecture](docs/architecture.md)
 - [Agent operations](docs/agent.md)
 - [Security](docs/security.md)
+- [VPS deployment](docs/operations/vps-deployment.md)
 - [Migration policy](docs/migrations.md)
 - [AWS roadmap](docs/aws-roadmap.md)
 - [ADR-007 PostgreSQL queue](docs/decisions/ADR-007-postgresql-persistent-job-queue.md)
@@ -309,6 +329,7 @@ vulnerability count.
 - [ADR-010 VPS agent](docs/decisions/ADR-010-vps-agent.md)
 - [ADR-011 agent outbox](docs/decisions/ADR-011-agent-persistent-outbox.md)
 - [ADR-012 safe Trivy execution](docs/decisions/ADR-012-safe-external-process-execution.md)
+- [ADR-013 VPS CI/CD](docs/decisions/ADR-013-vps-cicd.md)
 
 AWS remains intentionally deferred. The backend boundaries and agent outbox are
 preparation for a later presigned-S3/SQS/Lambda transport, not cloud
