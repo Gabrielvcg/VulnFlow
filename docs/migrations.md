@@ -1,5 +1,21 @@
 # Database migrations
 
+## V5 asset external identity
+
+V5 makes `(type, external_reference)` unique so multiple agents can resolve the
+same external image identity safely. Null references remain available for
+assets that do not have an external identity.
+
+An older database may already contain duplicates because V1 did not enforce
+this rule. V5 keeps the earliest `(created_at, id)` row as canonical and sets
+`external_reference` to null on later duplicates. It does not delete assets or
+their scans/findings. The resolver conserves the canonical asset name and uses
+PostgreSQL `INSERT ... ON CONFLICT DO NOTHING` before returning the row.
+
+`FlywayUpgradeIT` creates duplicate V2 data and verifies that V3, V4, and V5
+complete against PostgreSQL 16.4. `PostgreSQLFlowIT` proves two simultaneous
+resolver calls produce one `201`, one `200`, and exactly one asset row.
+
 ## V4 claim tokens and legacy scan policy
 
 V4 upgrades both a clean installation and databases that already applied V3.
@@ -43,4 +59,4 @@ off is that an interrupted 0.1.1 scan cannot resume automatically after upgrade;
 the original report must be uploaded again.
 
 `FlywayUpgradeIT` applies V1/V2, inserts representative legacy rows, applies V3
-and V4, and verifies the resulting policy with PostgreSQL 16.4.
+through V5, and verifies the resulting policy with PostgreSQL 16.4.

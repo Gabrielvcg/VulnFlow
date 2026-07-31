@@ -1,0 +1,26 @@
+services:
+  agent:
+    build:
+      context: ./agent
+      dockerfile: Dockerfile
+    environment:
+      VULNFLOW_API_URL: ${VULNFLOW_AGENT_API_URL:-http://host.docker.internal:8080/}
+      VULNFLOW_API_KEY: ${VULNFLOW_API_KEY:?VULNFLOW_API_KEY must be configured}
+      VULNFLOW_AGENT_ID: ${VULNFLOW_AGENT_ID:-docker-agent}
+      VULNFLOW_SCAN_INTERVAL: ${VULNFLOW_SCAN_INTERVAL:-6h}
+      VULNFLOW_TRIVY_PATH: /usr/local/bin/trivy
+      VULNFLOW_AGENT_DATA_DIR: /var/lib/vulnflow-agent
+      VULNFLOW_AGENT_TEMP_DIR: /var/lib/vulnflow-agent/tmp
+      VULNFLOW_AGENT_MAX_CONCURRENT_SCANS: ${VULNFLOW_AGENT_MAX_CONCURRENT_SCANS:-1}
+      VULNFLOW_AGENT_UPLOAD_RETRY_INTERVAL: ${VULNFLOW_AGENT_UPLOAD_RETRY_INTERVAL:-30s}
+      VULNFLOW_TARGETS_FILE: /etc/vulnflow-agent/targets.yml
+      TRIVY_CACHE_DIR: /var/lib/vulnflow-agent/trivy-cache
+    volumes:
+      - vulnflow-agent-data:/var/lib/vulnflow-agent
+      - ${VULNFLOW_AGENT_TARGETS_FILE:-./agent/targets.example.yml}:/etc/vulnflow-agent/targets.yml:ro
+    extra_hosts:
+      - host.docker.internal:host-gateway
+    restart: unless-stopped
+
+volumes:
+  vulnflow-agent-data:

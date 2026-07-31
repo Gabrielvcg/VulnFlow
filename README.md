@@ -1,13 +1,17 @@
 # VulnFlow
 
-VulnFlow 0.2.0 is a local-first Spring Boot API that accepts Trivy reports,
-stores them durably, and processes them asynchronously through a PostgreSQL job
-queue. PostgreSQL remains the source of truth for assets, scans, jobs, and
-findings; report bytes live behind the `ReportStorage` abstraction.
+VulnFlow 0.3.0 adds a standalone continuous-scanning agent to the local-first
+Spring Boot API. A Linux host can scan only its explicitly configured Docker
+images with Trivy, retain reports through outages, and submit them to the
+existing PostgreSQL-backed asynchronous ingestion flow. The agent and backend
+are independent Maven/Java 17 applications.
 
 ## Current architecture
 
 ```text
+Configured Linux host
+  | VulnFlow Agent: Trivy -> durable local outbox -> asset resolution
+  v
 Client
   | POST /api/v1/scans/trivy
   v
@@ -31,8 +35,9 @@ Findings + Scan(COMPLETED) + Job(COMPLETED)
   or RETRY_WAIT / DEAD_LETTER
 ```
 
-The backend is one modular monolith. No AWS service, message broker, frontend,
-or additional runtime container is required.
+The backend remains one modular monolith. The optional agent is an outbound-only
+process with no Spring or backend compile-time dependency. No AWS service,
+message broker, frontend, Docker socket, or cloud runtime is required.
 
 ## Run locally
 
@@ -73,6 +78,59 @@ endpoint requires `X-API-Key`.
 
 The API key is provisional. A future human-facing interface should use OIDC or
 JWT with explicit authorization.
+
+## Continuous scanning agent
+
+Targets are declared explicitly in YAML:
+
+```yaml
+targets:
+  - name: alpine-demo
+    type: CONTAINER_IMAGE
+    reference: alpine:3.15
+```
+
+Build and validate the agent:
+
+```powershell
+Set-Location agent
+.\mvnw.cmd verify
+Copy-Item targets.example.yml targets.yml
+$env:VULNFLOW_API_URL = "http://127.0.0.1:8080/"
+$env:VULNFLOW_API_KEY = "configured-value"
+$env:VULNFLOW_AGENT_ID = "developer-machine"
+$env:VULNFLOW_TARGETS_FILE = (Resolve-Path targets.yml)
+java -jar target/vulnflow-agent-0.3.0.jar --check
+java -jar target/vulnflow-agent-0.3.0.jar --once
+java -jar target/vulnflow-agent-0.3.0.jar --status
+```
+
+The default daemon mode schedules isolated scan, upload, and cleanup cycles.
+Reports enter a filesystem outbox before network access, survive restarts, and
+are checked against their SHA-256 before upload. `UPLOADED` reports are retained
+for seven days by default; pending, retrying, and dead-letter reports are never
+deleted automatically. See [the agent guide](docs/agent.md) for all variables,
+systemd, Docker, security, capacity, and failure behavior.
+
+## Idempotent asset resolution
+
+```http
+PUT /api/v1/assets/resolve
+X-API-Key: configured-value
+Content-Type: application/json
+
+{
+  "name": "alpine-demo",
+  "type": "CONTAINER_IMAGE",
+  "externalReference": "alpine:3.15"
+}
+```
+
+The endpoint returns `201` for a new `(type, externalReference)` identity and
+`200` with the existing asset otherwise. The original stored name is conserved.
+Flyway V5 and PostgreSQL `ON CONFLICT` make concurrent resolution atomic. The
+existing `POST /api/v1/assets` remains available; duplicate external identity
+now returns `409`.
 
 ## Asynchronous ingestion
 
@@ -192,7 +250,7 @@ filename is scan metadata only. Before parsing, the worker recomputes SHA-256
 and compares it with the scan hash; altered content dead-letters without being
 parsed.
 
-Completed payloads are intentionally retained in 0.2.0. Retention, cleanup,
+Backend-completed payloads are intentionally retained in 0.3.0. Retention, cleanup,
 capacity limits, backup, and encryption policies remain future work.
 
 ## Metrics
@@ -212,6 +270,8 @@ capacity limits, backup, and encryption policies remain future work.
 Set-Location backend
 .\mvnw.cmd test
 .\mvnw.cmd verify
+Set-Location ..\agent
+.\mvnw.cmd verify
 Set-Location ..
 
 $env:VULNFLOW_API_KEY = "local-development-only-api-key"
@@ -225,16 +285,31 @@ is unavailable. The demo polls with a timeout, shows a completed report,
 verifies a duplicate, waits for an invalid report, alters that retained payload,
 redrives it, and verifies integrity dead-lettering.
 
+The deterministic agent end-to-end demo does not require Trivy:
+
+```powershell
+& "C:\Program Files\Git\bin\bash.exe" -lc 'cd /c/Users/GabrielVG/Desktop/PROYECTOS/secscan && ./scripts/agent-e2e-fake.sh'
+```
+
+When Trivy is already installed, `scripts/agent-demo.sh` scans
+`VULNFLOW_DEMO_IMAGE` (default `alpine:3.15`) and repeats the cycle to show
+deduplication. The script never installs Trivy and does not assume a fixed
+vulnerability count.
+
 ## Documentation
 
 - [Architecture](docs/architecture.md)
+- [Agent operations](docs/agent.md)
 - [Security](docs/security.md)
 - [Migration policy](docs/migrations.md)
 - [AWS roadmap](docs/aws-roadmap.md)
 - [ADR-007 PostgreSQL queue](docs/decisions/ADR-007-postgresql-persistent-job-queue.md)
 - [ADR-008 local storage](docs/decisions/ADR-008-local-report-storage.md)
 - [ADR-009 at-least-once processing](docs/decisions/ADR-009-at-least-once-processing.md)
+- [ADR-010 VPS agent](docs/decisions/ADR-010-vps-agent.md)
+- [ADR-011 agent outbox](docs/decisions/ADR-011-agent-persistent-outbox.md)
+- [ADR-012 safe Trivy execution](docs/decisions/ADR-012-safe-external-process-execution.md)
 
-AWS remains intentionally deferred. The local `ReportStorage`, persistent job
-queue, and worker boundaries are preparation for later S3, SQS, and Lambda
-adapters, not cloud integrations in this release.
+AWS remains intentionally deferred. The backend boundaries and agent outbox are
+preparation for a later presigned-S3/SQS/Lambda transport, not cloud
+integrations in this release.

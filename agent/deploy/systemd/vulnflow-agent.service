@@ -1,0 +1,32 @@
+[Unit]
+Description=VulnFlow continuous vulnerability scanning agent
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=vulnflow-agent
+Group=vulnflow-agent
+WorkingDirectory=/opt/vulnflow-agent
+EnvironmentFile=/etc/vulnflow-agent/vulnflow-agent.env
+Environment=TRIVY_CACHE_DIR=/var/lib/vulnflow-agent/trivy-cache
+ExecStart=/usr/bin/java -jar /opt/vulnflow-agent/vulnflow-agent-0.3.0.jar
+Restart=on-failure
+RestartSec=10s
+TimeoutStopSec=45s
+KillSignal=SIGTERM
+NoNewPrivileges=true
+PrivateTmp=true
+PrivateDevices=true
+ProtectSystem=strict
+ProtectHome=true
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+RestrictSUIDSGID=true
+LockPersonality=true
+ReadWritePaths=/var/lib/vulnflow-agent
+StateDirectory=vulnflow-agent
+
+[Install]
+WantedBy=multi-user.target

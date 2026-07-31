@@ -23,7 +23,7 @@ public class OpenApiConfiguration {
                 .addSecurityItem(new SecurityRequirement().addList("apiKey"))
                 .info(new Info()
                         .title("VulnFlow API")
-                        .version("0.2.0")
+                        .version("0.3.0")
                         .description("Local-first API with persistent asynchronous vulnerability report ingestion."));
     }
 }
