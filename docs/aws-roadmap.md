@@ -2,7 +2,7 @@
 
 ## Current position
 
-VulnFlow 0.3.0 remains entirely local. PostgreSQL supplies the backend job
+VulnFlow 0.3.1 remains entirely VPS-local at runtime. PostgreSQL supplies the backend job
 queue, named volumes store backend payloads, and an independent Linux agent
 uses a filesystem outbox for continuous scans. No AWS SDK, credentials, API
 calls, or resources are part of this release.
@@ -84,5 +84,5 @@ Before any future deployment:
 4. Configure budgets, retention, and alarms.
 5. Run `terraform destroy`, verify deletion, and inspect for orphaned resources.
 
-Terraform in 0.3.0 remains a non-deploying skeleton and is only formatted,
+Terraform in 0.3.1 remains a non-deploying skeleton and is only formatted,
 initialized without a backend, and validated.

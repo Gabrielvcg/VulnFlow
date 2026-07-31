@@ -13,7 +13,7 @@
 
     <groupId>com.vulnflow</groupId>
     <artifactId>vulnflow-backend</artifactId>
-    <version>0.3.0</version>
+    <version>0.3.1</version>
     <name>vulnflow-backend</name>
     <description>Local-first vulnerability scan ingestion and query API</description>
 
