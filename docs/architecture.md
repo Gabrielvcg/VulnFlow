@@ -2,14 +2,29 @@
 
 ## Scope
 
-VulnFlow 0.2.0 is a Spring Boot modular monolith with PostgreSQL and a local
-persistent report volume. The API and worker run in the same process, but their
-transactional boundaries are independent so either side can later move behind
-an adapter.
+VulnFlow 0.3.0 consists of a Spring Boot modular-monolith backend and an
+independent Java 17 scanning agent. PostgreSQL and a local report volume remain
+the backend persistence layer. The agent has its own filesystem outbox and only
+outbound HTTP connectivity.
 
 ## Components
 
 ```text
+AgentApplication
+  -> AgentConfigLoader -> configured TargetRegistry
+  -> AgentScheduler
+      -> ScanCoordinator -> TrivyImageScanner -> FileAgentOutbox
+      -> UploadCoordinator
+          -> AssetCache
+          -> VulnFlowHttpClient
+          -> FileAgentOutbox
+      -> uploaded-only cleanup
+
+AssetController PUT /api/v1/assets/resolve
+  -> AssetService
+      -> AssetIdentityRepository -> INSERT ON CONFLICT
+      -> AssetRepository
+
 ScanIngestionController
   -> DefaultScanIngestionService
       -> AssetService
@@ -37,6 +52,26 @@ IngestionJobController
   -> IngestionJobQueryService
   -> IngestionJobRedriveService
 ```
+
+## Agent-to-findings flow
+
+1. Startup validates every required setting and target, then executes a bounded
+   `trivy --version` without a shell.
+2. A scan cycle takes only configured targets, applies global and per-target
+   concurrency guards, and invokes Trivy with an argument list.
+3. The bounded valid JSON is normalized only by removing the volatile root
+   `CreatedAt`, then copied to an atomically created UUID outbox directory.
+4. Scanning succeeds even when the backend is unavailable. A cached asset ID is
+   optional until the upload cycle can resolve it.
+5. Upload atomically claims a ready item, verifies SHA-256, and calls the
+   idempotent asset resolver when needed.
+6. The client sends multipart JSON to the existing ingestion endpoint. `200`
+   and `202` become `UPLOADED`; network/`5xx` failures set persisted backoff;
+   functional `4xx` failures dead-letter.
+7. The unchanged backend queue and worker turn the report into findings.
+
+The agent scheduler, scanner, uploader, target registry, outbox, and client are
+separate interfaces or focused classes. There is no inbound agent API.
 
 ## HTTP-to-worker flow
 
@@ -93,6 +128,8 @@ filesystem and PostgreSQL do not provide a distributed transaction.
 
 ## Concurrency and idempotency
 
+- `UNIQUE(type, external_reference)` plus `INSERT ... ON CONFLICT DO NOTHING`
+  resolves one asset under concurrent agents; an existing asset keeps its name.
 - `(asset_id, content_hash)` serializes duplicate report submission.
 - `UNIQUE(scan_id)` prevents a second job for a scan.
 - `SKIP LOCKED` lets backend instances claim different jobs without waiting.
@@ -103,6 +140,10 @@ filesystem and PostgreSQL do not provide a distributed transaction.
 - Completion deletes and recreates a scan's findings within one transaction,
   so redelivery cannot leave duplicates or partial findings.
 - Concurrent redrive locks the job row; only the first transition succeeds.
+- One scan cycle and a per-target stable-key set prevent target overlap. A fixed
+  executor caps global Trivy concurrency.
+- Outbox claims are synchronized and move persisted state to `UPLOADING` before
+  HTTP. A second upload cycle cannot claim that item.
 
 ## Recovery and backoff
 
@@ -122,7 +163,13 @@ IngestionJobRepository/claim service -> SQS delivery adapter
 LocalIngestionWorker -> Lambda handler
 ```
 
-These are migration seams only. No AWS SDK or cloud resource is used in 0.2.0.
+The agent's future transport seam is:
+
+```text
+FileAgentOutbox -> presigned S3 uploader -> SQS submission
+```
+
+These are migration seams only. No AWS SDK or cloud resource is used in 0.3.0.
 SQS will use receipt handles and visibility timeouts rather than copying the
 current PostgreSQL row-locking protocol. S3 calls must not be introduced under
 long-held database locks.
