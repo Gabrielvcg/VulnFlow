@@ -1,10 +1,11 @@
 # VulnFlow
 
-VulnFlow 0.4.1 completes an executable AWS ingestion path without deploying or
-contacting AWS. The local/VPS mode remains the default and unchanged. The
-explicit `aws` profile selects S3 payload storage, a recoverable PostgreSQL SQS
-publication outbox, the shared Lambda processor, and a DynamoDB result store.
-Terraform remains limited to offline format/init/validate in this phase.
+VulnFlow 0.4.2 keeps the executable AWS ingestion path without deploying or
+contacting AWS and fixes Trivy temporary storage for the containerized VPS
+agent. The local/VPS mode remains the default. The explicit `aws` profile
+selects S3 payload storage, a recoverable PostgreSQL SQS publication outbox,
+the shared Lambda processor, and a DynamoDB result store. Terraform remains
+limited to offline format/init/validate in this phase.
 
 ## Current architecture
 
@@ -132,9 +133,9 @@ $env:VULNFLOW_API_URL = "http://127.0.0.1:8080/"
 $env:VULNFLOW_API_KEY = "configured-value"
 $env:VULNFLOW_AGENT_ID = "developer-machine"
 $env:VULNFLOW_TARGETS_FILE = (Resolve-Path targets.yml)
-java -jar target/vulnflow-agent-0.4.1.jar --check
-java -jar target/vulnflow-agent-0.4.1.jar --once
-java -jar target/vulnflow-agent-0.4.1.jar --status
+java -jar target/vulnflow-agent-0.4.2.jar --check
+java -jar target/vulnflow-agent-0.4.2.jar --once
+java -jar target/vulnflow-agent-0.4.2.jar --status
 ```
 
 The default daemon mode schedules isolated scan, upload, and cleanup cycles.
