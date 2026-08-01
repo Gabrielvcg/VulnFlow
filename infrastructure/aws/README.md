@@ -6,7 +6,10 @@ result table, a Java 17 Lambda function, least-privilege IAM, bounded CloudWatch
 Logs, an optional DLQ alarm, and the SQS event source mapping.
 The Lambda uses unreserved account concurrency, while the SQS event source
 mapping applies the bounded concurrency limit used by the temporary demo.
-It has no remote Terraform backend.
+It has no active remote Terraform backend until the dedicated bucket in
+`infrastructure/bootstrap` has been created by a separately authorized apply.
+`backend.tf.example` contains the reviewed S3 backend shape with native
+`use_lockfile=true` locking and no credentials.
 
 The configuration intentionally fails closed before deployment while
 `result_store_provider="none"`. After reviewing the packaged DynamoDB adapter,
