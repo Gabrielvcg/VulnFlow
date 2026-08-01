@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.4.4 - 2026-08-01
+
+- Replaced the Lambda reserved-concurrency default with an SQS event-source
+  maximum concurrency of two, keeping the demo bounded while allowing plans
+  to work in AWS accounts whose regional concurrency quota is below 100.
+
 ## 0.4.3 - 2026-08-01
 
 - Return the controlled API error envelope with HTTP 404 for missing static
