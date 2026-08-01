@@ -10,23 +10,20 @@ locals {
   )
 
   policy_files = {
-    state = "terraform-state-operator-policy.json"
-    app   = "application-operator-policy.json"
+    state    = "terraform-state-operator-policy.json"
+    app      = "application-operator-policy.json"
+    workload = "workload-identity-operator-policy.json"
   }
 
-  operator_trust_statement = merge(
-    {
-      Sid       = "AllowExactBootstrapUser"
-      Effect    = "Allow"
-      Action    = "sts:AssumeRole"
-      Principal = { AWS = var.trusted_user_arn }
-    },
-    var.mfa_serial == null ? {} : {
-      Condition = {
-        Bool = { "aws:MultiFactorAuthPresent" = "true" }
-      }
+  operator_trust_statement = {
+    Sid       = "AllowExactBootstrapUserWithMfa"
+    Effect    = "Allow"
+    Action    = "sts:AssumeRole"
+    Principal = { AWS = var.trusted_user_arn }
+    Condition = {
+      Bool = { "aws:MultiFactorAuthPresent" = "true" }
     }
-  )
+  }
 
   operator_trust_policy = jsonencode({
     Version   = "2012-10-17"
@@ -46,12 +43,14 @@ resource "aws_iam_policy" "operator" {
   for_each = local.policy_files
 
   name = {
-    state = "VulnFlowTerraformStateOperator"
-    app   = "VulnFlowApplicationOperator"
+    state    = "VulnFlowTerraformStateOperator"
+    app      = "VulnFlowApplicationOperator"
+    workload = "VulnFlowWorkloadIdentityOperator"
   }[each.key]
   description = {
-    state = "Manage the dedicated VulnFlow Terraform state bucket and state objects."
-    app   = "Manage only the reviewed VulnFlow demo application resources."
+    state    = "Manage the dedicated VulnFlow Terraform state bucket and state objects."
+    app      = "Manage only the reviewed VulnFlow demo application resources."
+    workload = "Manage only the reviewed VulnFlow Roles Anywhere workload identity."
   }[each.key]
   policy = file("${path.module}/policies/${each.value}")
   tags   = local.common_tags

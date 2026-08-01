@@ -5,12 +5,10 @@ AWS. Human Terraform operators use the separate `VulnFlowTerraformOperator`
 AssumeRole flow instead. Neither path uses long-lived AWS access keys.
 
 Creating or updating a Roles Anywhere profile has an AWS-documented
-`iam:PassRole` dependency. The current human Terraform operator intentionally
-has `iam:PassRole` only for the Lambda execution role, so it cannot enable this
-module. A future reviewed phase must authorize passing exactly
-`arn:aws:iam::160172542031:role/vulnflow-demo-backend-role` to Roles Anywhere
-before planning this module; that permission is not part of the current
-identity bootstrap.
+`iam:PassRole` dependency. The human Terraform operator can pass exactly
+`arn:aws:iam::160172542031:role/vulnflow-demo-backend-role` to
+`rolesanywhere.amazonaws.com`; it cannot pass any other workload role through
+that statement.
 
 ## Prepared trust boundary
 
