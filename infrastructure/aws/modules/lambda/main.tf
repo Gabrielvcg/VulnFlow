@@ -100,4 +100,8 @@ resource "aws_lambda_event_source_mapping" "ingestion" {
   batch_size                         = var.batch_size
   maximum_batching_window_in_seconds = var.maximum_batching_window
   function_response_types            = ["ReportBatchItemFailures"]
+
+  scaling_config {
+    maximum_concurrency = var.maximum_concurrency
+  }
 }
