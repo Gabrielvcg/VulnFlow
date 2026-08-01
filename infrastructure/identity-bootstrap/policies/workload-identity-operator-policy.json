@@ -1,0 +1,103 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "ManageBackendRolesAnywhereRole",
+      "Effect": "Allow",
+      "Action": [
+        "iam:CreateRole",
+        "iam:DeleteRole",
+        "iam:DeleteRolePolicy",
+        "iam:GetRole",
+        "iam:GetRolePolicy",
+        "iam:ListAttachedRolePolicies",
+        "iam:ListRolePolicies",
+        "iam:ListRoleTags",
+        "iam:PutRolePolicy",
+        "iam:TagRole",
+        "iam:UntagRole",
+        "iam:UpdateAssumeRolePolicy"
+      ],
+      "Resource": "arn:aws:iam::160172542031:role/vulnflow-demo-backend-role"
+    },
+    {
+      "Sid": "PassOnlyBackendRoleToRolesAnywhere",
+      "Effect": "Allow",
+      "Action": "iam:PassRole",
+      "Resource": "arn:aws:iam::160172542031:role/vulnflow-demo-backend-role",
+      "Condition": {
+        "StringEquals": {
+          "iam:PassedToService": "rolesanywhere.amazonaws.com"
+        }
+      }
+    },
+    {
+      "Sid": "CreateTaggedRolesAnywhereResources",
+      "Effect": "Allow",
+      "Action": [
+        "rolesanywhere:CreateProfile",
+        "rolesanywhere:CreateTrustAnchor"
+      ],
+      "Resource": "*",
+      "Condition": {
+        "StringEquals": {
+          "aws:RequestTag/Project": "vulnflow",
+          "aws:RequestTag/Environment": "demo",
+          "aws:RequestTag/ManagedBy": "Terraform"
+        }
+      }
+    },
+    {
+      "Sid": "DiscoverRolesAnywhereResources",
+      "Effect": "Allow",
+      "Action": [
+        "rolesanywhere:ListProfiles",
+        "rolesanywhere:ListTagsForResource",
+        "rolesanywhere:ListTrustAnchors"
+      ],
+      "Resource": "*"
+    },
+    {
+      "Sid": "ManageTaggedRolesAnywhereProfiles",
+      "Effect": "Allow",
+      "Action": [
+        "rolesanywhere:DeleteProfile",
+        "rolesanywhere:DisableProfile",
+        "rolesanywhere:EnableProfile",
+        "rolesanywhere:GetProfile",
+        "rolesanywhere:TagResource",
+        "rolesanywhere:UntagResource",
+        "rolesanywhere:UpdateProfile"
+      ],
+      "Resource": "arn:aws:rolesanywhere:eu-west-1:160172542031:profile/*",
+      "Condition": {
+        "StringEquals": {
+          "aws:ResourceTag/Project": "vulnflow",
+          "aws:ResourceTag/Environment": "demo",
+          "aws:ResourceTag/ManagedBy": "Terraform"
+        }
+      }
+    },
+    {
+      "Sid": "ManageTaggedRolesAnywhereTrustAnchors",
+      "Effect": "Allow",
+      "Action": [
+        "rolesanywhere:DeleteTrustAnchor",
+        "rolesanywhere:DisableTrustAnchor",
+        "rolesanywhere:EnableTrustAnchor",
+        "rolesanywhere:GetTrustAnchor",
+        "rolesanywhere:TagResource",
+        "rolesanywhere:UntagResource",
+        "rolesanywhere:UpdateTrustAnchor"
+      ],
+      "Resource": "arn:aws:rolesanywhere:eu-west-1:160172542031:trust-anchor/*",
+      "Condition": {
+        "StringEquals": {
+          "aws:ResourceTag/Project": "vulnflow",
+          "aws:ResourceTag/Environment": "demo",
+          "aws:ResourceTag/ManagedBy": "Terraform"
+        }
+      }
+    }
+  ]
+}
