@@ -1,0 +1,2264 @@
+{
+  "generated_at": "2026-08-01T12:42:25.414391Z",
+  "root": ".",
+  "endpoints": [
+    {
+      "file": "backend/src/main/java/com/vulnflow/asset/AssetController.java",
+      "line": 19,
+      "type": "spring_endpoint_annotation",
+      "detail": "Spring controller or request mapping annotation",
+      "evidence": "@RestController"
+    },
+    {
+      "file": "backend/src/main/java/com/vulnflow/asset/AssetController.java",
+      "line": 20,
+      "type": "spring_endpoint_annotation",
+      "detail": "Spring controller or request mapping annotation",
+      "evidence": "@RequestMapping(\"/api/v1/assets\")"
+    },
+    {
+      "file": "backend/src/main/java/com/vulnflow/asset/AssetController.java",
+      "line": 29,
+      "type": "spring_endpoint_annotation",
+      "detail": "Spring controller or request mapping annotation",
+      "evidence": "@PostMapping"
+    },
+    {
+      "file": "backend/src/main/java/com/vulnflow/asset/AssetController.java",
+      "line": 35,
+      "type": "spring_endpoint_annotation",
+      "detail": "Spring controller or request mapping annotation",
+      "evidence": "@PutMapping(\"/resolve\")"
+    },
+    {
+      "file": "backend/src/main/java/com/vulnflow/asset/AssetController.java",
+      "line": 46,
+      "type": "spring_endpoint_annotation",
+      "detail": "Spring controller or request mapping annotation",
+      "evidence": "@GetMapping"
+    },
+    {
+      "file": "backend/src/main/java/com/vulnflow/asset/AssetController.java",
+      "line": 56,
+      "type": "spring_endpoint_annotation",
+      "detail": "Spring controller or request mapping annotation",
+      "evidence": "@GetMapping(\"/{id}\")"
+    },
+    {
+      "file": "backend/src/main/java/com/vulnflow/dashboard/DashboardController.java",
+      "line": 8,
+      "type": "spring_endpoint_annotation",
+      "detail": "Spring controller or request mapping annotation",
+      "evidence": "@RestController"
+    },
+    {
+      "file": "backend/src/main/java/com/vulnflow/dashboard/DashboardController.java",
+      "line": 10,
+      "type": "spring_endpoint_annotation",
+      "detail": "Spring controller or request mapping annotation",
+      "evidence": "@RequestMapping(\"/api/v1/dashboard\")"
+    },
+    {
+      "file": "backend/src/main/java/com/vulnflow/dashboard/DashboardController.java",
+      "line": 19,
+      "type": "spring_endpoint_annotation",
+      "detail": "Spring controller or request mapping annotation",
+      "evidence": "@GetMapping(\"/summary\")"
+    },
+    {
+      "file": "backend/src/main/java/com/vulnflow/finding/FindingController.java",
+      "line": 18,
+      "type": "spring_endpoint_annotation",
+      "detail": "Spring controller or request mapping annotation",
+      "evidence": "@RestController"
+    },
+    {
+      "file": "backend/src/main/java/com/vulnflow/finding/FindingController.java",
+      "line": 20,
+      "type": "spring_endpoint_annotation",
+      "detail": "Spring controller or request mapping annotation",
+      "evidence": "@RequestMapping(\"/api/v1/findings\")"
+    },
+    {
+      "file": "backend/src/main/java/com/vulnflow/finding/FindingController.java",
+      "line": 29,
+      "type": "spring_endpoint_annotation",
+      "detail": "Spring controller or request mapping annotation",
+      "evidence": "@GetMapping"
+    },
+    {
+      "file": "backend/src/main/java/com/vulnflow/finding/FindingController.java",
+      "line": 43,
+      "type": "spring_endpoint_annotation",
+      "detail": "Spring controller or request mapping annotation",
+      "evidence": "@GetMapping(\"/{id}\")"
+    },
+    {
+      "file": "backend/src/main/java/com/vulnflow/finding/FindingController.java",
+      "line": 48,
+      "type": "spring_endpoint_annotation",
+      "detail": "Spring controller or request mapping annotation",
+      "evidence": "@PatchMapping(\"/{id}/status\")"
+    },
+    {
+      "file": "backend/src/main/java/com/vulnflow/ingestion/IngestionJobController.java",
+      "line": 17,
+      "type": "spring_endpoint_annotation",
+      "detail": "Spring controller or request mapping annotation",
+      "evidence": "@RestController"
+    },
+    {
+      "file": "backend/src/main/java/com/vulnflow/ingestion/IngestionJobController.java",
+      "line": 19,
+      "type": "spring_endpoint_annotation",
+      "detail": "Spring controller or request mapping annotation",
+      "evidence": "@RequestMapping(\"/api/v1/ingestion-jobs\")"
+    },
+    {
+      "file": "backend/src/main/java/com/vulnflow/ingestion/IngestionJobController.java",
+      "line": 32,
+      "type": "spring_endpoint_annotation",
+      "detail": "Spring controller or request mapping annotation",
+      "evidence": "@GetMapping"
+    },
+    {
+      "file": "backend/src/main/java/com/vulnflow/ingestion/IngestionJobController.java",
+      "line": 44,
+      "type": "spring_endpoint_annotation",
+      "detail": "Spring controller or request mapping annotation",
+      "evidence": "@GetMapping(\"/{jobId}\")"
+    },
+    {
+      "file": "backend/src/main/java/com/vulnflow/ingestion/IngestionJobController.java",
+      "line": 49,
+      "type": "spring_endpoint_annotation",
+      "detail": "Spring controller or request mapping annotation",
+      "evidence": "@PostMapping(\"/{jobId}/redrive\")"
+    },
+    {
+      "file": "backend/src/main/java/com/vulnflow/ingestion/ScanIngestionController.java",
+      "line": 13,
+      "type": "spring_endpoint_annotation",
+      "detail": "Spring controller or request mapping annotation",
+      "evidence": "@RestController"
+    },
+    {
+      "file": "backend/src/main/java/com/vulnflow/ingestion/ScanIngestionController.java",
+      "line": 14,
+      "type": "spring_endpoint_annotation",
+      "detail": "Spring controller or request mapping annotation",
+      "evidence": "@RequestMapping(\"/api/v1/scans\")"
+    },
+    {
+      "file": "backend/src/main/java/com/vulnflow/ingestion/ScanIngestionController.java",
+      "line": 23,
+      "type": "spring_endpoint_annotation",
+      "detail": "Spring controller or request mapping annotation",
+      "evidence": "@PostMapping(value = \"/trivy\", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)"
+    },
+    {
+      "file": "backend/src/main/java/com/vulnflow/scan/ScanController.java",
+      "line": 14,
+      "type": "spring_endpoint_annotation",
+      "detail": "Spring controller or request mapping annotation",
+      "evidence": "@RestController"
+    },
+    {
+      "file": "backend/src/main/java/com/vulnflow/scan/ScanController.java",
+      "line": 16,
+      "type": "spring_endpoint_annotation",
+      "detail": "Spring controller or request mapping annotation",
+      "evidence": "@RequestMapping(\"/api/v1/scans\")"
+    },
+    {
+      "file": "backend/src/main/java/com/vulnflow/scan/ScanController.java",
+      "line": 25,
+      "type": "spring_endpoint_annotation",
+      "detail": "Spring controller or request mapping annotation",
+      "evidence": "@GetMapping"
+    },
+    {
+      "file": "backend/src/main/java/com/vulnflow/scan/ScanController.java",
+      "line": 35,
+      "type": "spring_endpoint_annotation",
+      "detail": "Spring controller or request mapping annotation",
+      "evidence": "@GetMapping(\"/{id}\")"
+    },
+    {
+      "file": "backend/src/main/java/com/vulnflow/aws/query/AwsScanResultController.java",
+      "line": 17,
+      "type": "spring_endpoint_annotation",
+      "detail": "Spring controller or request mapping annotation",
+      "evidence": "@RestController"
+    },
+    {
+      "file": "backend/src/main/java/com/vulnflow/aws/query/AwsScanResultController.java",
+      "line": 19,
+      "type": "spring_endpoint_annotation",
+      "detail": "Spring controller or request mapping annotation",
+      "evidence": "@RequestMapping(\"/api/v1/scans\")"
+    },
+    {
+      "file": "backend/src/main/java/com/vulnflow/aws/query/AwsScanResultController.java",
+      "line": 27,
+      "type": "spring_endpoint_annotation",
+      "detail": "Spring controller or request mapping annotation",
+      "evidence": "@GetMapping(\"/{id}\")"
+    },
+    {
+      "file": "backend/src/main/java/com/vulnflow/aws/query/AwsScanResultController.java",
+      "line": 32,
+      "type": "spring_endpoint_annotation",
+      "detail": "Spring controller or request mapping annotation",
+      "evidence": "@GetMapping(\"/{id}/findings\")"
+    }
+  ],
+  "security_rules": [
+    {
+      "file": "backend/src/main/java/com/vulnflow/security/SecurityConfiguration.java",
+      "line": 9,
+      "type": "spring_security_rule",
+      "detail": "Spring Security rule or matcher",
+      "evidence": "import org.springframework.security.web.SecurityFilterChain;"
+    },
+    {
+      "file": "backend/src/main/java/com/vulnflow/security/SecurityConfiguration.java",
+      "line": 25,
+      "type": "spring_security_rule",
+      "detail": "Spring Security rule or matcher",
+      "evidence": "SecurityFilterChain securityFilterChain("
+    },
+    {
+      "file": "backend/src/main/java/com/vulnflow/security/SecurityConfiguration.java",
+      "line": 35,
+      "type": "spring_security_rule",
+      "detail": "Spring Security rule or matcher",
+      "evidence": ".authorizeHttpRequests(authorize -> authorize"
+    },
+    {
+      "file": "backend/src/main/java/com/vulnflow/security/SecurityConfiguration.java",
+      "line": 36,
+      "type": "spring_security_rule",
+      "detail": "Spring Security rule or matcher",
+      "evidence": ".requestMatchers("
+    },
+    {
+      "file": "backend/src/main/java/com/vulnflow/security/SecurityConfiguration.java",
+      "line": 43,
+      "type": "spring_security_rule",
+      "detail": "Spring Security rule or matcher",
+      "evidence": ".permitAll()"
+    },
+    {
+      "file": "backend/src/main/java/com/vulnflow/security/SecurityConfiguration.java",
+      "line": 44,
+      "type": "spring_security_rule",
+      "detail": "Spring Security rule or matcher",
+      "evidence": ".requestMatchers(\"/api/v1/**\")"
+    },
+    {
+      "file": "backend/src/main/java/com/vulnflow/security/SecurityConfiguration.java",
+      "line": 45,
+      "type": "spring_security_rule",
+      "detail": "Spring Security rule or matcher",
+      "evidence": ".authenticated()"
+    },
+    {
+      "file": "backend/src/main/java/com/vulnflow/security/SecurityConfiguration.java",
+      "line": 47,
+      "type": "spring_security_rule",
+      "detail": "Spring Security rule or matcher",
+      "evidence": ".permitAll())"
+    }
+  ],
+  "method_authorization": [],
+  "cors_csrf": [
+    {
+      "file": "backend/src/main/java/com/vulnflow/security/SecurityConfiguration.java",
+      "line": 30,
+      "type": "cors_csrf_configuration",
+      "detail": "CORS or CSRF configuration marker",
+      "evidence": ".csrf(AbstractHttpConfigurer::disable)"
+    }
+  ],
+  "external_clients": [
+    {
+      "file": "agent/src/main/java/com/vulnflow/agent/client/VulnFlowHttpClient.java",
+      "line": 10,
+      "type": "external_http_client",
+      "detail": "External HTTP client or URL construction marker",
+      "evidence": "import java.net.http.HttpClient;"
+    },
+    {
+      "file": "agent/src/main/java/com/vulnflow/agent/client/VulnFlowHttpClient.java",
+      "line": 25,
+      "type": "external_http_client",
+      "detail": "External HTTP client or URL construction marker",
+      "evidence": "private final HttpClient httpClient;"
+    },
+    {
+      "file": "agent/src/main/java/com/vulnflow/agent/client/VulnFlowHttpClient.java",
+      "line": 38,
+      "type": "external_http_client",
+      "detail": "External HTTP client or URL construction marker",
+      "evidence": "this.httpClient = HttpClient.newBuilder()"
+    },
+    {
+      "file": "agent/src/main/java/com/vulnflow/agent/client/VulnFlowHttpClient.java",
+      "line": 40,
+      "type": "external_http_client",
+      "detail": "External HTTP client or URL construction marker",
+      "evidence": ".followRedirects(HttpClient.Redirect.NEVER)"
+    },
+    {
+      "file": "agent/src/main/java/com/vulnflow/agent/config/AgentConfigLoader.java",
+      "line": 115,
+      "type": "external_http_client",
+      "detail": "External HTTP client or URL construction marker",
+      "evidence": "URI uri = URI.create(value.endsWith(\"/\") ? value : value + \"/\");"
+    },
+    {
+      "file": "agent/src/test/java/com/vulnflow/agent/client/VulnFlowHttpClientTest.java",
+      "line": 37,
+      "type": "external_http_client",
+      "detail": "External HTTP client or URL construction marker",
+      "evidence": "baseUri = URI.create(\"http://127.0.0.1:\" + server.getAddress().getPort() + \"/\");"
+    },
+    {
+      "file": "agent/src/test/java/com/vulnflow/agent/client/VulnFlowHttpClientTest.java",
+      "line": 150,
+      "type": "external_http_client",
+      "detail": "External HTTP client or URL construction marker",
+      "evidence": "URI.create(\"http://127.0.0.1:1/\"),"
+    },
+    {
+      "file": "backend/src/main/java/com/vulnflow/asset/AssetController.java",
+      "line": 32,
+      "type": "external_http_client",
+      "detail": "External HTTP client or URL construction marker",
+      "evidence": "return ResponseEntity.created(URI.create(\"/api/v1/assets/\" + response.id())).body(response);"
+    },
+    {
+      "file": "backend/src/main/java/com/vulnflow/asset/AssetController.java",
+      "line": 40,
+      "type": "external_http_client",
+      "detail": "External HTTP client or URL construction marker",
+      "evidence": ".created(URI.create(\"/api/v1/assets/\" + resolution.asset().id()))"
+    }
+  ],
+  "file_handling": [
+    {
+      "file": "agent/src/main/java/com/vulnflow/agent/client/VulnFlowClient.java",
+      "line": 4,
+      "type": "file_handling_marker",
+      "detail": "File upload, download, path, or streaming marker",
+      "evidence": "import java.nio.file.Path;"
+    },
+    {
+      "file": "agent/src/main/java/com/vulnflow/agent/client/VulnFlowClient.java",
+      "line": 11,
+      "type": "file_handling_marker",
+      "detail": "File upload, download, path, or streaming marker",
+      "evidence": "UploadReceipt uploadTrivyReport(UUID assetId, Path report);"
+    },
+    {
+      "file": "agent/src/main/java/com/vulnflow/agent/client/VulnFlowHttpClient.java",
+      "line": 14,
+      "type": "file_handling_marker",
+      "detail": "File upload, download, path, or streaming marker",
+      "evidence": "import java.nio.file.Path;"
+    },
+    {
+      "file": "agent/src/main/java/com/vulnflow/agent/client/VulnFlowHttpClient.java",
+      "line": 77,
+      "type": "file_handling_marker",
+      "detail": "File upload, download, path, or streaming marker",
+      "evidence": "public UploadReceipt uploadTrivyReport(UUID assetId, Path report) {"
+    },
+    {
+      "file": "agent/src/main/java/com/vulnflow/agent/client/VulnFlowHttpClient.java",
+      "line": 80,
+      "type": "file_handling_marker",
+      "detail": "File upload, download, path, or streaming marker",
+      "evidence": "+ \"Content-Disposition: form-data; name=\\\"file\\\"; filename=\\\"report.json\\\"\\r\\n\""
+    },
+    {
+      "file": "agent/src/main/java/com/vulnflow/agent/config/AgentConfig.java",
+      "line": 5,
+      "type": "file_handling_marker",
+      "detail": "File upload, download, path, or streaming marker",
+      "evidence": "import java.nio.file.Path;"
+    },
+    {
+      "file": "agent/src/main/java/com/vulnflow/agent/config/AgentConfig.java",
+      "line": 16,
+      "type": "file_handling_marker",
+      "detail": "File upload, download, path, or streaming marker",
+      "evidence": "Path trivyPath,"
+    },
+    {
+      "file": "agent/src/main/java/com/vulnflow/agent/config/AgentConfig.java",
+      "line": 17,
+      "type": "file_handling_marker",
+      "detail": "File upload, download, path, or streaming marker",
+      "evidence": "Path dataDirectory,"
+    },
+    {
+      "file": "agent/src/main/java/com/vulnflow/agent/config/AgentConfig.java",
+      "line": 18,
+      "type": "file_handling_marker",
+      "detail": "File upload, download, path, or streaming marker",
+      "evidence": "Path temporaryDirectory,"
+    },
+    {
+      "file": "agent/src/main/java/com/vulnflow/agent/config/AgentConfig.java",
+      "line": 29,
+      "type": "file_handling_marker",
+      "detail": "File upload, download, path, or streaming marker",
+      "evidence": "Path targetsFile,"
+    },
+    {
+      "file": "agent/src/main/java/com/vulnflow/agent/config/AgentConfigLoader.java",
+      "line": 9,
+      "type": "file_handling_marker",
+      "detail": "File upload, download, path, or streaming marker",
+      "evidence": "import java.nio.file.Path;"
+    },
+    {
+      "file": "agent/src/main/java/com/vulnflow/agent/config/AgentConfigLoader.java",
+      "line": 31,
+      "type": "file_handling_marker",
+      "detail": "File upload, download, path, or streaming marker",
+      "evidence": "Path trivyPath = Path.of(value(environment, \"VULNFLOW_TRIVY_PATH\", \"trivy\"));"
+    },
+    {
+      "file": "agent/src/main/java/com/vulnflow/agent/config/AgentConfigLoader.java",
+      "line": 32,
+      "type": "file_handling_marker",
+      "detail": "File upload, download, path, or streaming marker",
+      "evidence": "Path dataDirectory = normalizedPath(environment, \"VULNFLOW_AGENT_DATA_DIR\", \"./data/agent\");"
+    },
+    {
+      "file": "agent/src/main/java/com/vulnflow/agent/config/AgentConfigLoader.java",
+      "line": 33,
+      "type": "file_handling_marker",
+      "detail": "File upload, download, path, or streaming marker",
+      "evidence": "Path temporaryDirectory = normalizedPath("
+    },
+    {
+      "file": "agent/src/main/java/com/vulnflow/agent/config/AgentConfigLoader.java",
+      "line": 46,
+      "type": "file_handling_marker",
+      "detail": "File upload, download, path, or streaming marker",
+      "evidence": "Path targetsFile = normalizedPath(environment, \"VULNFLOW_TARGETS_FILE\", \"./targets.yml\");"
+    },
+    {
+      "file": "agent/src/main/java/com/vulnflow/agent/config/AgentConfigLoader.java",
+      "line": 71,
+      "type": "file_handling_marker",
+      "detail": "File upload, download, path, or streaming marker",
+      "evidence": "private List<ScanTarget> readTargets(Path targetsFile) {"
+    },
+    {
+      "file": "agent/src/main/java/com/vulnflow/agent/config/AgentConfigLoader.java",
+      "line": 72,
+      "type": "file_handling_marker",
+      "detail": "File upload, download, path, or streaming marker",
+      "evidence": "if (!Files.isRegularFile(targetsFile)) {"
+    },
+    {
+      "file": "agent/src/main/java/com/vulnflow/agent/config/AgentConfigLoader.java",
+      "line": 76,
+      "type": "file_handling_marker",
+      "detail": "File upload, download, path, or streaming marker",
+      "evidence": "if (Files.size(targetsFile) > MAX_TARGET_FILE_BYTES) {"
+    },
+    {
+      "file": "agent/src/main/java/com/vulnflow/agent/config/AgentConfigLoader.java",
+      "line": 141,
+      "type": "file_handling_marker",
+      "detail": "File upload, download, path, or streaming marker",
+      "evidence": "private Path normalizedPath(Map<String, String> environment, String key, String defaultValue) {"
+    },
+    {
+      "file": "agent/src/main/java/com/vulnflow/agent/config/AgentConfigLoader.java",
+      "line": 142,
+      "type": "file_handling_marker",
+      "detail": "File upload, download, path, or streaming marker",
+      "evidence": "return Path.of(value(environment, key, defaultValue)).toAbsolutePath().normalize();"
+    },
+    {
+      "file": "agent/src/main/java/com/vulnflow/agent/outbox/AgentOutbox.java",
+      "line": 5,
+      "type": "file_handling_marker",
+      "detail": "File upload, download, path, or streaming marker",
+      "evidence": "import java.nio.file.Path;"
+    },
+    {
+      "file": "agent/src/main/java/com/vulnflow/agent/outbox/AgentOutbox.java",
+      "line": 12,
+      "type": "file_handling_marker",
+      "detail": "File upload, download, path, or streaming marker",
+      "evidence": "OutboxItem enqueue(String agentId, ScanTarget target, Instant scannedAt, Path report);"
+    },
+    {
+      "file": "agent/src/main/java/com/vulnflow/agent/outbox/AgentOutbox.java",
+      "line": 24,
+      "type": "file_handling_marker",
+      "detail": "File upload, download, path, or streaming marker",
+      "evidence": "Path reportPath(OutboxItem item);"
+    },
+    {
+      "file": "agent/src/main/java/com/vulnflow/agent/outbox/FileAgentOutbox.java",
+      "line": 12,
+      "type": "file_handling_marker",
+      "detail": "File upload, download, path, or streaming marker",
+      "evidence": "import java.nio.file.Path;"
+    },
+    {
+      "file": "agent/src/main/java/com/vulnflow/agent/outbox/FileAgentOutbox.java",
+      "line": 27,
+      "type": "file_handling_marker",
+      "detail": "File upload, download, path, or streaming marker",
+      "evidence": "private final Path itemsDirectory;"
+    },
+    {
+      "file": "agent/src/main/java/com/vulnflow/agent/outbox/FileAgentOutbox.java",
+      "line": 33,
+      "type": "file_handling_marker",
+      "detail": "File upload, download, path, or streaming marker",
+      "evidence": "public FileAgentOutbox(Path dataDirectory, long maxBytes, int maxItems, ObjectMapper objectMapper) {"
+    },
+    {
+      "file": "agent/src/main/java/com/vulnflow/agent/outbox/FileAgentOutbox.java",
+      "line": 39,
+      "type": "file_handling_marker",
+      "detail": "File upload, download, path, or streaming marker",
+      "evidence": "Files.createDirectories(itemsDirectory);"
+    },
+    {
+      "file": "agent/src/main/java/com/vulnflow/agent/outbox/FileAgentOutbox.java",
+      "line": 47,
+      "type": "file_handling_marker",
+      "detail": "File upload, download, path, or streaming marker",
+      "evidence": "public synchronized OutboxItem enqueue(String agentId, ScanTarget target, Instant scannedAt, Path report) {"
+    },
+    {
+      "file": "agent/src/main/java/com/vulnflow/agent/outbox/FileAgentOutbox.java",
+      "line": 49,
+      "type": "file_handling_marker",
+      "detail": "File upload, download, path, or streaming marker",
+      "evidence": "long reportSize = Files.size(report);"
+    },
+    {
+      "file": "agent/src/main/java/com/vulnflow/agent/outbox/FileAgentOutbox.java",
+      "line": 76,
+      "type": "file_handling_marker",
+      "detail": "File upload, download, path, or streaming marker",
+      "evidence": "Path temporaryDirectory = itemsDirectory.resolve(\".\" + id + \".tmp\");"
+    },
+    {
+      "file": "agent/src/main/java/com/vulnflow/agent/outbox/FileAgentOutbox.java",
+      "line": 77,
+      "type": "file_handling_marker",
+      "detail": "File upload, download, path, or streaming marker",
+      "evidence": "Path finalDirectory = itemDirectory(id);"
+    },
+    {
+      "file": "agent/src/main/java/com/vulnflow/agent/outbox/FileAgentOutbox.java",
+      "line": 78,
+      "type": "file_handling_marker",
+      "detail": "File upload, download, path, or streaming marker",
+      "evidence": "Files.createDirectory(temporaryDirectory);"
+    },
+    {
+      "file": "agent/src/main/java/com/vulnflow/agent/outbox/FileAgentOutbox.java",
+      "line": 80,
+      "type": "file_handling_marker",
+      "detail": "File upload, download, path, or streaming marker",
+      "evidence": "Path copiedReport = temporaryDirectory.resolve(REPORT_FILE);"
+    },
+    {
+      "file": "agent/src/main/java/com/vulnflow/agent/outbox/FileAgentOutbox.java",
+      "line": 81,
+      "type": "file_handling_marker",
+      "detail": "File upload, download, path, or streaming marker",
+      "evidence": "Files.copy(report, copiedReport, StandardCopyOption.COPY_ATTRIBUTES);"
+    },
+    {
+      "file": "agent/src/main/java/com/vulnflow/agent/outbox/FileAgentOutbox.java",
+      "line": 87,
+      "type": "file_handling_marker",
+      "detail": "File upload, download, path, or streaming marker",
+      "evidence": "Files.move(temporaryDirectory, finalDirectory, StandardCopyOption.ATOMIC_MOVE);"
+    },
+    {
+      "file": "agent/src/main/java/com/vulnflow/agent/outbox/FileAgentOutbox.java",
+      "line": 142,
+      "type": "file_handling_marker",
+      "detail": "File upload, download, path, or streaming marker",
+      "evidence": "public synchronized Path reportPath(OutboxItem item) {"
+    },
+    {
+      "file": "agent/src/main/java/com/vulnflow/agent/outbox/FileAgentOutbox.java",
+      "line": 143,
+      "type": "file_handling_marker",
+      "detail": "File upload, download, path, or streaming marker",
+      "evidence": "Path directory = itemDirectory(item.id());"
+    },
+    {
+      "file": "agent/src/main/java/com/vulnflow/agent/outbox/FileAgentOutbox.java",
+      "line": 144,
+      "type": "file_handling_marker",
+      "detail": "File upload, download, path, or streaming marker",
+      "evidence": "Path path = directory.resolve(item.reportFile()).normalize();"
+    },
+    {
+      "file": "agent/src/main/java/com/vulnflow/agent/outbox/FileAgentOutbox.java",
+      "line": 208,
+      "type": "file_handling_marker",
+      "detail": "File upload, download, path, or streaming marker",
+      "evidence": "try (var directories = Files.list(itemsDirectory)) {"
+    },
+    {
+      "file": "agent/src/main/java/com/vulnflow/agent/outbox/FileAgentOutbox.java",
+      "line": 210,
+      "type": "file_handling_marker",
+      "detail": "File upload, download, path, or streaming marker",
+      "evidence": "for (Path directory : directories.filter(Files::isDirectory).toList()) {"
+    },
+    {
+      "file": "agent/src/main/java/com/vulnflow/agent/outbox/FileAgentOutbox.java",
+      "line": 225,
+      "type": "file_handling_marker",
+      "detail": "File upload, download, path, or streaming marker",
+      "evidence": "try (var paths = Files.list(itemsDirectory)) {"
+    },
+    {
+      "file": "agent/src/main/java/com/vulnflow/agent/outbox/FileAgentOutbox.java",
+      "line": 226,
+      "type": "file_handling_marker",
+      "detail": "File upload, download, path, or streaming marker",
+      "evidence": "for (Path path : paths.filter(Files::isDirectory).toList()) {"
+    },
+    {
+      "file": "agent/src/main/java/com/vulnflow/agent/outbox/FileAgentOutbox.java",
+      "line": 260,
+      "type": "file_handling_marker",
+      "detail": "File upload, download, path, or streaming marker",
+      "evidence": "private Path itemDirectory(UUID id) {"
+    },
+    {
+      "file": "agent/src/main/java/com/vulnflow/agent/outbox/FileAgentOutbox.java",
+      "line": 261,
+      "type": "file_handling_marker",
+      "detail": "File upload, download, path, or streaming marker",
+      "evidence": "Path directory = itemsDirectory.resolve(id.toString()).normalize();"
+    },
+    {
+      "file": "agent/src/main/java/com/vulnflow/agent/outbox/FileAgentOutbox.java",
+      "line": 268,
+      "type": "file_handling_marker",
+      "detail": "File upload, download, path, or streaming marker",
+      "evidence": "private void deleteDirectory(Path directory) {"
+    },
+    {
+      "file": "agent/src/main/java/com/vulnflow/agent/outbox/FileAgentOutbox.java",
+      "line": 276,
+      "type": "file_handling_marker",
+      "detail": "File upload, download, path, or streaming marker",
+      "evidence": "private void deleteDirectoryIfExists(Path directory) throws IOException {"
+    },
+    {
+      "file": "agent/src/main/java/com/vulnflow/agent/outbox/FileAgentOutbox.java",
+      "line": 277,
+      "type": "file_handling_marker",
+      "detail": "File upload, download, path, or streaming marker",
+      "evidence": "if (!Files.exists(directory)) {"
+    },
+    {
+      "file": "agent/src/main/java/com/vulnflow/agent/outbox/FileAgentOutbox.java",
+      "line": 283,
+      "type": "file_handling_marker",
+      "detail": "File upload, download, path, or streaming marker",
+      "evidence": "try (var paths = Files.walk(directory)) {"
+    },
+    {
+      "file": "agent/src/main/java/com/vulnflow/agent/outbox/FileAgentOutbox.java",
+      "line": 284,
+      "type": "file_handling_marker",
+      "detail": "File upload, download, path, or streaming marker",
+      "evidence": "for (Path path : paths.sorted(Comparator.reverseOrder()).toList()) {"
+    },
+    {
+      "file": "agent/src/main/java/com/vulnflow/agent/outbox/FileAgentOutbox.java",
+      "line": 285,
+      "type": "file_handling_marker",
+      "detail": "File upload, download, path, or streaming marker",
+      "evidence": "Files.deleteIfExists(path);"
+    },
+    {
+      "file": "agent/src/main/java/com/vulnflow/agent/outbox/OutboxIntegrityVerifier.java",
+      "line": 5,
+      "type": "file_handling_marker",
+      "detail": "File upload, download, path, or streaming marker",
+      "evidence": "import java.nio.file.Path;"
+    },
+    {
+      "file": "agent/src/main/java/com/vulnflow/agent/outbox/OutboxIntegrityVerifier.java",
+      "line": 11,
+      "type": "file_handling_marker",
+      "detail": "File upload, download, path, or streaming marker",
+      "evidence": "public void verify(OutboxItem item, Path report) {"
+    },
+    {
+      "file": "agent/src/main/java/com/vulnflow/agent/scanner/ScanArtifact.java",
+      "line": 5,
+      "type": "file_handling_marker",
+      "detail": "File upload, download, path, or streaming marker",
+      "evidence": "import java.nio.file.Path;"
+    },
+    {
+      "file": "agent/src/main/java/com/vulnflow/agent/scanner/ScanArtifact.java",
+      "line": 8,
+      "type": "file_handling_marker",
+      "detail": "File upload, download, path, or streaming marker",
+      "evidence": "public record ScanArtifact(Path path, Instant scannedAt, long sizeBytes) implements AutoCloseable {"
+    },
+    {
+      "file": "agent/src/main/java/com/vulnflow/agent/scanner/ScanArtifact.java",
+      "line": 12,
+      "type": "file_handling_marker",
+      "detail": "File upload, download, path, or streaming marker",
+      "evidence": "Files.deleteIfExists(path);"
+    },
+    {
+      "file": "agent/src/main/java/com/vulnflow/agent/scanner/TrivyImageScanner.java",
+      "line": 13,
+      "type": "file_handling_marker",
+      "detail": "File upload, download, path, or streaming marker",
+      "evidence": "import java.nio.file.Path;"
+    },
+    {
+      "file": "agent/src/main/java/com/vulnflow/agent/scanner/TrivyImageScanner.java",
+      "line": 21,
+      "type": "file_handling_marker",
+      "detail": "File upload, download, path, or streaming marker",
+      "evidence": "private final Path trivyPath;"
+    },
+    {
+      "file": "agent/src/main/java/com/vulnflow/agent/scanner/TrivyImageScanner.java",
+      "line": 22,
+      "type": "file_handling_marker",
+      "detail": "File upload, download, path, or streaming marker",
+      "evidence": "private final Path temporaryDirectory;"
+    },
+    {
+      "file": "agent/src/main/java/com/vulnflow/agent/scanner/TrivyImageScanner.java",
+      "line": 29,
+      "type": "file_handling_marker",
+      "detail": "File upload, download, path, or streaming marker",
+      "evidence": "Path trivyPath,"
+    },
+    {
+      "file": "agent/src/main/java/com/vulnflow/agent/scanner/TrivyImageScanner.java",
+      "line": 30,
+      "type": "file_handling_marker",
+      "detail": "File upload, download, path, or streaming marker",
+      "evidence": "Path temporaryDirectory,"
+    },
+    {
+      "file": "agent/src/main/java/com/vulnflow/agent/scanner/TrivyImageScanner.java",
+      "line": 42,
+      "type": "file_handling_marker",
+      "detail": "File upload, download, path, or streaming marker",
+      "evidence": "Files.createDirectories(this.temporaryDirectory);"
+    },
+    {
+      "file": "agent/src/main/java/com/vulnflow/agent/scanner/TrivyImageScanner.java",
+      "line": 69,
+      "type": "file_handling_marker",
+      "detail": "File upload, download, path, or streaming marker",
+      "evidence": "Path output = null;"
+    },
+    {
+      "file": "agent/src/main/java/com/vulnflow/agent/scanner/TrivyImageScanner.java",
+      "line": 71,
+      "type": "file_handling_marker",
+      "detail": "File upload, download, path, or streaming marker",
+      "evidence": "output = Files.createTempFile(temporaryDirectory, \"trivy-report-\", \".json\");"
+    },
+    {
+      "file": "agent/src/main/java/com/vulnflow/agent/scanner/TrivyImageScanner.java",
+      "line": 80,
+      "type": "file_handling_marker",
+      "detail": "File upload, download, path, or streaming marker",
+      "evidence": "if (!Files.isRegularFile(output)) {"
+    },
+    {
+      "file": "agent/src/main/java/com/vulnflow/agent/scanner/TrivyImageScanner.java",
+      "line": 83,
+      "type": "file_handling_marker",
+      "detail": "File upload, download, path, or streaming marker",
+      "evidence": "long size = Files.size(output);"
+    },
+    {
+      "file": "agent/src/main/java/com/vulnflow/agent/scanner/TrivyImageScanner.java",
+      "line": 91,
+      "type": "file_handling_marker",
+      "detail": "File upload, download, path, or streaming marker",
+      "evidence": "try (InputStream input = Files.newInputStream(output)) {"
+    },
+    {
+      "file": "agent/src/main/java/com/vulnflow/agent/scanner/TrivyImageScanner.java",
+      "line": 101,
+      "type": "file_handling_marker",
+      "detail": "File upload, download, path, or streaming marker",
+      "evidence": "long normalizedSize = Files.size(output);"
+    },
+    {
+      "file": "agent/src/main/java/com/vulnflow/agent/scanner/TrivyImageScanner.java",
+      "line": 115,
+      "type": "file_handling_marker",
+      "detail": "File upload, download, path, or streaming marker",
+      "evidence": "public List<String> commandArguments(ScanTarget target, Path output) {"
+    },
+    {
+      "file": "agent/src/main/java/com/vulnflow/agent/scanner/TrivyImageScanner.java",
+      "line": 125,
+      "type": "file_handling_marker",
+      "detail": "File upload, download, path, or streaming marker",
+      "evidence": "private void deleteTemporary(Path output) {"
+    },
+    {
+      "file": "agent/src/main/java/com/vulnflow/agent/scanner/TrivyImageScanner.java",
+      "line": 130,
+      "type": "file_handling_marker",
+      "detail": "File upload, download, path, or streaming marker",
+      "evidence": "Files.deleteIfExists(output);"
+    },
+    {
+      "file": "agent/src/main/java/com/vulnflow/agent/scheduling/AgentStateStore.java",
+      "line": 7,
+      "type": "file_handling_marker",
+      "detail": "File upload, download, path, or streaming marker",
+      "evidence": "import java.nio.file.Path;"
+    },
+    {
+      "file": "agent/src/main/java/com/vulnflow/agent/scheduling/AgentStateStore.java",
+      "line": 13,
+      "type": "file_handling_marker",
+      "detail": "File upload, download, path, or streaming marker",
+      "evidence": "private final Path stateFile;"
+    },
+    {
+      "file": "agent/src/main/java/com/vulnflow/agent/scheduling/AgentStateStore.java",
+      "line": 17,
+      "type": "file_handling_marker",
+      "detail": "File upload, download, path, or streaming marker",
+      "evidence": "public AgentStateStore(Path dataDirectory, ObjectMapper objectMapper) {"
+    },
+    {
+      "file": "agent/src/main/java/com/vulnflow/agent/scheduling/AgentStateStore.java",
+      "line": 45,
+      "type": "file_handling_marker",
+      "detail": "File upload, download, path, or streaming marker",
+      "evidence": "if (!Files.exists(stateFile)) {"
+    },
+    {
+      "file": "agent/src/main/java/com/vulnflow/agent/scheduling/AssetCache.java",
+      "line": 9,
+      "type": "file_handling_marker",
+      "detail": "File upload, download, path, or streaming marker",
+      "evidence": "import java.nio.file.Path;"
+    },
+    {
+      "file": "agent/src/main/java/com/vulnflow/agent/scheduling/AssetCache.java",
+      "line": 18,
+      "type": "file_handling_marker",
+      "detail": "File upload, download, path, or streaming marker",
+      "evidence": "private final Path cacheFile;"
+    },
+    {
+      "file": "agent/src/main/java/com/vulnflow/agent/scheduling/AssetCache.java",
+      "line": 22,
+      "type": "file_handling_marker",
+      "detail": "File upload, download, path, or streaming marker",
+      "evidence": "public AssetCache(Path dataDirectory, ObjectMapper objectMapper) {"
+    },
+    {
+      "file": "agent/src/main/java/com/vulnflow/agent/scheduling/AssetCache.java",
+      "line": 44,
+      "type": "file_handling_marker",
+      "detail": "File upload, download, path, or streaming marker",
+      "evidence": "if (!Files.exists(cacheFile)) {"
+    },
+    {
+      "file": "agent/src/main/java/com/vulnflow/agent/shared/AtomicFiles.java",
+      "line": 8,
+      "type": "file_handling_marker",
+      "detail": "File upload, download, path, or streaming marker",
+      "evidence": "import java.nio.file.Path;"
+    },
+    {
+      "file": "agent/src/main/java/com/vulnflow/agent/shared/AtomicFiles.java",
+      "line": 17,
+      "type": "file_handling_marker",
+      "detail": "File upload, download, path, or streaming marker",
+      "evidence": "public static void write(Path destination, byte[] content) throws IOException {"
+    },
+    {
+      "file": "agent/src/main/java/com/vulnflow/agent/shared/AtomicFiles.java",
+      "line": 18,
+      "type": "file_handling_marker",
+      "detail": "File upload, download, path, or streaming marker",
+      "evidence": "Path parent = destination.toAbsolutePath().normalize().getParent();"
+    },
+    {
+      "file": "agent/src/main/java/com/vulnflow/agent/shared/AtomicFiles.java",
+      "line": 22,
+      "type": "file_handling_marker",
+      "detail": "File upload, download, path, or streaming marker",
+      "evidence": "Files.createDirectories(parent);"
+    },
+    {
+      "file": "agent/src/main/java/com/vulnflow/agent/shared/AtomicFiles.java",
+      "line": 23,
+      "type": "file_handling_marker",
+      "detail": "File upload, download, path, or streaming marker",
+      "evidence": "Path temporary = parent.resolve(\".\" + destination.getFileName() + \".\" + UUID.randomUUID() + \".tmp\");"
+    },
+    {
+      "file": "agent/src/main/java/com/vulnflow/agent/shared/AtomicFiles.java",
+      "line": 36,
+      "type": "file_handling_marker",
+      "detail": "File upload, download, path, or streaming marker",
+      "evidence": "Files.move("
+    },
+    {
+      "file": "agent/src/main/java/com/vulnflow/agent/shared/AtomicFiles.java",
+      "line": 45,
+      "type": "file_handling_marker",
+      "detail": "File upload, download, path, or streaming marker",
+      "evidence": "Files.deleteIfExists(temporary);"
+    },
+    {
+      "file": "agent/src/main/java/com/vulnflow/agent/shared/Hashes.java",
+      "line": 6,
+      "type": "file_handling_marker",
+      "detail": "File upload, download, path, or streaming marker",
+      "evidence": "import java.nio.file.Path;"
+    },
+    {
+      "file": "agent/src/main/java/com/vulnflow/agent/shared/Hashes.java",
+      "line": 16,
+      "type": "file_handling_marker",
+      "detail": "File upload, download, path, or streaming marker",
+      "evidence": "public static String sha256(Path path) throws IOException {"
+    },
+    {
+      "file": "agent/src/main/java/com/vulnflow/agent/shared/Hashes.java",
+      "line": 23,
+      "type": "file_handling_marker",
+      "detail": "File upload, download, path, or streaming marker",
+      "evidence": "try (InputStream input = Files.newInputStream(path)) {"
+    },
+    {
+      "file": "agent/src/test/java/com/vulnflow/agent/AgentApplicationTest.java",
+      "line": 9,
+      "type": "file_handling_marker",
+      "detail": "File upload, download, path, or streaming marker",
+      "evidence": "import java.nio.file.Path;"
+    },
+    {
+      "file": "agent/src/test/java/com/vulnflow/agent/AgentApplicationTest.java",
+      "line": 17,
+      "type": "file_handling_marker",
+      "detail": "File upload, download, path, or streaming marker",
+      "evidence": "@TempDir Path temporaryDirectory;"
+    },
+    {
+      "file": "agent/src/test/java/com/vulnflow/agent/AgentApplicationTest.java",
+      "line": 21,
+      "type": "file_handling_marker",
+      "detail": "File upload, download, path, or streaming marker",
+      "evidence": "Path targets = temporaryDirectory.resolve(\"targets.yml\");"
+    },
+    {
+      "file": "agent/src/test/java/com/vulnflow/agent/AgentApplicationTest.java",
+      "line": 22,
+      "type": "file_handling_marker",
+      "detail": "File upload, download, path, or streaming marker",
+      "evidence": "Files.writeString(targets, \"\"\""
+    },
+    {
+      "file": "agent/src/test/java/com/vulnflow/agent/client/VulnFlowHttpClientTest.java",
+      "line": 16,
+      "type": "file_handling_marker",
+      "detail": "File upload, download, path, or streaming marker",
+      "evidence": "import java.nio.file.Path;"
+    },
+    {
+      "file": "agent/src/test/java/com/vulnflow/agent/client/VulnFlowHttpClientTest.java",
+      "line": 31,
+      "type": "file_handling_marker",
+      "detail": "File upload, download, path, or streaming marker",
+      "evidence": "@TempDir Path temporaryDirectory;"
+    },
+    {
+      "file": "agent/src/test/java/com/vulnflow/agent/client/VulnFlowHttpClientTest.java",
+      "line": 68,
+      "type": "file_handling_marker",
+      "detail": "File upload, download, path, or streaming marker",
+      "evidence": "Path report = temporaryDirectory.resolve(\"report.json\");"
+    },
+    {
+      "file": "agent/src/test/java/com/vulnflow/agent/client/VulnFlowHttpClientTest.java",
+      "line": 69,
+      "type": "file_handling_marker",
+      "detail": "File upload, download, path, or streaming marker",
+      "evidence": "Files.writeString(report, \"{\\\"Results\\\":[]}\");"
+    },
+    {
+      "file": "agent/src/test/java/com/vulnflow/agent/client/VulnFlowHttpClientTest.java",
+      "line": 88,
+      "type": "file_handling_marker",
+      "detail": "File upload, download, path, or streaming marker",
+      "evidence": "Path report = temporaryDirectory.resolve(\"report.json\");"
+    },
+    {
+      "file": "agent/src/test/java/com/vulnflow/agent/client/VulnFlowHttpClientTest.java",
+      "line": 89,
+      "type": "file_handling_marker",
+      "detail": "File upload, download, path, or streaming marker",
+      "evidence": "Files.writeString(report, \"{}\");"
+    },
+    {
+      "file": "agent/src/test/java/com/vulnflow/agent/client/VulnFlowHttpClientTest.java",
+      "line": 119,
+      "type": "file_handling_marker",
+      "detail": "File upload, download, path, or streaming marker",
+      "evidence": "Path report = temporaryDirectory.resolve(\"report.json\");"
+    },
+    {
+      "file": "agent/src/test/java/com/vulnflow/agent/client/VulnFlowHttpClientTest.java",
+      "line": 120,
+      "type": "file_handling_marker",
+      "detail": "File upload, download, path, or streaming marker",
+      "evidence": "Files.writeString(report, \"{}\");"
+    },
+    {
+      "file": "agent/src/test/java/com/vulnflow/agent/client/VulnFlowHttpClientTest.java",
+      "line": 160,
+      "type": "file_handling_marker",
+      "detail": "File upload, download, path, or streaming marker",
+      "evidence": "private void assertKind(VulnFlowHttpClient client, Path report, ClientFailureKind kind) {"
+    },
+    {
+      "file": "agent/src/test/java/com/vulnflow/agent/config/AgentConfigLoaderTest.java",
+      "line": 7,
+      "type": "file_handling_marker",
+      "detail": "File upload, download, path, or streaming marker",
+      "evidence": "import java.nio.file.Path;"
+    },
+    {
+      "file": "agent/src/test/java/com/vulnflow/agent/config/AgentConfigLoaderTest.java",
+      "line": 15,
+      "type": "file_handling_marker",
+      "detail": "File upload, download, path, or streaming marker",
+      "evidence": "@TempDir Path temporaryDirectory;"
+    },
+    {
+      "file": "agent/src/test/java/com/vulnflow/agent/config/AgentConfigLoaderTest.java",
+      "line": 78,
+      "type": "file_handling_marker",
+      "detail": "File upload, download, path, or streaming marker",
+      "evidence": "Path targets = temporaryDirectory.resolve(\"targets-\" + Math.abs(yaml.hashCode()) + \".yml\");"
+    },
+    {
+      "file": "agent/src/test/java/com/vulnflow/agent/config/AgentConfigLoaderTest.java",
+      "line": 79,
+      "type": "file_handling_marker",
+      "detail": "File upload, download, path, or streaming marker",
+      "evidence": "Files.writeString(targets, yaml);"
+    },
+    {
+      "file": "agent/src/test/java/com/vulnflow/agent/outbox/FileAgentOutboxTest.java",
+      "line": 11,
+      "type": "file_handling_marker",
+      "detail": "File upload, download, path, or streaming marker",
+      "evidence": "import java.nio.file.Path;"
+    },
+    {
+      "file": "agent/src/test/java/com/vulnflow/agent/outbox/FileAgentOutboxTest.java",
+      "line": 23,
+      "type": "file_handling_marker",
+      "detail": "File upload, download, path, or streaming marker",
+      "evidence": "@TempDir Path temporaryDirectory;"
+    },
+    {
+      "file": "agent/src/test/java/com/vulnflow/agent/outbox/FileAgentOutboxTest.java",
+      "line": 27,
+      "type": "file_handling_marker",
+      "detail": "File upload, download, path, or streaming marker",
+      "evidence": "Path report = report(\"{\\\"Results\\\":[]}\");"
+    },
+    {
+      "file": "agent/src/test/java/com/vulnflow/agent/outbox/FileAgentOutboxTest.java",
+      "line": 37,
+      "type": "file_handling_marker",
+      "detail": "File upload, download, path, or streaming marker",
+      "evidence": "assertThat(Files.isRegularFile(restarted.reportPath(item))).isTrue();"
+    },
+    {
+      "file": "agent/src/test/java/com/vulnflow/agent/outbox/FileAgentOutboxTest.java",
+      "line": 39,
+      "type": "file_handling_marker",
+      "detail": "File upload, download, path, or streaming marker",
+      "evidence": "try (var paths = Files.list(temporaryDirectory.resolve(\"data/outbox/items\"))) {"
+    },
+    {
+      "file": "agent/src/test/java/com/vulnflow/agent/outbox/FileAgentOutboxTest.java",
+      "line": 47,
+      "type": "file_handling_marker",
+      "detail": "File upload, download, path, or streaming marker",
+      "evidence": "Path items = temporaryDirectory.resolve(\"data/outbox/items\");"
+    },
+    {
+      "file": "agent/src/test/java/com/vulnflow/agent/outbox/FileAgentOutboxTest.java",
+      "line": 48,
+      "type": "file_handling_marker",
+      "detail": "File upload, download, path, or streaming marker",
+      "evidence": "Files.createDirectories(items);"
+    },
+    {
+      "file": "agent/src/test/java/com/vulnflow/agent/outbox/FileAgentOutboxTest.java",
+      "line": 49,
+      "type": "file_handling_marker",
+      "detail": "File upload, download, path, or streaming marker",
+      "evidence": "Path orphan = Files.createDirectory(items.resolve(\".\" + UUID.randomUUID() + \".tmp\"));"
+    },
+    {
+      "file": "agent/src/test/java/com/vulnflow/agent/outbox/FileAgentOutboxTest.java",
+      "line": 50,
+      "type": "file_handling_marker",
+      "detail": "File upload, download, path, or streaming marker",
+      "evidence": "Files.writeString(orphan.resolve(\"partial-report.json\"), \"partial\");"
+    },
+    {
+      "file": "agent/src/test/java/com/vulnflow/agent/outbox/FileAgentOutboxTest.java",
+      "line": 51,
+      "type": "file_handling_marker",
+      "detail": "File upload, download, path, or streaming marker",
+      "evidence": "Path unrelated = Files.createDirectory(items.resolve(\"operator-notes\"));"
+    },
+    {
+      "file": "agent/src/test/java/com/vulnflow/agent/outbox/FileAgentOutboxTest.java",
+      "line": 135,
+      "type": "file_handling_marker",
+      "detail": "File upload, download, path, or streaming marker",
+      "evidence": "private Path report(String content) throws Exception {"
+    },
+    {
+      "file": "agent/src/test/java/com/vulnflow/agent/outbox/FileAgentOutboxTest.java",
+      "line": 136,
+      "type": "file_handling_marker",
+      "detail": "File upload, download, path, or streaming marker",
+      "evidence": "Path file = Files.createTempFile(temporaryDirectory, \"report-\", \".json\");"
+    },
+    {
+      "file": "agent/src/test/java/com/vulnflow/agent/outbox/FileAgentOutboxTest.java",
+      "line": 137,
+      "type": "file_handling_marker",
+      "detail": "File upload, download, path, or streaming marker",
+      "evidence": "Files.writeString(file, content);"
+    },
+    {
+      "file": "agent/src/test/java/com/vulnflow/agent/scanner/TrivyImageScannerTest.java",
+      "line": 10,
+      "type": "file_handling_marker",
+      "detail": "File upload, download, path, or streaming marker",
+      "evidence": "import java.nio.file.Path;"
+    },
+    {
+      "file": "agent/src/test/java/com/vulnflow/agent/scanner/TrivyImageScannerTest.java",
+      "line": 19,
+      "type": "file_handling_marker",
+      "detail": "File upload, download, path, or streaming marker",
+      "evidence": "@TempDir Path temporaryDirectory;"
+    },
+    {
+      "file": "agent/src/test/java/com/vulnflow/agent/scanner/TrivyImageScannerTest.java",
+      "line": 38,
+      "type": "file_handling_marker",
+      "detail": "File upload, download, path, or streaming marker",
+      "evidence": "assertThat(Files.exists(artifact.path())).isTrue();"
+    },
+    {
+      "file": "agent/src/test/java/com/vulnflow/agent/scanner/TrivyImageScannerTest.java",
+      "line": 40,
+      "type": "file_handling_marker",
+      "detail": "File upload, download, path, or streaming marker",
+      "evidence": "assertThat(Files.list(temporaryDirectory)).isEmpty();"
+    },
+    {
+      "file": "agent/src/test/java/com/vulnflow/agent/scanner/TrivyImageScannerTest.java",
+      "line": 74,
+      "type": "file_handling_marker",
+      "detail": "File upload, download, path, or streaming marker",
+      "evidence": "Path fakeTrivy = temporaryDirectory.resolve(windows ? \"fake-trivy.cmd\" : \"fake-trivy\");"
+    },
+    {
+      "file": "agent/src/test/java/com/vulnflow/agent/scanner/TrivyImageScannerTest.java",
+      "line": 76,
+      "type": "file_handling_marker",
+      "detail": "File upload, download, path, or streaming marker",
+      "evidence": "Files.writeString(fakeTrivy, \"\"\""
+    },
+    {
+      "file": "agent/src/test/java/com/vulnflow/agent/scanner/TrivyImageScannerTest.java",
+      "line": 92,
+      "type": "file_handling_marker",
+      "detail": "File upload, download, path, or streaming marker",
+      "evidence": "Files.writeString(fakeTrivy, \"\"\""
+    },
+    {
+      "file": "agent/src/test/java/com/vulnflow/agent/scanner/TrivyImageScannerTest.java",
+      "line": 108,
+      "type": "file_handling_marker",
+      "detail": "File upload, download, path, or streaming marker",
+      "evidence": "Files.setPosixFilePermissions("
+    },
+    {
+      "file": "agent/src/test/java/com/vulnflow/agent/scanner/TrivyImageScannerTest.java",
+      "line": 122,
+      "type": "file_handling_marker",
+      "detail": "File upload, download, path, or streaming marker",
+      "evidence": "assertThat(Files.readString(artifact.path()).trim()).isEqualTo(\"{\\\"Results\\\":[]}\");"
+    },
+    {
+      "file": "agent/src/test/java/com/vulnflow/agent/scanner/TrivyImageScannerTest.java",
+      "line": 128,
+      "type": "file_handling_marker",
+      "detail": "File upload, download, path, or streaming marker",
+      "evidence": "Path.of(\"trivy\"),"
+    },
+    {
+      "file": "agent/src/test/java/com/vulnflow/agent/scanner/TrivyImageScannerTest.java",
+      "line": 168,
+      "type": "file_handling_marker",
+      "detail": "File upload, download, path, or streaming marker",
+      "evidence": "Files.writeString(Path.of(arguments.get(outputIndex + 1)), output);"
+    },
+    {
+      "file": "agent/src/test/java/com/vulnflow/agent/scheduling/AgentSchedulerTest.java",
+      "line": 15,
+      "type": "file_handling_marker",
+      "detail": "File upload, download, path, or streaming marker",
+      "evidence": "import java.nio.file.Path;"
+    },
+    {
+      "file": "agent/src/test/java/com/vulnflow/agent/scheduling/AgentSchedulerTest.java",
+      "line": 28,
+      "type": "file_handling_marker",
+      "detail": "File upload, download, path, or streaming marker",
+      "evidence": "@TempDir Path temporaryDirectory;"
+    },
+    {
+      "file": "agent/src/test/java/com/vulnflow/agent/scheduling/AgentSchedulerTest.java",
+      "line": 67,
+      "type": "file_handling_marker",
+      "detail": "File upload, download, path, or streaming marker",
+      "evidence": "Path data = temporaryDirectory.resolve(\"data\");"
+    },
+    {
+      "file": "agent/src/test/java/com/vulnflow/agent/scheduling/AgentSchedulerTest.java",
+      "line": 104,
+      "type": "file_handling_marker",
+      "detail": "File upload, download, path, or streaming marker",
+      "evidence": "@Override public UploadReceipt uploadTrivyReport(UUID assetId, Path report) {"
+    },
+    {
+      "file": "agent/src/test/java/com/vulnflow/agent/scheduling/ScanCoordinatorTest.java",
+      "line": 14,
+      "type": "file_handling_marker",
+      "detail": "File upload, download, path, or streaming marker",
+      "evidence": "import java.nio.file.Path;"
+    },
+    {
+      "file": "agent/src/test/java/com/vulnflow/agent/scheduling/ScanCoordinatorTest.java",
+      "line": 26,
+      "type": "file_handling_marker",
+      "detail": "File upload, download, path, or streaming marker",
+      "evidence": "@TempDir Path temporaryDirectory;"
+    },
+    {
+      "file": "agent/src/test/java/com/vulnflow/agent/scheduling/ScanCoordinatorTest.java",
+      "line": 99,
+      "type": "file_handling_marker",
+      "detail": "File upload, download, path, or streaming marker",
+      "evidence": "Path data = temporaryDirectory.resolve(\"data\");"
+    },
+    {
+      "file": "agent/src/test/java/com/vulnflow/agent/scheduling/ScanCoordinatorTest.java",
+      "line": 119,
+      "type": "file_handling_marker",
+      "detail": "File upload, download, path, or streaming marker",
+      "evidence": "Path report = Files.createTempFile(temporaryDirectory, \"scan-\", \".json\");"
+    },
+    {
+      "file": "agent/src/test/java/com/vulnflow/agent/scheduling/ScanCoordinatorTest.java",
+      "line": 120,
+      "type": "file_handling_marker",
+      "detail": "File upload, download, path, or streaming marker",
+      "evidence": "Files.writeString(report, \"{}\");"
+    },
+    {
+      "file": "agent/src/test/java/com/vulnflow/agent/scheduling/UploadCoordinatorTest.java",
+      "line": 17,
+      "type": "file_handling_marker",
+      "detail": "File upload, download, path, or streaming marker",
+      "evidence": "import java.nio.file.Path;"
+    },
+    {
+      "file": "agent/src/test/java/com/vulnflow/agent/scheduling/UploadCoordinatorTest.java",
+      "line": 30,
+      "type": "file_handling_marker",
+      "detail": "File upload, download, path, or streaming marker",
+      "evidence": "@TempDir Path temporaryDirectory;"
+    },
+    {
+      "file": "agent/src/test/java/com/vulnflow/agent/scheduling/UploadCoordinatorTest.java",
+      "line": 55,
+      "type": "file_handling_marker",
+      "detail": "File upload, download, path, or streaming marker",
+      "evidence": "assertThat(Files.exists(fixture.outbox().reportPath(item))).isTrue();"
+    },
+    {
+      "file": "agent/src/test/java/com/vulnflow/agent/scheduling/UploadCoordinatorTest.java",
+      "line": 63,
+      "type": "file_handling_marker",
+      "detail": "File upload, download, path, or streaming marker",
+      "evidence": "Files.writeString(fixture.outbox().reportPath(item), \"{\\\"altered\\\":true}\");"
+    },
+    {
+      "file": "agent/src/test/java/com/vulnflow/agent/scheduling/UploadCoordinatorTest.java",
+      "line": 84,
+      "type": "file_handling_marker",
+      "detail": "File upload, download, path, or streaming marker",
+      "evidence": "Path secondData = temporaryDirectory.resolve(\"second\");"
+    },
+    {
+      "file": "agent/src/test/java/com/vulnflow/agent/scheduling/UploadCoordinatorTest.java",
+      "line": 120,
+      "type": "file_handling_marker",
+      "detail": "File upload, download, path, or streaming marker",
+      "evidence": "private Fixture fixture(VulnFlowClient client, Path data) throws Exception {"
+    },
+    {
+      "file": "agent/src/test/java/com/vulnflow/agent/scheduling/UploadCoordinatorTest.java",
+      "line": 123,
+      "type": "file_handling_marker",
+      "detail": "File upload, download, path, or streaming marker",
+      "evidence": "Path report = Files.createTempFile(temporaryDirectory, \"report-\", \".json\");"
+    },
+    {
+      "file": "agent/src/test/java/com/vulnflow/agent/scheduling/UploadCoordinatorTest.java",
+      "line": 124,
+      "type": "file_handling_marker",
+      "detail": "File upload, download, path, or streaming marker",
+      "evidence": "Files.writeString(report, \"{}\");"
+    },
+    {
+      "file": "agent/src/test/java/com/vulnflow/agent/scheduling/UploadCoordinatorTest.java",
+      "line": 155,
+      "type": "file_handling_marker",
+      "detail": "File upload, download, path, or streaming marker",
+      "evidence": "public UploadReceipt uploadTrivyReport(UUID assetId, Path report) {"
+    },
+    {
+      "file": "agent/src/test/java/com/vulnflow/agent/scheduling/UploadCoordinatorTest.java",
+      "line": 179,
+      "type": "file_handling_marker",
+      "detail": "File upload, download, path, or streaming marker",
+      "evidence": "public UploadReceipt uploadTrivyReport(UUID assetId, Path report) {"
+    },
+    {
+      "file": "agent/src/test/java/com/vulnflow/agent/scheduling/UploadCoordinatorTest.java",
+      "line": 195,
+      "type": "file_handling_marker",
+      "detail": "File upload, download, path, or streaming marker",
+      "evidence": "public UploadReceipt uploadTrivyReport(UUID assetId, Path report) {"
+    },
+    {
+      "file": "backend/src/main/java/com/vulnflow/ingestion/DefaultScanIngestionService.java",
+      "line": 16,
+      "type": "file_handling_marker",
+      "detail": "File upload, download, path, or streaming marker",
+      "evidence": "import org.springframework.web.multipart.MultipartFile;"
+    },
+    {
+      "file": "backend/src/main/java/com/vulnflow/ingestion/DefaultScanIngestionService.java",
+      "line": 40,
+      "type": "file_handling_marker",
+      "detail": "File upload, download, path, or streaming marker",
+      "evidence": "public ScanIngestionResponse ingestTrivy(UUID assetId, MultipartFile file) {"
+    },
+    {
+      "file": "backend/src/main/java/com/vulnflow/ingestion/DefaultScanIngestionService.java",
+      "line": 72,
+      "type": "file_handling_marker",
+      "detail": "File upload, download, path, or streaming marker",
+      "evidence": "private void validateFile(MultipartFile file) {"
+    },
+    {
+      "file": "backend/src/main/java/com/vulnflow/ingestion/DefaultScanIngestionService.java",
+      "line": 87,
+      "type": "file_handling_marker",
+      "detail": "File upload, download, path, or streaming marker",
+      "evidence": "private byte[] readContent(MultipartFile file) {"
+    },
+    {
+      "file": "backend/src/main/java/com/vulnflow/ingestion/DefaultScanIngestionService.java",
+      "line": 103,
+      "type": "file_handling_marker",
+      "detail": "File upload, download, path, or streaming marker",
+      "evidence": "private String safeFileName(MultipartFile file) {"
+    },
+    {
+      "file": "backend/src/main/java/com/vulnflow/ingestion/LocalFileReportStorage.java",
+      "line": 12,
+      "type": "file_handling_marker",
+      "detail": "File upload, download, path, or streaming marker",
+      "evidence": "import java.nio.file.Path;"
+    },
+    {
+      "file": "backend/src/main/java/com/vulnflow/ingestion/LocalFileReportStorage.java",
+      "line": 23,
+      "type": "file_handling_marker",
+      "detail": "File upload, download, path, or streaming marker",
+      "evidence": "private final Path baseDirectory;"
+    },
+    {
+      "file": "backend/src/main/java/com/vulnflow/ingestion/LocalFileReportStorage.java",
+      "line": 32,
+      "type": "file_handling_marker",
+      "detail": "File upload, download, path, or streaming marker",
+      "evidence": "Files.createDirectories(baseDirectory);"
+    },
+    {
+      "file": "backend/src/main/java/com/vulnflow/ingestion/LocalFileReportStorage.java",
+      "line": 41,
+      "type": "file_handling_marker",
+      "detail": "File upload, download, path, or streaming marker",
+      "evidence": "Path target = resolve(payloadKey);"
+    },
+    {
+      "file": "backend/src/main/java/com/vulnflow/ingestion/LocalFileReportStorage.java",
+      "line": 42,
+      "type": "file_handling_marker",
+      "detail": "File upload, download, path, or streaming marker",
+      "evidence": "Path temporary = null;"
+    },
+    {
+      "file": "backend/src/main/java/com/vulnflow/ingestion/LocalFileReportStorage.java",
+      "line": 44,
+      "type": "file_handling_marker",
+      "detail": "File upload, download, path, or streaming marker",
+      "evidence": "Files.createDirectories(target.getParent());"
+    },
+    {
+      "file": "backend/src/main/java/com/vulnflow/ingestion/LocalFileReportStorage.java",
+      "line": 45,
+      "type": "file_handling_marker",
+      "detail": "File upload, download, path, or streaming marker",
+      "evidence": "temporary = Files.createTempFile(target.getParent(), \"report-\", \".tmp\");"
+    },
+    {
+      "file": "backend/src/main/java/com/vulnflow/ingestion/LocalFileReportStorage.java",
+      "line": 46,
+      "type": "file_handling_marker",
+      "detail": "File upload, download, path, or streaming marker",
+      "evidence": "Files.write(temporary, content, StandardOpenOption.TRUNCATE_EXISTING);"
+    },
+    {
+      "file": "backend/src/main/java/com/vulnflow/ingestion/LocalFileReportStorage.java",
+      "line": 55,
+      "type": "file_handling_marker",
+      "detail": "File upload, download, path, or streaming marker",
+      "evidence": "Files.deleteIfExists(temporary);"
+    },
+    {
+      "file": "backend/src/main/java/com/vulnflow/ingestion/LocalFileReportStorage.java",
+      "line": 65,
+      "type": "file_handling_marker",
+      "detail": "File upload, download, path, or streaming marker",
+      "evidence": "Path payload = resolve(payloadKey);"
+    },
+    {
+      "file": "backend/src/main/java/com/vulnflow/ingestion/LocalFileReportStorage.java",
+      "line": 67,
+      "type": "file_handling_marker",
+      "detail": "File upload, download, path, or streaming marker",
+      "evidence": "return Files.readAllBytes(payload);"
+    },
+    {
+      "file": "backend/src/main/java/com/vulnflow/ingestion/LocalFileReportStorage.java",
+      "line": 77,
+      "type": "file_handling_marker",
+      "detail": "File upload, download, path, or streaming marker",
+      "evidence": "Path payload = resolve(payloadKey);"
+    },
+    {
+      "file": "backend/src/main/java/com/vulnflow/ingestion/LocalFileReportStorage.java",
+      "line": 79,
+      "type": "file_handling_marker",
+      "detail": "File upload, download, path, or streaming marker",
+      "evidence": "Files.deleteIfExists(payload);"
+    },
+    {
+      "file": "backend/src/main/java/com/vulnflow/ingestion/LocalFileReportStorage.java",
+      "line": 80,
+      "type": "file_handling_marker",
+      "detail": "File upload, download, path, or streaming marker",
+      "evidence": "Path parent = payload.getParent();"
+    },
+    {
+      "file": "backend/src/main/java/com/vulnflow/ingestion/LocalFileReportStorage.java",
+      "line": 83,
+      "type": "file_handling_marker",
+      "detail": "File upload, download, path, or streaming marker",
+      "evidence": "Files.delete(parent);"
+    },
+    {
+      "file": "backend/src/main/java/com/vulnflow/ingestion/LocalFileReportStorage.java",
+      "line": 95,
+      "type": "file_handling_marker",
+      "detail": "File upload, download, path, or streaming marker",
+      "evidence": "return Files.isRegularFile(resolve(payloadKey));"
+    },
+    {
+      "file": "backend/src/main/java/com/vulnflow/ingestion/LocalFileReportStorage.java",
+      "line": 98,
+      "type": "file_handling_marker",
+      "detail": "File upload, download, path, or streaming marker",
+      "evidence": "private void moveIntoPlace(Path source, Path target) throws IOException {"
+    },
+    {
+      "file": "backend/src/main/java/com/vulnflow/ingestion/LocalFileReportStorage.java",
+      "line": 100,
+      "type": "file_handling_marker",
+      "detail": "File upload, download, path, or streaming marker",
+      "evidence": "Files.move(source, target, StandardCopyOption.ATOMIC_MOVE);"
+    },
+    {
+      "file": "backend/src/main/java/com/vulnflow/ingestion/LocalFileReportStorage.java",
+      "line": 102,
+      "type": "file_handling_marker",
+      "detail": "File upload, download, path, or streaming marker",
+      "evidence": "Files.move(source, target);"
+    },
+    {
+      "file": "backend/src/main/java/com/vulnflow/ingestion/LocalFileReportStorage.java",
+      "line": 106,
+      "type": "file_handling_marker",
+      "detail": "File upload, download, path, or streaming marker",
+      "evidence": "private Path resolve(String payloadKey) {"
+    },
+    {
+      "file": "backend/src/main/java/com/vulnflow/ingestion/LocalFileReportStorage.java",
+      "line": 110,
+      "type": "file_handling_marker",
+      "detail": "File upload, download, path, or streaming marker",
+      "evidence": "Path relative = Path.of(payloadKey);"
+    },
+    {
+      "file": "backend/src/main/java/com/vulnflow/ingestion/LocalFileReportStorage.java",
+      "line": 114,
+      "type": "file_handling_marker",
+      "detail": "File upload, download, path, or streaming marker",
+      "evidence": "Path resolved = baseDirectory.resolve(relative).normalize();"
+    },
+    {
+      "file": "backend/src/main/java/com/vulnflow/ingestion/ReportStorageProperties.java",
+      "line": 5,
+      "type": "file_handling_marker",
+      "detail": "File upload, download, path, or streaming marker",
+      "evidence": "import java.nio.file.Path;"
+    },
+    {
+      "file": "backend/src/main/java/com/vulnflow/ingestion/ReportStorageProperties.java",
+      "line": 11,
+      "type": "file_handling_marker",
+      "detail": "File upload, download, path, or streaming marker",
+      "evidence": "public record ReportStorageProperties(@NotNull Path directory) {"
+    },
+    {
+      "file": "backend/src/main/java/com/vulnflow/ingestion/ScanIngestionController.java",
+      "line": 11,
+      "type": "file_handling_marker",
+      "detail": "File upload, download, path, or streaming marker",
+      "evidence": "import org.springframework.web.multipart.MultipartFile;"
+    },
+    {
+      "file": "backend/src/main/java/com/vulnflow/ingestion/ScanIngestionController.java",
+      "line": 26,
+      "type": "file_handling_marker",
+      "detail": "File upload, download, path, or streaming marker",
+      "evidence": "@RequestPart(\"file\") MultipartFile file) {"
+    },
+    {
+      "file": "backend/src/main/java/com/vulnflow/ingestion/ScanIngestionService.java",
+      "line": 4,
+      "type": "file_handling_marker",
+      "detail": "File upload, download, path, or streaming marker",
+      "evidence": "import org.springframework.web.multipart.MultipartFile;"
+    },
+    {
+      "file": "backend/src/main/java/com/vulnflow/ingestion/ScanIngestionService.java",
+      "line": 8,
+      "type": "file_handling_marker",
+      "detail": "File upload, download, path, or streaming marker",
+      "evidence": "ScanIngestionResponse ingestTrivy(UUID assetId, MultipartFile file);"
+    },
+    {
+      "file": "backend/src/test/java/com/vulnflow/PostgreSQLFlowIT.java",
+      "line": 60,
+      "type": "file_handling_marker",
+      "detail": "File upload, download, path, or streaming marker",
+      "evidence": "import java.nio.file.Path;"
+    },
+    {
+      "file": "backend/src/test/java/com/vulnflow/PostgreSQLFlowIT.java",
+      "line": 107,
+      "type": "file_handling_marker",
+      "detail": "File upload, download, path, or streaming marker",
+      "evidence": "private static final Path REPORT_DIRECTORY = createReportDirectory();"
+    },
+    {
+      "file": "backend/src/test/java/com/vulnflow/PostgreSQLFlowIT.java",
+      "line": 144,
+      "type": "file_handling_marker",
+      "detail": "File upload, download, path, or streaming marker",
+      "evidence": "if (Files.exists(REPORT_DIRECTORY)) {"
+    },
+    {
+      "file": "backend/src/test/java/com/vulnflow/PostgreSQLFlowIT.java",
+      "line": 145,
+      "type": "file_handling_marker",
+      "detail": "File upload, download, path, or streaming marker",
+      "evidence": "try (var paths = Files.walk(REPORT_DIRECTORY)) {"
+    },
+    {
+      "file": "backend/src/test/java/com/vulnflow/PostgreSQLFlowIT.java",
+      "line": 146,
+      "type": "file_handling_marker",
+      "detail": "File upload, download, path, or streaming marker",
+      "evidence": "for (Path path : paths.sorted(Comparator.reverseOrder()).toList()) {"
+    },
+    {
+      "file": "backend/src/test/java/com/vulnflow/PostgreSQLFlowIT.java",
+      "line": 148,
+      "type": "file_handling_marker",
+      "detail": "File upload, download, path, or streaming marker",
+      "evidence": "Files.deleteIfExists(path);"
+    },
+    {
+      "file": "backend/src/test/java/com/vulnflow/PostgreSQLFlowIT.java",
+      "line": 274,
+      "type": "file_handling_marker",
+      "detail": "File upload, download, path, or streaming marker",
+      "evidence": "Files.write("
+    },
+    {
+      "file": "backend/src/test/java/com/vulnflow/PostgreSQLFlowIT.java",
+      "line": 321,
+      "type": "file_handling_marker",
+      "detail": "File upload, download, path, or streaming marker",
+      "evidence": "try (var files = Files.walk(REPORT_DIRECTORY)) {"
+    },
+    {
+      "file": "backend/src/test/java/com/vulnflow/PostgreSQLFlowIT.java",
+      "line": 859,
+      "type": "file_handling_marker",
+      "detail": "File upload, download, path, or streaming marker",
+      "evidence": "private static Path createReportDirectory() {"
+    },
+    {
+      "file": "backend/src/test/java/com/vulnflow/PostgreSQLFlowIT.java",
+      "line": 861,
+      "type": "file_handling_marker",
+      "detail": "File upload, download, path, or streaming marker",
+      "evidence": "return Files.createTempDirectory(\"vulnflow-it-reports-\");"
+    },
+    {
+      "file": "backend/src/test/java/com/vulnflow/ingestion/IngestionConfigurationValidationTest.java",
+      "line": 7,
+      "type": "file_handling_marker",
+      "detail": "File upload, download, path, or streaming marker",
+      "evidence": "import java.nio.file.Path;"
+    },
+    {
+      "file": "backend/src/test/java/com/vulnflow/ingestion/IngestionConfigurationValidationTest.java",
+      "line": 24,
+      "type": "file_handling_marker",
+      "detail": "File upload, download, path, or streaming marker",
+      "evidence": "assertThat(validator.validate(new ReportStorageProperties(Path.of(\"reports\")))).isEmpty();"
+    },
+    {
+      "file": "backend/src/test/java/com/vulnflow/ingestion/IngestionConfigurationValidationTest.java",
+      "line": 51,
+      "type": "file_handling_marker",
+      "detail": "File upload, download, path, or streaming marker",
+      "evidence": "assertThat(validator.validate(new ReportStorageProperties(Path.of(\"\"))))"
+    },
+    {
+      "file": "backend/src/test/java/com/vulnflow/ingestion/LocalFileReportStorageTest.java",
+      "line": 8,
+      "type": "file_handling_marker",
+      "detail": "File upload, download, path, or streaming marker",
+      "evidence": "import java.nio.file.Path;"
+    },
+    {
+      "file": "backend/src/test/java/com/vulnflow/ingestion/LocalFileReportStorageTest.java",
+      "line": 16,
+      "type": "file_handling_marker",
+      "detail": "File upload, download, path, or streaming marker",
+      "evidence": "Path directory;"
+    },
+    {
+      "file": "backend/src/test/java/com/vulnflow/ingestion/LocalFileReportStorageTest.java",
+      "line": 27,
+      "type": "file_handling_marker",
+      "detail": "File upload, download, path, or streaming marker",
+      "evidence": "try (var files = Files.walk(directory)) {"
+    }
+  ],
+  "secret_candidates": [
+    {
+      "file": "docker-compose.yml",
+      "line": 7,
+      "type": "secret_keyword_candidate",
+      "detail": "Potential secret keyword candidate; manual review required",
+      "evidence": "POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-local-vulnflow-password}"
+    },
+    {
+      "file": "docker-compose.yml",
+      "line": 28,
+      "type": "secret_keyword_candidate",
+      "detail": "Potential secret keyword candidate; manual review required",
+      "evidence": "SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-local-vulnflow-password}"
+    },
+    {
+      "file": ".github/workflows/backend-ci.yml",
+      "line": 153,
+      "type": "secret_keyword_candidate",
+      "detail": "Potential secret keyword candidate; manual review required",
+      "evidence": "password: ${{ secrets.GITHUB_TOKEN }}"
+    },
+    {
+      "file": ".github/workflows/backend-ci.yml",
+      "line": 289,
+      "type": "secret_keyword_candidate",
+      "detail": "Potential secret keyword candidate; manual review required",
+      "evidence": "docker login ghcr.io --username \"$GHCR_USERNAME\" --password-stdin"
+    },
+    {
+      "file": "agent/src/test/java/com/vulnflow/agent/client/VulnFlowHttpClientTest.java",
+      "line": 74,
+      "type": "secret_keyword_candidate",
+      "detail": "Potential secret keyword candidate; manual review required",
+      "evidence": "assertThat(resolveApiKey).hasValue(\"secret-api-key\");"
+    },
+    {
+      "file": "agent/src/test/java/com/vulnflow/agent/client/VulnFlowHttpClientTest.java",
+      "line": 75,
+      "type": "secret_keyword_candidate",
+      "detail": "Potential secret keyword candidate; manual review required",
+      "evidence": "assertThat(uploadApiKey).hasValue(\"secret-api-key\");"
+    },
+    {
+      "file": "agent/src/test/java/com/vulnflow/agent/client/VulnFlowHttpClientTest.java",
+      "line": 151,
+      "type": "secret_keyword_candidate",
+      "detail": "Potential secret keyword candidate; manual review required",
+      "evidence": "\"secret-api-key\","
+    },
+    {
+      "file": "agent/src/test/java/com/vulnflow/agent/client/VulnFlowHttpClientTest.java",
+      "line": 169,
+      "type": "secret_keyword_candidate",
+      "detail": "Potential secret keyword candidate; manual review required",
+      "evidence": "\"secret-api-key\","
+    },
+    {
+      "file": "agent/src/test/java/com/vulnflow/agent/config/AgentConfigLoaderTest.java",
+      "line": 24,
+      "type": "secret_keyword_candidate",
+      "detail": "Potential secret keyword candidate; manual review required",
+      "evidence": "assertThat(config.apiKey()).isEqualTo(\"super-secret-value\");"
+    },
+    {
+      "file": "agent/src/test/java/com/vulnflow/agent/config/AgentConfigLoaderTest.java",
+      "line": 82,
+      "type": "secret_keyword_candidate",
+      "detail": "Potential secret keyword candidate; manual review required",
+      "evidence": "environment.put(\"VULNFLOW_API_KEY\", \"super-secret-value\");"
+    },
+    {
+      "file": "aws/aws-adapters/src/main/java/com/vulnflow/aws/dynamodb/DynamoDbProcessingResultStore.java",
+      "line": 313,
+      "type": "secret_keyword_candidate",
+      "detail": "Potential secret keyword candidate; manual review required",
+      "evidence": "String token = severity.name().toLowerCase(Locale.ROOT);"
+    },
+    {
+      "file": "aws/aws-adapters/src/main/java/com/vulnflow/aws/dynamodb/DynamoDbProcessingResultStore.java",
+      "line": 314,
+      "type": "secret_keyword_candidate",
+      "detail": "Potential secret keyword candidate; manual review required",
+      "evidence": "expression.append(\", severity_\").append(token).append(\" = :\").append(token);"
+    },
+    {
+      "file": "aws/aws-adapters/src/main/java/com/vulnflow/aws/dynamodb/DynamoDbProcessingResultStore.java",
+      "line": 315,
+      "type": "secret_keyword_candidate",
+      "detail": "Potential secret keyword candidate; manual review required",
+      "evidence": "values.put(\":\" + token, number(counts.getOrDefault(severity, 0)));"
+    },
+    {
+      "file": "backend/src/main/java/com/vulnflow/aws/ingestion/AwsOutboxClaimService.java",
+      "line": 29,
+      "type": "secret_keyword_candidate",
+      "detail": "Potential secret keyword candidate; manual review required",
+      "evidence": "UUID token = event.claim(now);"
+    },
+    {
+      "file": "backend/src/main/java/com/vulnflow/aws/ingestion/AwsOutboxClaimService.java",
+      "line": 34,
+      "type": "secret_keyword_candidate",
+      "detail": "Potential secret keyword candidate; manual review required",
+      "evidence": "token,"
+    },
+    {
+      "file": "backend/src/main/resources/config/application-pre.yml",
+      "line": 5,
+      "type": "secret_keyword_candidate",
+      "detail": "Potential secret keyword candidate; manual review required",
+      "evidence": "password: ${SPRING_DATASOURCE_PASSWORD}"
+    },
+    {
+      "file": "backend/src/main/resources/config/application-prod.yml",
+      "line": 5,
+      "type": "secret_keyword_candidate",
+      "detail": "Potential secret keyword candidate; manual review required",
+      "evidence": "password: ${SPRING_DATASOURCE_PASSWORD}"
+    },
+    {
+      "file": "backend/src/main/resources/config/application.yml",
+      "line": 7,
+      "type": "secret_keyword_candidate",
+      "detail": "Potential secret keyword candidate; manual review required",
+      "evidence": "password: ${SPRING_DATASOURCE_PASSWORD:local-vulnflow-password}"
+    },
+    {
+      "file": "backend/src/test/java/com/vulnflow/AwsExecutionPathIT.java",
+      "line": 93,
+      "type": "secret_keyword_candidate",
+      "detail": "Potential secret keyword candidate; manual review required",
+      "evidence": "private static final String API_KEY = \"test-api-key\";"
+    },
+    {
+      "file": "backend/src/test/java/com/vulnflow/AwsExecutionPathIT.java",
+      "line": 138,
+      "type": "secret_keyword_candidate",
+      "detail": "Potential secret keyword candidate; manual review required",
+      "evidence": ".header(\"X-API-Key\", API_KEY))"
+    },
+    {
+      "file": "backend/src/test/java/com/vulnflow/AwsExecutionPathIT.java",
+      "line": 190,
+      "type": "secret_keyword_candidate",
+      "detail": "Potential secret keyword candidate; manual review required",
+      "evidence": "mockMvc.perform(get(\"/api/v1/scans/{id}\", scanId).header(\"X-API-Key\", API_KEY))"
+    },
+    {
+      "file": "backend/src/test/java/com/vulnflow/AwsExecutionPathIT.java",
+      "line": 195,
+      "type": "secret_keyword_candidate",
+      "detail": "Potential secret keyword candidate; manual review required",
+      "evidence": ".header(\"X-API-Key\", API_KEY))"
+    },
+    {
+      "file": "backend/src/test/java/com/vulnflow/PostgreSQLFlowIT.java",
+      "line": 106,
+      "type": "secret_keyword_candidate",
+      "detail": "Potential secret keyword candidate; manual review required",
+      "evidence": "private static final String API_KEY = \"test-api-key\";"
+    },
+    {
+      "file": "backend/src/test/java/com/vulnflow/PostgreSQLFlowIT.java",
+      "line": 211,
+      "type": "secret_keyword_candidate",
+      "detail": "Potential secret keyword candidate; manual review required",
+      "evidence": ".header(ApiKeyAuthenticationFilter.HEADER_NAME, API_KEY)"
+    },
+    {
+      "file": "backend/src/test/java/com/vulnflow/PostgreSQLFlowIT.java",
+      "line": 216,
+      "type": "secret_keyword_candidate",
+      "detail": "Potential secret keyword candidate; manual review required",
+      "evidence": ".header(ApiKeyAuthenticationFilter.HEADER_NAME, API_KEY)"
+    },
+    {
+      "file": "backend/src/test/java/com/vulnflow/PostgreSQLFlowIT.java",
+      "line": 239,
+      "type": "secret_keyword_candidate",
+      "detail": "Potential secret keyword candidate; manual review required",
+      "evidence": ".header(ApiKeyAuthenticationFilter.HEADER_NAME, API_KEY))"
+    },
+    {
+      "file": "backend/src/test/java/com/vulnflow/PostgreSQLFlowIT.java",
+      "line": 289,
+      "type": "secret_keyword_candidate",
+      "detail": "Potential secret keyword candidate; manual review required",
+      "evidence": ".header(ApiKeyAuthenticationFilter.HEADER_NAME, API_KEY))"
+    },
+    {
+      "file": "backend/src/test/java/com/vulnflow/PostgreSQLFlowIT.java",
+      "line": 466,
+      "type": "secret_keyword_candidate",
+      "detail": "Potential secret keyword candidate; manual review required",
+      "evidence": ".header(ApiKeyAuthenticationFilter.HEADER_NAME, API_KEY))"
+    },
+    {
+      "file": "backend/src/test/java/com/vulnflow/PostgreSQLFlowIT.java",
+      "line": 494,
+      "type": "secret_keyword_candidate",
+      "detail": "Potential secret keyword candidate; manual review required",
+      "evidence": "JsonNode accepted = upload(createAsset(\"claim-token-aba\"), reportBytes, \"aba.json\", 202);"
+    },
+    {
+      "file": "backend/src/test/java/com/vulnflow/PostgreSQLFlowIT.java",
+      "line": 774,
+      "type": "secret_keyword_candidate",
+      "detail": "Potential secret keyword candidate; manual review required",
+      "evidence": ".header(ApiKeyAuthenticationFilter.HEADER_NAME, API_KEY))"
+    },
+    {
+      "file": "backend/src/test/java/com/vulnflow/PostgreSQLFlowIT.java",
+      "line": 783,
+      "type": "secret_keyword_candidate",
+      "detail": "Potential secret keyword candidate; manual review required",
+      "evidence": ".header(ApiKeyAuthenticationFilter.HEADER_NAME, API_KEY)"
+    },
+    {
+      "file": "backend/src/test/java/com/vulnflow/PostgreSQLFlowIT.java",
+      "line": 801,
+      "type": "secret_keyword_candidate",
+      "detail": "Potential secret keyword candidate; manual review required",
+      "evidence": ".header(ApiKeyAuthenticationFilter.HEADER_NAME, API_KEY))"
+    }
+  ],
+  "validation_markers": [
+    {
+      "file": "backend/src/main/java/com/vulnflow/asset/AssetController.java",
+      "line": 3,
+      "type": "dto_validation_marker",
+      "detail": "DTO validation marker",
+      "evidence": "import jakarta.validation.Valid;"
+    },
+    {
+      "file": "backend/src/main/java/com/vulnflow/asset/AssetController.java",
+      "line": 30,
+      "type": "dto_validation_marker",
+      "detail": "DTO validation marker",
+      "evidence": "public ResponseEntity<AssetDtos.Response> create(@Valid @RequestBody AssetDtos.CreateRequest request) {"
+    },
+    {
+      "file": "backend/src/main/java/com/vulnflow/asset/AssetController.java",
+      "line": 36,
+      "type": "dto_validation_marker",
+      "detail": "DTO validation marker",
+      "evidence": "public ResponseEntity<AssetDtos.Response> resolve(@Valid @RequestBody AssetDtos.ResolveRequest request) {"
+    },
+    {
+      "file": "backend/src/main/java/com/vulnflow/asset/AssetDtos.java",
+      "line": 3,
+      "type": "dto_validation_marker",
+      "detail": "DTO validation marker",
+      "evidence": "import jakarta.validation.constraints.NotBlank;"
+    },
+    {
+      "file": "backend/src/main/java/com/vulnflow/asset/AssetDtos.java",
+      "line": 4,
+      "type": "dto_validation_marker",
+      "detail": "DTO validation marker",
+      "evidence": "import jakarta.validation.constraints.NotNull;"
+    },
+    {
+      "file": "backend/src/main/java/com/vulnflow/asset/AssetDtos.java",
+      "line": 5,
+      "type": "dto_validation_marker",
+      "detail": "DTO validation marker",
+      "evidence": "import jakarta.validation.constraints.Size;"
+    },
+    {
+      "file": "backend/src/main/java/com/vulnflow/config/AwsIngestionProperties.java",
+      "line": 3,
+      "type": "dto_validation_marker",
+      "detail": "DTO validation marker",
+      "evidence": "import jakarta.validation.constraints.NotBlank;"
+    },
+    {
+      "file": "backend/src/main/java/com/vulnflow/config/AwsIngestionProperties.java",
+      "line": 4,
+      "type": "dto_validation_marker",
+      "detail": "DTO validation marker",
+      "evidence": "import jakarta.validation.constraints.Max;"
+    },
+    {
+      "file": "backend/src/main/java/com/vulnflow/config/AwsIngestionProperties.java",
+      "line": 5,
+      "type": "dto_validation_marker",
+      "detail": "DTO validation marker",
+      "evidence": "import jakarta.validation.constraints.Min;"
+    },
+    {
+      "file": "backend/src/main/java/com/vulnflow/config/AwsIngestionProperties.java",
+      "line": 6,
+      "type": "dto_validation_marker",
+      "detail": "DTO validation marker",
+      "evidence": "import jakarta.validation.constraints.Pattern;"
+    },
+    {
+      "file": "backend/src/main/java/com/vulnflow/config/AwsIngestionProperties.java",
+      "line": 7,
+      "type": "dto_validation_marker",
+      "detail": "DTO validation marker",
+      "evidence": "import jakarta.validation.constraints.Positive;"
+    },
+    {
+      "file": "backend/src/main/java/com/vulnflow/config/AwsIngestionProperties.java",
+      "line": 8,
+      "type": "dto_validation_marker",
+      "detail": "DTO validation marker",
+      "evidence": "import jakarta.validation.constraints.AssertTrue;"
+    },
+    {
+      "file": "backend/src/main/java/com/vulnflow/config/AwsIngestionProperties.java",
+      "line": 14,
+      "type": "dto_validation_marker",
+      "detail": "DTO validation marker",
+      "evidence": "@Validated"
+    },
+    {
+      "file": "backend/src/main/java/com/vulnflow/finding/FindingController.java",
+      "line": 3,
+      "type": "dto_validation_marker",
+      "detail": "DTO validation marker",
+      "evidence": "import jakarta.validation.Valid;"
+    },
+    {
+      "file": "backend/src/main/java/com/vulnflow/finding/FindingController.java",
+      "line": 51,
+      "type": "dto_validation_marker",
+      "detail": "DTO validation marker",
+      "evidence": "@Valid @RequestBody FindingDtos.StatusUpdateRequest request) {"
+    },
+    {
+      "file": "backend/src/main/java/com/vulnflow/finding/FindingDtos.java",
+      "line": 3,
+      "type": "dto_validation_marker",
+      "detail": "DTO validation marker",
+      "evidence": "import jakarta.validation.constraints.NotNull;"
+    },
+    {
+      "file": "backend/src/main/java/com/vulnflow/ingestion/IngestionProperties.java",
+      "line": 3,
+      "type": "dto_validation_marker",
+      "detail": "DTO validation marker",
+      "evidence": "import jakarta.validation.constraints.AssertTrue;"
+    },
+    {
+      "file": "backend/src/main/java/com/vulnflow/ingestion/IngestionProperties.java",
+      "line": 4,
+      "type": "dto_validation_marker",
+      "detail": "DTO validation marker",
+      "evidence": "import jakarta.validation.constraints.Min;"
+    },
+    {
+      "file": "backend/src/main/java/com/vulnflow/ingestion/IngestionProperties.java",
+      "line": 5,
+      "type": "dto_validation_marker",
+      "detail": "DTO validation marker",
+      "evidence": "import jakarta.validation.constraints.NotNull;"
+    },
+    {
+      "file": "backend/src/main/java/com/vulnflow/ingestion/IngestionProperties.java",
+      "line": 10,
+      "type": "dto_validation_marker",
+      "detail": "DTO validation marker",
+      "evidence": "@Validated"
+    },
+    {
+      "file": "backend/src/main/java/com/vulnflow/ingestion/ReportStorageProperties.java",
+      "line": 3,
+      "type": "dto_validation_marker",
+      "detail": "DTO validation marker",
+      "evidence": "import jakarta.validation.constraints.AssertTrue;"
+    },
+    {
+      "file": "backend/src/main/java/com/vulnflow/ingestion/ReportStorageProperties.java",
+      "line": 4,
+      "type": "dto_validation_marker",
+      "detail": "DTO validation marker",
+      "evidence": "import jakarta.validation.constraints.NotNull;"
+    },
+    {
+      "file": "backend/src/main/java/com/vulnflow/ingestion/ReportStorageProperties.java",
+      "line": 9,
+      "type": "dto_validation_marker",
+      "detail": "DTO validation marker",
+      "evidence": "@Validated"
+    },
+    {
+      "file": "backend/src/main/java/com/vulnflow/ingestion/WorkerProperties.java",
+      "line": 3,
+      "type": "dto_validation_marker",
+      "detail": "DTO validation marker",
+      "evidence": "import jakarta.validation.constraints.Min;"
+    },
+    {
+      "file": "backend/src/main/java/com/vulnflow/ingestion/WorkerProperties.java",
+      "line": 4,
+      "type": "dto_validation_marker",
+      "detail": "DTO validation marker",
+      "evidence": "import jakarta.validation.constraints.NotEmpty;"
+    },
+    {
+      "file": "backend/src/main/java/com/vulnflow/ingestion/WorkerProperties.java",
+      "line": 5,
+      "type": "dto_validation_marker",
+      "detail": "DTO validation marker",
+      "evidence": "import jakarta.validation.constraints.NotNull;"
+    },
+    {
+      "file": "backend/src/main/java/com/vulnflow/ingestion/WorkerProperties.java",
+      "line": 12,
+      "type": "dto_validation_marker",
+      "detail": "DTO validation marker",
+      "evidence": "@Validated"
+    },
+    {
+      "file": "backend/src/main/java/com/vulnflow/security/ApiKeyProperties.java",
+      "line": 3,
+      "type": "dto_validation_marker",
+      "detail": "DTO validation marker",
+      "evidence": "import jakarta.validation.constraints.NotBlank;"
+    },
+    {
+      "file": "backend/src/main/java/com/vulnflow/security/ApiKeyProperties.java",
+      "line": 7,
+      "type": "dto_validation_marker",
+      "detail": "DTO validation marker",
+      "evidence": "@Validated"
+    },
+    {
+      "file": "backend/src/main/java/com/vulnflow/aws/ingestion/AwsOutboxProperties.java",
+      "line": 3,
+      "type": "dto_validation_marker",
+      "detail": "DTO validation marker",
+      "evidence": "import jakarta.validation.constraints.AssertTrue;"
+    },
+    {
+      "file": "backend/src/main/java/com/vulnflow/aws/ingestion/AwsOutboxProperties.java",
+      "line": 4,
+      "type": "dto_validation_marker",
+      "detail": "DTO validation marker",
+      "evidence": "import jakarta.validation.constraints.Max;"
+    },
+    {
+      "file": "backend/src/main/java/com/vulnflow/aws/ingestion/AwsOutboxProperties.java",
+      "line": 5,
+      "type": "dto_validation_marker",
+      "detail": "DTO validation marker",
+      "evidence": "import jakarta.validation.constraints.Min;"
+    },
+    {
+      "file": "backend/src/main/java/com/vulnflow/aws/ingestion/AwsOutboxProperties.java",
+      "line": 6,
+      "type": "dto_validation_marker",
+      "detail": "DTO validation marker",
+      "evidence": "import jakarta.validation.constraints.NotEmpty;"
+    },
+    {
+      "file": "backend/src/main/java/com/vulnflow/aws/ingestion/AwsOutboxProperties.java",
+      "line": 7,
+      "type": "dto_validation_marker",
+      "detail": "DTO validation marker",
+      "evidence": "import jakarta.validation.constraints.NotNull;"
+    },
+    {
+      "file": "backend/src/main/java/com/vulnflow/aws/ingestion/AwsOutboxProperties.java",
+      "line": 14,
+      "type": "dto_validation_marker",
+      "detail": "DTO validation marker",
+      "evidence": "@Validated"
+    },
+    {
+      "file": "backend/src/main/java/com/vulnflow/aws/query/AwsScanResultController.java",
+      "line": 5,
+      "type": "dto_validation_marker",
+      "detail": "DTO validation marker",
+      "evidence": "import jakarta.validation.constraints.Max;"
+    },
+    {
+      "file": "backend/src/main/java/com/vulnflow/aws/query/AwsScanResultController.java",
+      "line": 6,
+      "type": "dto_validation_marker",
+      "detail": "DTO validation marker",
+      "evidence": "import jakarta.validation.constraints.Min;"
+    },
+    {
+      "file": "backend/src/main/java/com/vulnflow/aws/query/AwsScanResultController.java",
+      "line": 16,
+      "type": "dto_validation_marker",
+      "detail": "DTO validation marker",
+      "evidence": "@Validated"
+    },
+    {
+      "file": "backend/src/test/java/com/vulnflow/asset/AssetRequestValidationTest.java",
+      "line": 5,
+      "type": "dto_validation_marker",
+      "detail": "DTO validation marker",
+      "evidence": "import jakarta.validation.Validation;"
+    },
+    {
+      "file": "backend/src/test/java/com/vulnflow/asset/AssetRequestValidationTest.java",
+      "line": 6,
+      "type": "dto_validation_marker",
+      "detail": "DTO validation marker",
+      "evidence": "import jakarta.validation.Validator;"
+    },
+    {
+      "file": "backend/src/test/java/com/vulnflow/ingestion/IngestionConfigurationValidationTest.java",
+      "line": 5,
+      "type": "dto_validation_marker",
+      "detail": "DTO validation marker",
+      "evidence": "import jakarta.validation.Validation;"
+    },
+    {
+      "file": "backend/src/test/java/com/vulnflow/ingestion/IngestionConfigurationValidationTest.java",
+      "line": 6,
+      "type": "dto_validation_marker",
+      "detail": "DTO validation marker",
+      "evidence": "import jakarta.validation.Validator;"
+    }
+  ],
+  "limitations": [
+    "Inventory only: matches are evidence candidates, not vulnerability determinations.",
+    "Regex-based scan may miss generated routes, meta-annotations, framework conventions, and dynamic configuration.",
+    "Manual tracing is required to assess exploitability, authorization boundaries, and data flow."
+  ]
+}

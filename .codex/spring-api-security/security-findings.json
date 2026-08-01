@@ -1,0 +1,52 @@
+{
+  "scope": "VulnFlow 0.4.1 AWS execution path",
+  "summary": {
+    "critical_open": 0,
+    "high_open": 0,
+    "medium_open": 0,
+    "low_open": 1,
+    "resolved": 1,
+    "architectural_risks": 2
+  },
+  "findings": [
+    {
+      "id": "VF-AWS-001",
+      "severity": "LOW",
+      "status": "RESOLVED",
+      "title": "Ambiguous S3 prefix accepted during property binding",
+      "evidence": "backend/src/main/java/com/vulnflow/config/AwsIngestionProperties.java:29",
+      "resolution": "Reject ambiguous bucket and prefix values during validated configuration binding."
+    },
+    {
+      "id": "VF-AWS-002",
+      "severity": "LOW",
+      "status": "ACCEPTED_LOCAL_PHASE",
+      "title": "Shared API key and no rate limiting",
+      "evidence": "backend/src/main/java/com/vulnflow/security/SecurityConfiguration.java:35",
+      "recommendation": "Adopt per-client OIDC/JWT authorization and rate limiting before broader exposure."
+    },
+    {
+      "id": "VF-AWS-003",
+      "severity": "INFORMATIONAL",
+      "status": "MITIGATED",
+      "title": "No distributed S3/PostgreSQL/SQS transaction",
+      "evidence": "backend/src/main/java/com/vulnflow/aws/ingestion/AwsScanSubmissionService.java:31",
+      "controls": ["outbox", "claim-token fencing", "S3 compensation", "S3 lifecycle", "eventId idempotency"]
+    },
+    {
+      "id": "VF-AWS-004",
+      "severity": "PREREQUISITE",
+      "status": "NOT_CONFIGURED_BY_DESIGN",
+      "title": "Future VPS workload credentials are not provisioned",
+      "evidence": "docs/decisions/ADR-023-vps-aws-credentials.md",
+      "recommendation": "Prefer IAM Roles Anywhere, platform OIDC, or a narrower proxy; do not create long-lived access keys."
+    }
+  ],
+  "scanner_status": {
+    "inventory": "COMPLETED",
+    "manual_review": "COMPLETED",
+    "credential_pattern_check": "COMPLETED",
+    "live_dast": "NOT_RUN_FORBIDDEN_NO_DEPLOYMENT",
+    "real_aws_iam_simulation": "NOT_RUN_FORBIDDEN_NO_AWS_ACCESS"
+  }
+}
