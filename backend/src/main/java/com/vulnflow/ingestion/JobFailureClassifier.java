@@ -1,6 +1,10 @@
 package com.vulnflow.ingestion;
 
-import com.vulnflow.shared.exception.InvalidReportException;
+import com.vulnflow.processing.InvalidReportException;
+import com.vulnflow.processing.PayloadIntegrityException;
+import com.vulnflow.processing.port.PayloadNotFoundException;
+import com.vulnflow.processing.port.ReportStorageException;
+import com.vulnflow.processing.port.TransientReportStorageException;
 import java.sql.SQLRecoverableException;
 import java.sql.SQLException;
 import java.sql.SQLTransientException;

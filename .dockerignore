@@ -1,0 +1,13 @@
+.git
+.github
+**/target
+**/.terraform
+data
+infra
+docs
+scripts
+deploy
+agent/src
+agent/Dockerfile
+agent/deploy
+*.md

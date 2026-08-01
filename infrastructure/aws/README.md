@@ -1,13 +1,19 @@
-# VulnFlow AWS infrastructure
+# VulnFlow temporary AWS slice
 
-This directory is a validation-only Terraform skeleton for VulnFlow's future
-serverless AWS architecture. It currently defines provider constraints,
-variables, naming, tags, and a configuration summary output. It defines **zero
-AWS resources** and has no remote backend.
+This directory defines the first temporary AWS ingestion slice: private S3
+report storage, encrypted SQS and DLQ queues, a Java 17 Lambda function,
+least-privilege IAM, bounded CloudWatch Logs, and the SQS event source mapping.
+It has no remote Terraform backend.
 
-## Validate safely
+The configuration intentionally fails closed before deployment while
+`result_store_provider_ready=false`. A reviewed implementation of
+`LambdaProcessingResultStoreProvider` must be packaged before that safety gate
+may be changed. See `docs/decisions/ADR-aws-result-storage.md`.
 
-No AWS credentials are required for formatting, initialization, or validation:
+## Offline-safe validation
+
+Formatting and static validation need no AWS credentials and do not create
+resources:
 
 ```bash
 terraform fmt -check -recursive
@@ -15,30 +21,9 @@ terraform init -backend=false
 terraform validate
 ```
 
-From the repository root, the equivalent containerized commands are:
+From the repository root, `make terraform-format` and
+`make terraform-validate` run the same checks in a Terraform container.
 
-```bash
-make terraform-format
-make terraform-validate
-```
-
-`terraform init` downloads the provider plugin but does not create AWS
-resources. Do not run `terraform apply` until every future module, IAM policy,
-retention setting, budget alarm, and estimated cost has been reviewed.
-
-## Future modules
-
-The directories under `modules/` only document intended boundaries. Resource
-definitions will be introduced incrementally after the local ingestion
-contract is stable.
-
-The intended lifecycle is:
-
-```text
-Permanent local development
-+
-Temporary and reproducible AWS deployment
-+
-terraform destroy after demonstrations
-```
-
+Do not run plan, apply, or destroy as part of CI. Any future temporary apply
+requires the manual cost/security review and complete create-test-destroy flow
+in `docs/aws-temporary-deployment-runbook.md`.

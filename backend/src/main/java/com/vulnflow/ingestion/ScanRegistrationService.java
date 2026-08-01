@@ -1,5 +1,6 @@
 package com.vulnflow.ingestion;
 
+import com.vulnflow.processing.port.ReportStorage;
 import com.vulnflow.asset.Asset;
 import com.vulnflow.scan.Scan;
 import com.vulnflow.scan.ScanRepository;

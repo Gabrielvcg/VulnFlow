@@ -2,7 +2,8 @@
 
 ## Scope
 
-VulnFlow 0.3.1 consists of a Spring Boot modular-monolith backend and an
+VulnFlow 0.4.0 consists of a Spring Boot modular-monolith backend, a shared
+processing core, prepared AWS adapters/Lambda artifact, and an
 independent Java 17 scanning agent. PostgreSQL and a local report volume remain
 the backend persistence layer. The agent has its own filesystem outbox and only
 outbound HTTP connectivity.
@@ -38,10 +39,12 @@ LocalIngestionWorker (@Scheduled)
   -> JobClaimService -> PostgreSQL FOR UPDATE SKIP LOCKED
   -> IngestionJobProcessor
       -> ReportStorage.load
-      -> PayloadIntegrityVerifier
-      -> TrivyVulnerabilityReportParser
-      -> IngestionPersistenceService
+      -> VulnerabilityReportProcessor
+          -> PayloadIntegrityVerifier
+          -> TrivyVulnerabilityReportParser
           -> FindingRiskCalculator
+      -> IngestionPersistenceService
+          -> ProcessingResultStore<LocalCompletionContext>
           -> FindingRepository
           -> ScanRepository
           -> IngestionJobRepository
@@ -220,7 +223,9 @@ The agent's future transport seam is:
 FileAgentOutbox -> presigned S3 uploader -> SQS submission
 ```
 
-These are migration seams only. No AWS SDK or cloud resource is used in 0.3.1.
+The S3/SQS implementations and Lambda handler are migration seams. The local
+profile creates no AWS SDK clients. No cloud resource is created or contacted
+by 0.4.0; see `docs/aws-architecture.md` for the prepared path.
 SQS will use receipt handles and visibility timeouts rather than copying the
 current PostgreSQL row-locking protocol. S3 calls must not be introduced under
 long-held database locks.

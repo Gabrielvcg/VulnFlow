@@ -2,7 +2,11 @@ package com.vulnflow.ingestion;
 
 import com.vulnflow.finding.Finding;
 import com.vulnflow.finding.FindingRepository;
-import com.vulnflow.finding.FindingRiskCalculator;
+import com.vulnflow.finding.FindingSeverity;
+import com.vulnflow.processing.NormalizedFinding;
+import com.vulnflow.processing.ProcessedVulnerabilityReport;
+import com.vulnflow.processing.port.ProcessingResultStore;
+import com.vulnflow.processing.port.ProcessingStoreOutcome;
 import com.vulnflow.scan.Scan;
 import com.vulnflow.scan.ScanRepository;
 import com.vulnflow.scan.ScanStatus;
@@ -16,26 +20,26 @@ import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
-public class IngestionPersistenceService {
+public class IngestionPersistenceService implements ProcessingResultStore<LocalCompletionContext> {
 
     private final FindingRepository findingRepository;
-    private final FindingRiskCalculator riskCalculator;
     private final ScanRepository scanRepository;
     private final IngestionJobRepository jobRepository;
 
     public IngestionPersistenceService(
             FindingRepository findingRepository,
-            FindingRiskCalculator riskCalculator,
             ScanRepository scanRepository,
             IngestionJobRepository jobRepository) {
         this.findingRepository = findingRepository;
-        this.riskCalculator = riskCalculator;
         this.scanRepository = scanRepository;
         this.jobRepository = jobRepository;
     }
 
     @Transactional(propagation = Propagation.REQUIRES_NEW)
-    public void complete(UUID jobId, UUID expectedClaimToken, ParsedVulnerabilityReport report) {
+    @Override
+    public ProcessingStoreOutcome store(LocalCompletionContext context, ProcessedVulnerabilityReport report) {
+        UUID jobId = context.jobId();
+        UUID expectedClaimToken = context.expectedClaimToken();
         IngestionJob job = jobRepository.findByIdForUpdate(jobId)
                 .orElseThrow(() -> new ResourceNotFoundException("IngestionJob", jobId));
         if (job.getStatus() != IngestionJobStatus.PROCESSING
@@ -47,18 +51,21 @@ public class IngestionPersistenceService {
         if (scan.getStatus() != ScanStatus.PROCESSING) {
             throw new IllegalStateException("Only a processing scan can be completed");
         }
+        if (!scan.getId().equals(report.scanId()) || !scan.getAsset().getId().equals(report.assetId())) {
+            throw new IllegalArgumentException("The processing result does not belong to the claimed scan");
+        }
 
-        List<Finding> findings = report.vulnerabilities().stream()
+        List<Finding> findings = report.findings().stream()
                 .map(vulnerability -> toFinding(scan, vulnerability))
                 .toList();
         findingRepository.deleteByScanId(scan.getId());
         findingRepository.saveAll(findings);
         scan.markCompleted(report.scannerVersion());
         job.markCompleted(Instant.now());
+        return ProcessingStoreOutcome.STORED;
     }
 
-    private Finding toFinding(Scan scan, ParsedVulnerability vulnerability) {
-        boolean knownExploited = false;
+    private Finding toFinding(Scan scan, NormalizedFinding vulnerability) {
         return new Finding(
                 scan,
                 scan.getAsset(),
@@ -66,10 +73,10 @@ public class IngestionPersistenceService {
                 vulnerability.packageName(),
                 vulnerability.installedVersion(),
                 vulnerability.fixedVersion(),
-                vulnerability.severity(),
+                FindingSeverity.valueOf(vulnerability.severity().name()),
                 vulnerability.title(),
                 vulnerability.description(),
-                knownExploited,
-                riskCalculator.calculate(vulnerability.severity(), knownExploited));
+                vulnerability.knownExploited(),
+                vulnerability.riskScore());
     }
 }

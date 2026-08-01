@@ -37,15 +37,19 @@ import com.vulnflow.ingestion.JobClaimService;
 import com.vulnflow.ingestion.JobFailureService;
 import com.vulnflow.ingestion.LocalFileReportStorage;
 import com.vulnflow.ingestion.LocalIngestionWorker;
-import com.vulnflow.ingestion.ParsedVulnerability;
-import com.vulnflow.ingestion.ParsedVulnerabilityReport;
+import com.vulnflow.ingestion.LocalCompletionContext;
 import com.vulnflow.ingestion.RecoveryResult;
-import com.vulnflow.ingestion.ReportStorage;
-import com.vulnflow.ingestion.ReportStorageException;
 import com.vulnflow.ingestion.ReportStorageProperties;
 import com.vulnflow.ingestion.StaleJobClaimException;
-import com.vulnflow.ingestion.TransientReportStorageException;
-import com.vulnflow.ingestion.VulnerabilityReportParser;
+import com.vulnflow.processing.ParsedVulnerability;
+import com.vulnflow.processing.ParsedVulnerabilityReport;
+import com.vulnflow.processing.ProcessedVulnerabilityReport;
+import com.vulnflow.processing.VulnerabilityReportParser;
+import com.vulnflow.processing.VulnerabilityReportProcessingRequest;
+import com.vulnflow.processing.VulnerabilityReportProcessor;
+import com.vulnflow.processing.port.ReportStorage;
+import com.vulnflow.processing.port.ReportStorageException;
+import com.vulnflow.processing.port.TransientReportStorageException;
 import com.vulnflow.scan.ScanRepository;
 import com.vulnflow.scan.ScanStatus;
 import com.vulnflow.security.ApiKeyAuthenticationFilter;
@@ -123,6 +127,7 @@ class PostgreSQLFlowIT {
     @Autowired IngestionJobRecoveryService recoveryService;
     @Autowired IngestionJobRedriveService redriveService;
     @Autowired IngestionPersistenceService persistenceService;
+    @Autowired VulnerabilityReportProcessor reportProcessor;
     @Autowired JobFailureService failureService;
     @Autowired JdbcTemplate jdbcTemplate;
     @Autowired PlatformTransactionManager transactionManager;
@@ -501,16 +506,19 @@ class PostgreSQLFlowIT {
         redriveService.redrive(jobId);
         JobClaim workerB = claimService.claimAvailable(1).get(0);
         ParsedVulnerabilityReport report = reportParser.parse(reportBytes);
+        ProcessedVulnerabilityReport processed = reportProcessor.process(new VulnerabilityReportProcessingRequest(
+                workerB.scanId(), workerB.assetId(), sha256(reportBytes), reportBytes));
 
         assertThat(workerA.attempt()).isEqualTo(workerB.attempt());
         assertThat(workerA.claimToken()).isNotEqualTo(workerB.claimToken());
-        assertThatThrownBy(() -> persistenceService.complete(jobId, workerA.claimToken(), report))
+        assertThatThrownBy(() -> persistenceService.store(
+                new LocalCompletionContext(jobId, workerA.claimToken()), processed))
                 .isInstanceOf(StaleJobClaimException.class);
         assertThat(failureService.handleFailure(
                 jobId, workerA.claimToken(), true, "obsolete failure"))
                 .isEqualTo(FailureDisposition.IGNORED_STALE_CLAIM);
 
-        persistenceService.complete(jobId, workerB.claimToken(), report);
+        persistenceService.store(new LocalCompletionContext(jobId, workerB.claimToken()), processed);
 
         assertThat(jobRepository.findById(jobId).orElseThrow().getStatus())
                 .isEqualTo(IngestionJobStatus.COMPLETED);
@@ -708,10 +716,10 @@ class PostgreSQLFlowIT {
                 List.of(
                         new ParsedVulnerability(
                                 "CVE-VALID", "valid-package", "1", null,
-                                FindingSeverity.HIGH, null, null),
+                                com.vulnflow.processing.FindingSeverity.HIGH, null, null),
                         new ParsedVulnerability(
                                 "CVE-INVALID", null, "1", null,
-                                FindingSeverity.HIGH, null, null)));
+                                com.vulnflow.processing.FindingSeverity.HIGH, null, null)));
         doReturn(invalidPersistenceReport).when(reportParser).parse(any());
 
         worker.pollOnce();

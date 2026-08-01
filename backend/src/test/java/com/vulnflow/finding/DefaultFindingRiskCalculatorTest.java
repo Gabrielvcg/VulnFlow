@@ -2,6 +2,8 @@ package com.vulnflow.finding;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.vulnflow.processing.DefaultFindingRiskCalculator;
+import com.vulnflow.processing.FindingSeverity;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
@@ -28,4 +30,3 @@ class DefaultFindingRiskCalculatorTest {
         assertThat(calculator.calculate(FindingSeverity.CRITICAL, true)).isEqualTo(100);
     }
 }
-
