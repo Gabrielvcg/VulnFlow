@@ -35,6 +35,19 @@ data "aws_iam_policy_document" "processor" {
     resources = [var.queue_arn]
   }
   statement {
+    sid    = "PersistAndReadResults"
+    effect = "Allow"
+    actions = [
+      "dynamodb:GetItem",
+      "dynamodb:PutItem",
+      "dynamodb:UpdateItem",
+      "dynamodb:BatchWriteItem",
+      "dynamodb:Query",
+      "dynamodb:TransactWriteItems"
+    ]
+    resources = [var.result_table_arn, var.result_table_gsi_arn]
+  }
+  statement {
     sid       = "WriteFunctionLogs"
     effect    = "Allow"
     actions   = ["logs:CreateLogStream", "logs:PutLogEvents"]
@@ -62,16 +75,18 @@ resource "aws_lambda_function" "processor" {
 
   environment {
     variables = {
-      VULNFLOW_S3_BUCKET         = var.bucket_name
-      VULNFLOW_S3_PREFIX         = trimsuffix(var.report_prefix, "/")
-      VULNFLOW_MAX_PAYLOAD_BYTES = tostring(var.max_payload_bytes)
+      VULNFLOW_S3_BUCKET             = var.bucket_name
+      VULNFLOW_S3_PREFIX             = trimsuffix(var.report_prefix, "/")
+      VULNFLOW_MAX_PAYLOAD_BYTES     = tostring(var.max_payload_bytes)
+      VULNFLOW_DYNAMODB_TABLE        = var.result_table_name
+      VULNFLOW_DYNAMODB_MAX_FINDINGS = tostring(var.dynamodb_max_findings)
     }
   }
 
   lifecycle {
     precondition {
-      condition     = var.result_store_provider_ready
-      error_message = "Package exactly one reviewed Lambda result-store provider before any apply."
+      condition     = var.result_store_provider == "dynamodb"
+      error_message = "Set result_store_provider=dynamodb only after reviewing the packaged adapter and costs."
     }
   }
 

@@ -144,6 +144,26 @@ exception types remain internal logs; persisted reasons are generic and bounded.
 
 ## Prepared AWS boundary
 
+### 0.4.1 execution controls
+
+AWS SDK clients use bounded connect/API/socket timeouts and standard SDK retries. Bucket, prefix, queue
+URL, table name, payload size, event identity, cursor, and finding count are validated. Events carry only
+generated identifiers, hash, scanner, and an internal logical S3 key; they contain no report body,
+filename, API key, credential, or personal data. Lambda logs message identifiers and exception classes,
+not event/report bodies. Failed-result text is fixed and bounded.
+
+Terraform now enables managed encryption for DynamoDB and scopes Lambda IAM to one table/index in
+addition to the existing object prefix, queue, and log group. It declares no VPC or PostgreSQL access.
+
+For a future non-AWS VPS, prefer IAM Roles Anywhere short-lived credentials. Platform OIDC is better when
+a trustworthy issuer exists; a narrow proxy/presigned-upload service can reduce VPS permissions further.
+Long-lived IAM user keys are the least-preferred fallback because rotation and leak response become host
+responsibilities. No credential mechanism is configured in 0.4.1.
+
+Remaining AWS-specific risks include at-least-once duplicate publication, S3 orphans in the upload/commit
+crash window, an outbox `FAILED` state distinct from SQS DLQ visibility, hot scan partitions for unusually
+large reports, lifecycle deletion before delayed processing, and lack of human authorization/rate limits.
+
 AWS adapters are inactive unless the `aws` profile is explicit. S3 keys are
 generated internally under a validated prefix, payload size is bounded, and an
 application SHA-256 metadata value is checked after download in addition to SDK
