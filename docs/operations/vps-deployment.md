@@ -39,7 +39,7 @@ shell history:
 ```bash
 install -d -m 750 /srv/vulnflow/runtime
 install -m 600 /tmp/vulnflow.env.prod.example /srv/vulnflow/runtime/.env.prod
-install -m 600 /tmp/vulnflow.targets.example.yml /srv/vulnflow/runtime/targets.yml
+install -m 644 /tmp/vulnflow.targets.example.yml /srv/vulnflow/runtime/targets.yml
 ```
 
 Edit both files directly on the VPS. Populate every blank required value and make
@@ -47,6 +47,10 @@ Edit both files directly on the VPS. Populate every blank required value and mak
 has Docker volumes, set the three explicit volume-name variables to those exact
 names before the first run. The deployment never executes `down`, `down -v`,
 volume removal, or image pruning.
+
+The targets file contains no credentials and must be readable by the non-root
+agent UID through the read-only bind mount. Keep `runtime/.env.prod` at mode
+`600`; do not apply that secret-file mode to `runtime/targets.yml`.
 
 The example runs PostgreSQL, backend, and agent as separate containers on one
 private Compose network. PostgreSQL has no published host port. The backend is
