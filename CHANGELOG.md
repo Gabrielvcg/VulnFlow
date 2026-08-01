@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.4.5 - 2026-08-01
+
+- Added an isolated Terraform bootstrap for the private, encrypted, versioned
+  S3 state bucket with public-access blocking, TLS enforcement, and destruction
+  guards.
+- Prepared the inactive application S3 backend configuration with native
+  lockfiles and documented the two-phase state migration, scoped human
+  permissions, Identity Center access, and future Roles Anywhere boundary.
+
 ## 0.4.4 - 2026-08-01
 
 - Replaced the Lambda reserved-concurrency default with an SQS event-source
