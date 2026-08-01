@@ -1,5 +1,16 @@
 # AWS roadmap
 
+## 0.4.1 update
+
+The executable path is now complete offline: the AWS profile selects S3 storage, a PostgreSQL SQS
+publication outbox, Lambda, DynamoDB result persistence, and DynamoDB result queries. The original local
+filesystem/PostgreSQL worker path remains the default and the VPS continues to use only `prod`.
+
+The next phase is an explicitly authorized temporary create-test-destroy exercise. It still requires a
+current plan/cost review, short-lived workload credentials, alarm notification ownership, backup/restore
+evidence, and residual-resource checks. Terraform in this phase is limited to format, initialization
+without a backend, and validation; no plan is part of 0.4.1.
+
 ## Current position
 
 VulnFlow 0.4.0 remains entirely local/VPS at runtime by default. PostgreSQL supplies the backend job

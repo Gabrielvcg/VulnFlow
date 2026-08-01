@@ -21,13 +21,13 @@ public class DefaultScanIngestionService implements ScanIngestionService {
     private static final Logger LOGGER = LoggerFactory.getLogger(DefaultScanIngestionService.class);
 
     private final AssetService assetService;
-    private final ScanRegistrationService registrationService;
+    private final ScanSubmissionService registrationService;
     private final IngestionProperties properties;
     private final IngestionMetrics metrics;
 
     public DefaultScanIngestionService(
             AssetService assetService,
-            ScanRegistrationService registrationService,
+            ScanSubmissionService registrationService,
             IngestionProperties properties,
             IngestionMetrics metrics) {
         this.assetService = assetService;
@@ -64,7 +64,9 @@ public class DefaultScanIngestionService implements ScanIngestionService {
                 submission.assetId(),
                 submission.scanStatus(),
                 submission.jobStatus(),
-                submission.outcome());
+                submission.outcome(),
+                submission.eventId(),
+                submission.publicationStatus());
     }
 
     private void validateFile(MultipartFile file) {

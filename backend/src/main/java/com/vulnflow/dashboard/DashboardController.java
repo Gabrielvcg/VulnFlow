@@ -1,10 +1,12 @@
 package com.vulnflow.dashboard;
 
+import org.springframework.context.annotation.Profile;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
+@Profile("!aws")
 @RequestMapping("/api/v1/dashboard")
 public class DashboardController {
 
@@ -19,4 +21,3 @@ public class DashboardController {
         return dashboardService.summary();
     }
 }
-

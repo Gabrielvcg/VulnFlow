@@ -1,5 +1,5 @@
 report_bucket_name         = "replace-with-a-globally-unique-temporary-name"
-result_store_provider_ready = false
+result_store_provider       = "none"
 
 additional_tags = {
   Owner = "replace-me"

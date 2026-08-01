@@ -25,3 +25,10 @@ The message contains no API key, credential, report bytes, uploaded filename, re
 ## Compatibility
 
 V1 is immutable after release. Additive fields are not added silently because V1 readers deliberately reject unknown input. A semantic or structural change requires `IngestionEventV2`, a new codec branch, producer rollout after consumers can read both versions, and explicit retirement evidence before V1 is removed. Redelivery never changes `eventId`.
+
+## Idempotency and terminal results
+
+The DynamoDB adapter binds `eventId` to `scanId`, `assetId`, `contentHash`, `scanner`, and normalized
+finding count. A completed or safely failed duplicate is success. A different identity or content under
+the same event ID is a permanent conflict. An incomplete `WRITING` result resumes deterministic finding
+keys and remains invisible to result queries until the event and scan commit markers change atomically.
