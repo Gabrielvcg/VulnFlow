@@ -45,6 +45,7 @@ module "lambda" {
   report_prefix           = var.report_prefix
   batch_size              = var.sqs_batch_size
   maximum_batching_window = var.sqs_maximum_batching_window_seconds
+  maximum_concurrency     = var.sqs_maximum_concurrency
   max_payload_bytes       = var.max_payload_bytes
   result_store_provider   = var.result_store_provider
   result_table_name       = module.results.table_name

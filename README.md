@@ -1,6 +1,6 @@
 # VulnFlow
 
-VulnFlow 0.4.3 keeps the executable AWS ingestion path without deploying or
+VulnFlow 0.4.4 keeps the executable AWS ingestion path without deploying or
 contacting AWS and fixes Trivy temporary storage for the containerized VPS
 agent. The local/VPS mode remains the default. The explicit `aws` profile
 selects S3 payload storage, a recoverable PostgreSQL SQS publication outbox,
@@ -133,9 +133,9 @@ $env:VULNFLOW_API_URL = "http://127.0.0.1:8080/"
 $env:VULNFLOW_API_KEY = "configured-value"
 $env:VULNFLOW_AGENT_ID = "developer-machine"
 $env:VULNFLOW_TARGETS_FILE = (Resolve-Path targets.yml)
-java -jar target/vulnflow-agent-0.4.3.jar --check
-java -jar target/vulnflow-agent-0.4.3.jar --once
-java -jar target/vulnflow-agent-0.4.3.jar --status
+java -jar target/vulnflow-agent-0.4.4.jar --check
+java -jar target/vulnflow-agent-0.4.4.jar --once
+java -jar target/vulnflow-agent-0.4.4.jar --status
 ```
 
 The default daemon mode schedules isolated scan, upload, and cleanup cycles.
