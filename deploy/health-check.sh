@@ -19,6 +19,15 @@ for required_file in "${runtime_env}" "${release_env}" "${compose_file}"; do
   fi
 done
 
+if grep -Eq '^VULNFLOW_AWS_MODE=true$' "${runtime_env}"; then
+  aws_compose_file="${script_dir}/docker-compose.aws.yml"
+  if [[ ! -f "${aws_compose_file}" ]]; then
+    echo "AWS mode is enabled but the Compose override is missing: ${aws_compose_file}" >&2
+    exit 65
+  fi
+  compose+=(-f "${aws_compose_file}")
+fi
+
 container_id() {
   "${compose[@]}" ps --all -q "$1" | head -n 1
 }
