@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.4.3 - 2026-08-01
+
+- Return the controlled API error envelope with HTTP 404 for missing static
+  resources, including disabled OpenAPI endpoints, instead of treating them as
+  unexpected HTTP 500 failures.
+
 ## 0.4.2 - 2026-08-01
 
 - Routed Trivy OCI download temporary files to the durable agent volume so the

@@ -72,7 +72,7 @@ jobs:
       - name: Require Lambda package and offline AWS demo
         shell: bash
         run: |
-          test -f aws/lambda-processor/target/vulnflow-lambda-processor-0.4.2.jar
+          test -f aws/lambda-processor/target/vulnflow-lambda-processor-0.4.3.jar
           test -f backend/target/failsafe-reports/TEST-com.vulnflow.AwsExecutionPathIT.xml
           forbidden_aws_test_pattern='local''stack|endpoint''Override'
           ! git grep -I -E "$forbidden_aws_test_pattern" -- ':!docs/**'
