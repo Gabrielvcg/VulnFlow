@@ -15,6 +15,7 @@ variable "bucket_name" { type = string }
 variable "report_prefix" { type = string }
 variable "batch_size" { type = number }
 variable "maximum_batching_window" { type = number }
+variable "maximum_concurrency" { type = number }
 variable "max_payload_bytes" { type = number }
 variable "result_store_provider" { type = string }
 variable "result_table_name" { type = string }

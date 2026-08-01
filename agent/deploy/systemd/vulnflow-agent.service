@@ -10,7 +10,7 @@ Group=vulnflow-agent
 WorkingDirectory=/opt/vulnflow-agent
 EnvironmentFile=/etc/vulnflow-agent/vulnflow-agent.env
 Environment=TRIVY_CACHE_DIR=/var/lib/vulnflow-agent/trivy-cache
-ExecStart=/usr/bin/java -jar /opt/vulnflow-agent/vulnflow-agent-0.4.3.jar
+ExecStart=/usr/bin/java -jar /opt/vulnflow-agent/vulnflow-agent-0.4.4.jar
 Restart=on-failure
 RestartSec=10s
 TimeoutStopSec=45s
