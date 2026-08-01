@@ -2,7 +2,7 @@
 
 ## Purpose and trust boundary
 
-The 0.3.1 agent completes the path from a configured Docker image to VulnFlow
+The 0.4.0 agent continues the path from a configured Docker image to VulnFlow
 findings without requiring an operator to upload every report manually:
 
 ```text
@@ -109,7 +109,7 @@ pull public or explicitly authenticated registry images using Trivy-supported
 credentials, but it cannot see images available only in the host daemon. A host
 service is the recommended mode for that scenario.
 
-The 0.3.1 production bundle chooses this containerized mode deliberately. The
+The 0.4.0 production bundle continues to choose this containerized mode deliberately. The
 agent is a separate Compose service and image, communicates with the backend on
 the private network, reads a VPS-only targets file, and stores its outbox and
 Trivy cache in a named volume. Its image is deployed by the same commit SHA as
@@ -140,6 +140,7 @@ transport is:
 Agent -> presigned S3 upload -> SQS -> Lambda
 ```
 
-That phase must preserve the outbox and checksum contracts, replace API-key
-handling appropriately, and use SQS receipt handles and visibility timeouts.
-No AWS SDK, upload, queue, credential, or resource exists in 0.3.1.
+0.4.0 prepares the backend-side S3/SQS/Lambda contracts but does not change the
+agent transport: it still uploads to the authenticated HTTP API. Presigned S3
+upload, AWS credentials, and direct queue publication remain out of scope. The
+agent outbox and checksum must be preserved when that later transport is built.

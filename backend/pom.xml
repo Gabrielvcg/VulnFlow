@@ -5,15 +5,14 @@
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
-        <groupId>org.springframework.boot</groupId>
-        <artifactId>spring-boot-starter-parent</artifactId>
-        <version>3.5.16</version>
-        <relativePath/>
+        <groupId>com.vulnflow</groupId>
+        <artifactId>vulnflow</artifactId>
+        <version>0.4.0</version>
+        <relativePath>../pom.xml</relativePath>
     </parent>
 
     <groupId>com.vulnflow</groupId>
     <artifactId>vulnflow-backend</artifactId>
-    <version>0.3.1</version>
     <name>vulnflow-backend</name>
     <description>Local-first vulnerability scan ingestion and query API</description>
 
@@ -24,6 +23,20 @@
     </properties>
 
     <dependencies>
+        <dependency>
+            <groupId>com.vulnflow</groupId>
+            <artifactId>processing-core</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.vulnflow</groupId>
+            <artifactId>aws-adapters</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>software.amazon.awssdk</groupId>
+            <artifactId>url-connection-client</artifactId>
+        </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-web</artifactId>

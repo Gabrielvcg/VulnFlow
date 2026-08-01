@@ -1,5 +1,6 @@
 package com.vulnflow.ingestion;
 
+import com.vulnflow.processing.port.ReportStorage;
 import com.vulnflow.scan.Scan;
 import com.vulnflow.scan.ScanRepository;
 import com.vulnflow.shared.exception.ResourceNotFoundException;

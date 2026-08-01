@@ -8,6 +8,10 @@ Thumbs.db
 
 backend/target/
 agent/target/
+processing-core/target/
+aws/aws-adapters/target/
+aws/lambda-processor/target/
+aws/lambda-processor/aws/
 agent/data/
 .agent-demo.*
 .agent-demo-tools.*
