@@ -4,13 +4,13 @@ This is a cost-control model, not a promise of zero cost. Prices, free tiers, ta
 
 ## Assumed demonstration
 
-One temporary environment in `eu-west-1`, at most 100 reports, each no larger than 10 MiB, one short processing invocation per delivery, batch size 5, reserved concurrency 2, three receives before DLQ, seven-day object/log retention, and destruction immediately after evidence collection.
+One temporary environment in `eu-west-1`, at most 100 reports, each no larger than 10 MiB, one short processing invocation per delivery, batch size 5, unreserved Lambda concurrency with SQS maximum concurrency 2, three receives before DLQ, seven-day object/log retention, and destruction immediately after evidence collection.
 
 | Resource | Charging behavior | Idle exposure/control |
 |---|---|---|
 | S3 | storage, requests, retrieval/transfer | Stored objects cost while retained; seven-day lifecycle and destroy cleanup. |
 | SQS + DLQ | API requests and payload units | Empty queues generally have no request usage, but polling is controlled by Lambda event source; destroy both. |
-| Lambda | requests and GB-seconds | No always-on compute; memory 512 MiB, timeout 30 s, concurrency 2. |
+| Lambda | requests and GB-seconds | No always-on compute; memory 512 MiB, timeout 30 s, SQS maximum concurrency 2. |
 | CloudWatch Logs | ingestion, storage, queries | Logs persist until seven-day retention or destroy; avoid verbose payload logs. |
 | DynamoDB | on-demand requests, storage, PITR | No fixed capacity; staged finding batches and retries consume writes. PITR adds storage cost when enabled. |
 | CloudWatch alarm | metric alarm evaluation | The DLQ alarm is disabled by default and has no notification action. |
@@ -23,7 +23,8 @@ Avoided resources with meaningful idle or fixed cost include NAT Gateway, ALB, E
 - `s3_lifecycle_days=7` (validated 1–30).
 - `cloudwatch_log_retention_days=7`.
 - `sqs_batch_size=5` (maximum 10).
-- `lambda_reserved_concurrency=2` (validated maximum 5).
+- `lambda_reserved_concurrency=-1`; the function uses the account's unreserved pool so plans remain valid for low-quota accounts.
+- `sqs_maximum_concurrency=2` (validated range 2-5) bounds SQS-triggered Lambda concurrency without reserving account capacity.
 - `sqs_max_receive_count=3` (validated maximum 5).
 - `max_payload_bytes=10485760` (hard maximum 10 MiB).
 - `lambda_timeout_seconds=30`; visibility defaults to 180 seconds, six times the timeout.
