@@ -1,124 +1,141 @@
 # AWS operator permissions
 
-The current local IAM user is an emergency/bootstrap identity, not the target
-human access model. Human Terraform operations should use the AWS CLI profile
-`vulnflow-admin` backed by IAM Identity Center and short-lived credentials.
-
-Create three reviewed customer-managed policies or equivalent inline policies in
-the Identity Center permission set. Do not use `AdministratorAccess` as the
-default permission set.
-
-Ready-to-review policy documents are split by lifecycle so they can be attached
-only when needed:
-
-- `docs/security/iam/bootstrap-operator-policy.json`
-- `docs/security/iam/application-operator-policy.json`
-- `docs/security/iam/workload-identity-operator-policy.json`
-
-They are templates for Access Analyzer and administrator review, not policies
-that this repository or CI applies automatically.
-
-## Identity Center manual setup
-
-The workstation currently has only the long-lived `default` profile and no SSO
-profile. Its IAM user cannot inspect Identity Center or Organizations, so an
-AWS account/organization administrator must complete this decision in AWS
-Console:
-
-1. Open IAM Identity Center and confirm whether an organization instance is
-   already enabled and in which region. Do not create a second instance.
-2. If it is not enabled, choose the organization/standalone instance model,
-   identity source, user or group ownership, and home region explicitly.
-3. Create a `VulnFlowTerraformOperator` permission set using the scoped
-   bootstrap and application permissions below.
-4. Assign the operator user or group to account `160172542031` with that
-   permission set.
-5. Record the access portal start URL and SSO region, then configure and verify
-   the local temporary profile without copying any credentials:
-
-```bash
-aws configure sso --profile vulnflow-admin
-aws sso login --profile vulnflow-admin
-aws sts get-caller-identity --profile vulnflow-admin
-```
-
-The verified ARN should be an assumed-role/SSO session rather than
-`arn:aws:iam::160172542031:user/vacaro` before any apply is authorized.
-`scripts/aws/assert-temporary-identity.ps1` enforces the expected account,
-region, and `VulnFlowTerraformOperator` permission-set session before any
-Terraform operation.
-
-## State bootstrap scope
-
-Limit bucket-level actions to:
+VulnFlow deliberately uses a single-account IAM/STS design for human Terraform
+access. AWS Organizations and IAM Identity Center must remain disabled so the
+account stays on its current AWS Free Plan and retains its remaining credits.
 
 ```text
-arn:aws:s3:::vulnflow-terraform-state-160172542031-eu-west-1
+IAM user vacaro
+  -> sts:AssumeRole
+  -> VulnFlowTerraformOperator
+  -> temporary STS credentials
+  -> Terraform
 ```
 
-Required management actions are `s3:CreateBucket`, `s3:DeleteBucket`,
-`s3:GetBucketLocation`, bucket tagging, versioning, encryption, public-access
-block and bucket-policy get/put/delete operations. The committed Terraform
-guards still prevent accidental destruction.
+The target account is `160172542031` and the workload region is `eu-west-1`.
+The permanent user is only the one-time identity bootstrap principal and the
+source for `AssumeRole`; it is not an approved identity for state or application
+Terraform operations.
 
-After creation, backend access needs `s3:ListBucket` on the bucket and
-`s3:GetObject`/`s3:PutObject` on these prefixes:
+## Verified starting point
 
-```text
-vulnflow/bootstrap/terraform.tfstate*
-vulnflow/demo/terraform.tfstate*
+A read-only audit on 2026-08-01 established that:
+
+- `arn:aws:iam::160172542031:user/vacaro` is the current caller;
+- the user has no directly attached or inline policy, but group `admin` grants
+  the AWS-managed `AdministratorAccess` policy;
+- the user has no MFA device; the account's only listed MFA device belongs to
+  the root user;
+- `VulnFlowTerraformOperator` and VulnFlow customer-managed policies do not yet
+  exist;
+- the account is not a member of AWS Organizations; and
+- there is no local `vulnflow-admin` profile yet.
+
+No credential value was read, printed, changed, or written during that audit.
+
+## One-time identity bootstrap
+
+`infrastructure/identity-bootstrap` is a separate Terraform root. Its initial
+plan creates exactly:
+
+- one `VulnFlowTerraformOperator` role;
+- two scoped customer-managed policies for state and application; and
+- two attachments of those policies to the role.
+
+The trust policy accepts only
+`arn:aws:iam::160172542031:user/vacaro`. It contains no account-root,
+cross-account, external, service, or wildcard principal. The role session is
+limited to one hour.
+
+The root's `mfa_serial` is `null` by default because MFA is not currently
+configured on `vacaro`. After a real device is assigned to that user, supply its
+verified ARN in a new reviewed identity-bootstrap plan. That adds the
+`aws:MultiFactorAuthPresent=true` trust condition. Never reuse the root MFA ARN
+or invent a serial.
+
+The permanent user must run the initial identity-bootstrap plan/apply because
+the target role does not exist yet. Applying it is a STOP operation requiring
+explicit authorization. This repository and its CI never apply it.
+
+## Local AssumeRole profile
+
+Only after the role exists, add this credential-free block to `~/.aws/config`:
+
+```ini
+[profile vulnflow-admin]
+role_arn = arn:aws:iam::160172542031:role/VulnFlowTerraformOperator
+source_profile = default
+region = eu-west-1
+role_session_name = vulnflow-terraform
 ```
 
-S3 native lockfiles additionally require `s3:DeleteObject` for the matching
-`.tflock` objects. State-object deletion is not part of normal operation.
+If and only if the role trust has been updated with a real MFA device assigned
+to `vacaro`, also add:
 
-## Application infrastructure scope
-
-Limit permissions to account `160172542031`, region `eu-west-1`, and these
-names:
-
-```text
-S3 bucket:      vulnflow-demo-160172542031-eu-west-1-reports
-SQS queues:     vulnflow-demo-ingestion, vulnflow-demo-dlq
-DynamoDB table: vulnflow-demo-results and its indexes
-Lambda:         vulnflow-demo-processor
-IAM role:       vulnflow-demo-processor-role
-Log group:      /aws/lambda/vulnflow-demo-processor
+```ini
+mfa_serial = arn:aws:iam::160172542031:mfa/<real-device-name>
 ```
 
-The Terraform operator needs create/read/update/delete and tagging operations
-for those exact S3, SQS, DynamoDB, Lambda and CloudWatch Logs resources. IAM
-permissions are limited to creating and managing the named Lambda role and its
-inline policy. `iam:PassRole` must target only that role and require
+Do not add access keys, secrets, or session tokens to the profile. Refreshing
+means invoking an AWS CLI or Terraform command with the profile; the AWS CLI
+uses the source profile to call STS and caches/renews temporary role sessions as
+supported by its credential provider chain.
+
+Before every state/application `plan`, migration, `apply`, or `destroy`, run:
+
+```powershell
+./scripts/aws/assert-temporary-identity.ps1 -Profile vulnflow-admin
+```
+
+The preflight requires account `160172542031`, region `eu-west-1`, and an STS
+ARN matching
+`arn:aws:sts::160172542031:assumed-role/VulnFlowTerraformOperator/<session>`.
+It rejects the permanent IAM user and all unexpected roles.
+
+## Effective operator policies
+
+The single sources of truth are:
+
+- `infrastructure/identity-bootstrap/policies/terraform-state-operator-policy.json`
+- `infrastructure/identity-bootstrap/policies/application-operator-policy.json`
+
+The state policy is limited to the dedicated bucket
+`vulnflow-terraform-state-160172542031-eu-west-1`, its two reviewed state keys,
+and their native `.tflock` objects. It grants no normal state-object deletion;
+only lockfile deletion is allowed.
+
+The application policy is limited to the reviewed demo report bucket, two SQS
+queues, DynamoDB table, Lambda function, Lambda execution role, Lambda log
+group, and optional DLQ alarm. `iam:PassRole` targets only
+`arn:aws:iam::160172542031:role/vulnflow-demo-processor-role` and requires
 `iam:PassedToService=lambda.amazonaws.com`.
 
-Some discovery and create APIs, notably Lambda event-source-mapping discovery,
-cannot be completely restricted to an already-known resource ARN because the
-resource does not exist yet. Any unavoidable `Resource="*"` statement must
-contain only the exact unsupported actions, be kept separate from resource-
-scoped statements, and be reviewed through CloudTrail. It must never contain
-service-wide full-access actions.
+No policy grants `Action="*"`. The remaining `Resource="*"` statements are
+isolated to APIs that cannot be scoped to a known ARN at authorization time:
 
-## VPS workload identity
+- `sqs:ListQueues`;
+- Lambda event-source-mapping creation and discovery calls; management after
+  creation is restricted to the account/region event-source-mapping ARN type;
+- `logs:DescribeLogGroups` and `cloudwatch:DescribeAlarms` discovery calls.
 
-The VPS is a separate workload and must not reuse human Terraform permissions.
-The next phase may create this chain:
+These exceptions contain only the listed actions and must remain separate from
+resource-scoped management statements.
+
+## Separation from VPS workload identity
+
+The VPS never uses `vulnflow-admin` or the human operator role. Its prepared,
+still-disabled chain is:
 
 ```text
-VPS -> X.509 certificate -> IAM Roles Anywhere -> VulnFlowBackend role
+VPS -> locally issued X.509 leaf -> IAM Roles Anywhere -> VulnFlow backend role
 ```
 
-That role needs S3 `PutObject`, `GetObject`, and `DeleteObject` for `reports/*`
-(where `HeadObject` is authorized by `GetObject`), SQS `SendMessage` for the
-ingestion queue, and DynamoDB `GetItem`/`Query` for the VulnFlow result table
-and index. The optional Terraform module duplicates these bounds in the role
-policy and the Roles Anywhere session policy. It is disabled by default; no
-trust anchor, certificate, role, profile, or access key is created merely by
-validating or planning the initial application configuration.
-
-When the optional identity is enabled, the operator additionally needs
-create/read/update/enable/disable/delete and tagging actions for the exact
-Roles Anywhere trust anchor and profile, plus management of only
-`arn:aws:iam::160172542031:role/vulnflow-demo-backend-role`. Create and list
-operations that do not support resource-level permissions must remain in a
-separate reviewed `Resource="*"` statement.
+The CA private key remains offline and outside AWS; AWS Private CA is not used.
+AWS documents `iam:PassRole` as a dependent permission for Roles Anywhere
+profile creation. Because the approved human operator may pass only the exact
+Lambda execution role, the future Roles Anywhere apply needs a separate,
+explicitly reviewed authorization for the exact backend role. The current
+operator policy intentionally does not grant it and no Roles Anywhere resource
+is included in the 14-resource application plan. See
+`docs/security/iam-roles-anywhere.md` for the separate certificate ceremony and
+workload boundary.
