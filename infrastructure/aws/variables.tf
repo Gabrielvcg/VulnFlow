@@ -53,7 +53,7 @@ variable "report_prefix" {
 variable "lambda_zip_path" {
   description = "Path to the shaded Lambda JAR produced by Maven."
   type        = string
-  default     = "../../aws/lambda-processor/target/vulnflow-lambda-processor-0.4.1.jar"
+  default     = "../../aws/lambda-processor/target/vulnflow-lambda-processor-0.4.2.jar"
 }
 
 variable "lambda_source_code_hash" {
