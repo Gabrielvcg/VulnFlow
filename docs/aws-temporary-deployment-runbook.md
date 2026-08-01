@@ -5,6 +5,7 @@ This runbook is documentation only. It was not executed for 0.4.1. Running it is
 ## 1. Prechecks
 
 - Confirm the branch/commit, clean tree, approved region/account, budget alert, operator identity, and scheduled destruction owner/time.
+- Read the regional Lambda account concurrency limit. Keep the function unreserved for low-quota accounts and bound the SQS event source with `sqs_maximum_concurrency`.
 - Review ADR-019 through ADR-023 and set `result_store_provider="dynamodb"` only in an authorized reviewed input.
 - Choose a globally unique temporary bucket name and non-sensitive tags.
 - Confirm payloads are synthetic and under the configured size limit.
@@ -15,7 +16,7 @@ This runbook is documentation only. It was not executed for 0.4.1. Running it is
 ./backend/mvnw -f pom.xml verify
 ```
 
-Confirm `aws/lambda-processor/target/vulnflow-lambda-processor-0.4.3.jar` exists and calculate its base64 SHA-256 for `lambda_source_code_hash`.
+Confirm `aws/lambda-processor/target/vulnflow-lambda-processor-0.4.4.jar` exists and calculate its base64 SHA-256 for `lambda_source_code_hash`.
 
 ## 3. Validate only
 

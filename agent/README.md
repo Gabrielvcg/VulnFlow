@@ -1,4 +1,4 @@
-# VulnFlow Agent 0.4.3
+# VulnFlow Agent 0.4.4
 
 The VulnFlow Agent is a standalone Java 17 process for explicitly configured
 Linux hosts. It runs Trivy image scans, stores reports in a durable local
@@ -61,10 +61,10 @@ Sizes accept `B`, `KB`, `MB`, or `GB`.
 ## Commands
 
 ```bash
-java -jar target/vulnflow-agent-0.4.3.jar --check
-java -jar target/vulnflow-agent-0.4.3.jar --once
-java -jar target/vulnflow-agent-0.4.3.jar --status
-java -jar target/vulnflow-agent-0.4.3.jar
+java -jar target/vulnflow-agent-0.4.4.jar --check
+java -jar target/vulnflow-agent-0.4.4.jar --once
+java -jar target/vulnflow-agent-0.4.4.jar --status
+java -jar target/vulnflow-agent-0.4.4.jar
 ```
 
 `--check` validates configuration and prints a secret-free effective view.

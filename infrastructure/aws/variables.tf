@@ -53,7 +53,7 @@ variable "report_prefix" {
 variable "lambda_zip_path" {
   description = "Path to the shaded Lambda JAR produced by Maven."
   type        = string
-  default     = "../../aws/lambda-processor/target/vulnflow-lambda-processor-0.4.3.jar"
+  default     = "../../aws/lambda-processor/target/vulnflow-lambda-processor-0.4.4.jar"
 }
 
 variable "lambda_source_code_hash" {
@@ -155,10 +155,23 @@ variable "lambda_memory_size_mb" {
 
 variable "lambda_reserved_concurrency" {
   type    = number
-  default = 2
+  default = -1
   validation {
-    condition     = var.lambda_reserved_concurrency >= 1 && var.lambda_reserved_concurrency <= 5
-    error_message = "Temporary reserved concurrency must be between 1 and 5."
+    condition = (
+      var.lambda_reserved_concurrency == -1 ||
+      (var.lambda_reserved_concurrency >= 1 && var.lambda_reserved_concurrency <= 5)
+    )
+    error_message = "Reserved concurrency must be -1 (unreserved) or between 1 and 5."
+  }
+}
+
+variable "sqs_maximum_concurrency" {
+  description = "Maximum concurrent Lambda invocations from the SQS event source."
+  type        = number
+  default     = 2
+  validation {
+    condition     = var.sqs_maximum_concurrency >= 2 && var.sqs_maximum_concurrency <= 5
+    error_message = "SQS maximum concurrency must be between 2 and 5."
   }
 }
 
