@@ -11,6 +11,14 @@ It has no active remote Terraform backend until the dedicated bucket in
 `backend.tf.example` contains the reviewed S3 backend shape with native
 `use_lockfile=true` locking and no credentials.
 
+The optional `modules/rolesanywhere` path prepares the non-AWS VPS workload
+identity. It is disabled by default, so the initial application plan remains at
+14 resources. Enabling it adds a trust anchor, profile, backend IAM role, and
+inline role policy after a separate certificate ceremony and plan review. The
+role trust is restricted by account, exact trust anchor, and certificate CN;
+the role and session policy are both restricted to the VulnFlow report prefix,
+ingestion queue, and read-only result access.
+
 The configuration intentionally fails closed before deployment while
 `result_store_provider="none"`. After reviewing the packaged DynamoDB adapter,
 an authorized operator must explicitly set it to `"dynamodb"`. See ADR-019 and

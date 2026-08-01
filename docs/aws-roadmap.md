@@ -1,23 +1,29 @@
 # AWS roadmap
 
-## 0.4.1 update
+## 0.4.6 update
 
-The executable path is now complete offline: the AWS profile selects S3 storage, a PostgreSQL SQS
+The executable path is complete offline: the AWS profile selects S3 storage, a PostgreSQL SQS
 publication outbox, Lambda, DynamoDB result persistence, and DynamoDB result queries. The original local
-filesystem/PostgreSQL worker path remains the default and the VPS continues to use only `prod`.
+filesystem/PostgreSQL worker path remains the default and the production VPS continues to use only
+`prod`.
 
-The next phase is an explicitly authorized temporary create-test-destroy exercise. It still requires a
-current plan/cost review, short-lived workload credentials, alarm notification ownership, backup/restore
-evidence, and residual-resource checks. Terraform in this phase is limited to format, initialization
-without a backend, and validation; no plan is part of 0.4.1.
+Remote state now has a separate bootstrap root and distinct bootstrap/application keys. Human apply
+access is designed for an IAM Identity Center session, while the optional VPS identity uses IAM Roles
+Anywhere with a short-lived credential process. Neither identity is silently enabled: the current human
+profile must pass the account and assumed-role preflight, and the workload identity requires an explicit
+Terraform variable plus a reviewed public CA certificate.
+
+The next phase is an explicitly authorized create-test-destroy exercise. It still requires a current
+saved-plan/cost review, the temporary human session, certificate issuance, alarm notification ownership,
+backup/restore evidence, and residual-resource checks. No apply has been run.
 
 ## Current position
 
-VulnFlow 0.4.0 remains entirely local/VPS at runtime by default. PostgreSQL supplies the backend job
+VulnFlow 0.4.6 remains entirely local/VPS at runtime by default. PostgreSQL supplies the backend job
 queue, named volumes store backend payloads, and an independent Linux agent
 uses a filesystem outbox for continuous scans. AWS SDK adapters and a Lambda
 artifact are compiled but inactive by default; no credentials, AWS API calls,
-or resources are used by this release.
+or resources are used by default.
 
 The local design now proves the behavior needed before cloud migration:
 
@@ -99,5 +105,6 @@ Before any future deployment:
 4. Configure budgets, retention, and alarms.
 5. Run `terraform destroy`, verify deletion, and inspect for orphaned resources.
 
-Terraform in 0.4.0 describes the first S3/SQS/Lambda slice and is only formatted,
-initialized without a backend, and validated.
+Terraform in 0.4.6 describes the S3/SQS/Lambda/DynamoDB slice, its alarms, remote-state bootstrap, and
+optional Roles Anywhere identity. CI formats, validates, tests, and resolves both local and AWS runtime
+configurations; applying any plan remains a manual authorization gate.

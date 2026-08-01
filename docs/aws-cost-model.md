@@ -15,8 +15,11 @@ One temporary environment in `eu-west-1`, at most 100 reports, each no larger th
 | DynamoDB | on-demand requests, storage, PITR | No fixed capacity; staged finding batches and retries consume writes. PITR adds storage cost when enabled. |
 | CloudWatch alarm | metric alarm evaluation | The DLQ alarm is disabled by default and has no notification action. |
 | IAM/event source | ordinarily no direct service charge | Still security-sensitive and must be destroyed. |
+| IAM Roles Anywhere | no additional service charge | Disabled in the initial plan; certificate operations and sessions remain security-sensitive. |
 
 Avoided resources with meaningful idle or fixed cost include NAT Gateway, ALB, EC2, RDS, RDS Proxy, ECS, OpenSearch, Route 53, and a custom domain.
+AWS Private CA is also excluded: VulnFlow expects an existing or offline
+self-managed CA because AWS Private CA introduces a material monthly charge.
 
 ## Conservative variables
 

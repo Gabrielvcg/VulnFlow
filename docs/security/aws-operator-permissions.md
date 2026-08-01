@@ -4,9 +4,19 @@ The current local IAM user is an emergency/bootstrap identity, not the target
 human access model. Human Terraform operations should use the AWS CLI profile
 `vulnflow-admin` backed by IAM Identity Center and short-lived credentials.
 
-Create two reviewed customer-managed policies or equivalent inline policies in
+Create three reviewed customer-managed policies or equivalent inline policies in
 the Identity Center permission set. Do not use `AdministratorAccess` as the
 default permission set.
+
+Ready-to-review policy documents are split by lifecycle so they can be attached
+only when needed:
+
+- `docs/security/iam/bootstrap-operator-policy.json`
+- `docs/security/iam/application-operator-policy.json`
+- `docs/security/iam/workload-identity-operator-policy.json`
+
+They are templates for Access Analyzer and administrator review, not policies
+that this repository or CI applies automatically.
 
 ## Identity Center manual setup
 
@@ -34,6 +44,9 @@ aws sts get-caller-identity --profile vulnflow-admin
 
 The verified ARN should be an assumed-role/SSO session rather than
 `arn:aws:iam::160172542031:user/vacaro` before any apply is authorized.
+`scripts/aws/assert-temporary-identity.ps1` enforces the expected account,
+region, and `VulnFlowTerraformOperator` permission-set session before any
+Terraform operation.
 
 ## State bootstrap scope
 
@@ -95,7 +108,17 @@ The next phase may create this chain:
 VPS -> X.509 certificate -> IAM Roles Anywhere -> VulnFlowBackend role
 ```
 
-That role will need only S3 `PutObject`/`GetObject` for `reports/*`, SQS
-`SendMessage` for the ingestion queue, and DynamoDB read operations for the
-VulnFlow result table and index. No trust anchor, certificate, role, profile or
-access key is created in the current phase.
+That role needs S3 `PutObject`, `GetObject`, and `DeleteObject` for `reports/*`
+(where `HeadObject` is authorized by `GetObject`), SQS `SendMessage` for the
+ingestion queue, and DynamoDB `GetItem`/`Query` for the VulnFlow result table
+and index. The optional Terraform module duplicates these bounds in the role
+policy and the Roles Anywhere session policy. It is disabled by default; no
+trust anchor, certificate, role, profile, or access key is created merely by
+validating or planning the initial application configuration.
+
+When the optional identity is enabled, the operator additionally needs
+create/read/update/enable/disable/delete and tagging actions for the exact
+Roles Anywhere trust anchor and profile, plus management of only
+`arn:aws:iam::160172542031:role/vulnflow-demo-backend-role`. Create and list
+operations that do not support resource-level permissions must remain in a
+separate reviewed `Resource="*"` statement.
