@@ -16,7 +16,7 @@ This runbook is documentation only. It was not executed for 0.4.1. Running it is
 ./backend/mvnw -f pom.xml verify
 ```
 
-Confirm `aws/lambda-processor/target/vulnflow-lambda-processor-0.4.4.jar` exists and calculate its base64 SHA-256 for `lambda_source_code_hash`.
+Confirm `aws/lambda-processor/target/vulnflow-lambda-processor-0.4.5.jar` exists and calculate its base64 SHA-256 for `lambda_source_code_hash`.
 
 ## 3. Validate only
 
