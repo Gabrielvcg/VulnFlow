@@ -1,6 +1,6 @@
 # Temporary AWS deployment runbook
 
-This runbook is documentation only. It has not been executed. VulnFlow 0.4.6 prepares remote state,
+This runbook is documentation only. It has not been executed. VulnFlow 0.4.7 prepares remote state,
 temporary human authentication, and the optional VPS workload identity, but every `terraform apply`
 remains a separate explicitly authorized operation that needs reviewed short-lived credentials and a
 current cost/security review.
@@ -19,7 +19,7 @@ current cost/security review.
 ./backend/mvnw -f pom.xml verify
 ```
 
-Confirm `aws/lambda-processor/target/vulnflow-lambda-processor-0.4.6.jar` exists and calculate its base64 SHA-256 for `lambda_source_code_hash`.
+Confirm `aws/lambda-processor/target/vulnflow-lambda-processor-0.4.7.jar` exists and calculate its base64 SHA-256 for `lambda_source_code_hash`.
 
 ## 3. Validate only
 
@@ -27,6 +27,10 @@ Confirm `aws/lambda-processor/target/vulnflow-lambda-processor-0.4.6.jar` exists
 terraform -chdir=infrastructure/aws fmt -check -recursive
 terraform -chdir=infrastructure/aws init -backend=false -input=false
 terraform -chdir=infrastructure/aws validate
+terraform -chdir=infrastructure/identity-bootstrap fmt -check -recursive
+terraform -chdir=infrastructure/identity-bootstrap init -backend=false -input=false
+terraform -chdir=infrastructure/identity-bootstrap validate
+terraform -chdir=infrastructure/identity-bootstrap test
 ```
 
 These commands do not need AWS credentials. Do not confuse validation with deployment readiness.
@@ -37,8 +41,12 @@ Complete `docs/aws-cost-model.md`, inspect IAM scope, timeouts, retention, concu
 
 ## 5. Manual apply
 
-Only an authorized operator may run apply after the safety gate and review. Record the exact commit,
-plan digest, approver, start time, and destruction deadline. This step has not been run.
+The existing `vacaro` bootstrap user may apply only the independently reviewed
+identity plan first. After that, configure `vulnflow-admin`, pass the temporary
+identity preflight, and use only that role session for state/application work.
+Only an authorized operator may run apply after the safety gate and review.
+Record the exact commit, plan digest, approver, start time, and destruction
+deadline. No apply described here has been run.
 
 ## 6. End-to-end evidence
 
