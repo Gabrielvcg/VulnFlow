@@ -1,6 +1,7 @@
 package com.vulnflow.scan;
 
 import java.util.UUID;
+import org.springframework.context.annotation.Profile;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -11,6 +12,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
+@Profile("!aws")
 @RequestMapping("/api/v1/scans")
 public class ScanController {
 
