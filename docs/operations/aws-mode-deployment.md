@@ -10,8 +10,8 @@ mode switch itself.
 - `main` and the deployed immutable image SHA are recorded and healthy.
 - PostgreSQL has a current tested backup and the three Docker volume names are
   recorded.
-- `vulnflow-admin` is a logged-in `VulnFlowTerraformOperator` Identity Center
-  session accepted by `scripts/aws/assert-temporary-identity.ps1`.
+- `vulnflow-admin` has assumed the exact `VulnFlowTerraformOperator` IAM role
+  through STS and is accepted by `scripts/aws/assert-temporary-identity.ps1`.
 - The bootstrap and application plans are newly generated from that commit,
   contain no unexpected change/destroy actions, and have recorded SHA-256
   digests.

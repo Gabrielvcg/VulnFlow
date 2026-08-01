@@ -1,9 +1,10 @@
 # VulnFlow
 
-VulnFlow 0.4.6 keeps the executable AWS ingestion path disabled by default and
-prepares temporary workload credentials through IAM Roles Anywhere. The
-local/VPS mode remains the default. An explicit deployment override selects the
-`aws` profile, S3 payload storage, a recoverable PostgreSQL SQS publication
+VulnFlow 0.4.7 keeps the executable AWS ingestion path disabled by default,
+prepares temporary human Terraform sessions through a scoped IAM AssumeRole
+flow, and prepares temporary workload credentials through IAM Roles Anywhere.
+The local/VPS mode remains the default. An explicit deployment override selects
+the `aws` profile, S3 payload storage, a recoverable PostgreSQL SQS publication
 outbox, the shared Lambda processor, and a DynamoDB result store. CI validates
 the preparation but never runs Terraform apply or activates AWS production.
 
@@ -133,9 +134,9 @@ $env:VULNFLOW_API_URL = "http://127.0.0.1:8080/"
 $env:VULNFLOW_API_KEY = "configured-value"
 $env:VULNFLOW_AGENT_ID = "developer-machine"
 $env:VULNFLOW_TARGETS_FILE = (Resolve-Path targets.yml)
-java -jar target/vulnflow-agent-0.4.6.jar --check
-java -jar target/vulnflow-agent-0.4.6.jar --once
-java -jar target/vulnflow-agent-0.4.6.jar --status
+java -jar target/vulnflow-agent-0.4.7.jar --check
+java -jar target/vulnflow-agent-0.4.7.jar --once
+java -jar target/vulnflow-agent-0.4.7.jar --status
 ```
 
 The default daemon mode schedules isolated scan, upload, and cleanup cycles.
@@ -375,8 +376,9 @@ vulnerability count.
 - [ADR-022 event idempotency](docs/decisions/ADR-022-event-idempotency-policy.md)
 - [ADR-023 VPS AWS credentials](docs/decisions/ADR-023-vps-aws-credentials.md)
 
-AWS resource creation remains intentionally deferred. VulnFlow 0.4.6 has been
+AWS resource creation remains intentionally deferred. VulnFlow 0.4.7 has been
 validated with real plan-only access, but no Terraform apply or destroy has
 run. Any future apply requires the explicit `result_store_provider="dynamodb"`
-input, a reviewed state-backend bootstrap, temporary operator credentials, and
-the documented cost and security review.
+input, an explicitly authorized identity and state bootstrap, temporary
+operator credentials, and the documented cost and security review. AWS
+Organizations and IAM Identity Center intentionally remain disabled.

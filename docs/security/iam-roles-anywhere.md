@@ -1,8 +1,16 @@
 # IAM Roles Anywhere for the VulnFlow VPS
 
 VulnFlow uses IAM Roles Anywhere only for the backend workload running outside
-AWS. Human Terraform operators use IAM Identity Center instead. Neither path
-uses long-lived AWS access keys.
+AWS. Human Terraform operators use the separate `VulnFlowTerraformOperator`
+AssumeRole flow instead. Neither path uses long-lived AWS access keys.
+
+Creating or updating a Roles Anywhere profile has an AWS-documented
+`iam:PassRole` dependency. The current human Terraform operator intentionally
+has `iam:PassRole` only for the Lambda execution role, so it cannot enable this
+module. A future reviewed phase must authorize passing exactly
+`arn:aws:iam::160172542031:role/vulnflow-demo-backend-role` to Roles Anywhere
+before planning this module; that permission is not part of the current
+identity bootstrap.
 
 ## Prepared trust boundary
 
