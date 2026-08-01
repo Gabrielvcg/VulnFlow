@@ -26,6 +26,17 @@ variable "aws_region" {
   default     = "eu-west-1"
 }
 
+variable "aws_account_id" {
+  description = "AWS account that owns the temporary VulnFlow resources."
+  type        = string
+  default     = "160172542031"
+
+  validation {
+    condition     = can(regex("^[0-9]{12}$", var.aws_account_id))
+    error_message = "aws_account_id must contain exactly 12 digits."
+  }
+}
+
 variable "additional_tags" {
   description = "Extra tags merged into the required VulnFlow tags."
   type        = map(string)
@@ -53,7 +64,7 @@ variable "report_prefix" {
 variable "lambda_zip_path" {
   description = "Path to the shaded Lambda JAR produced by Maven."
   type        = string
-  default     = "../../aws/lambda-processor/target/vulnflow-lambda-processor-0.4.5.jar"
+  default     = "../../aws/lambda-processor/target/vulnflow-lambda-processor-0.4.6.jar"
 }
 
 variable "lambda_source_code_hash" {
@@ -236,4 +247,48 @@ variable "allow_destroy_non_empty_bucket" {
   description = "Temporary-only switch that permits destroy to remove retained reports."
   type        = bool
   default     = true
+}
+
+variable "enable_vps_roles_anywhere" {
+  description = "Creates the optional VPS Roles Anywhere trust anchor, profile, and least-privilege role."
+  type        = bool
+  default     = false
+}
+
+variable "roles_anywhere_ca_certificate_pem" {
+  description = "Public PEM certificate for the external CA that issues the VPS workload certificate."
+  type        = string
+  default     = null
+  nullable    = true
+  sensitive   = true
+
+  validation {
+    condition = (
+      var.roles_anywhere_ca_certificate_pem == null ||
+      can(regex("^-----BEGIN CERTIFICATE-----[\\s\\S]+-----END CERTIFICATE-----\\s*$", var.roles_anywhere_ca_certificate_pem))
+    )
+    error_message = "roles_anywhere_ca_certificate_pem must be null or a PEM-encoded certificate."
+  }
+}
+
+variable "roles_anywhere_certificate_subject_cn" {
+  description = "Exact X.509 subject CN accepted by the VPS role trust policy."
+  type        = string
+  default     = "vulnflow-backend.vacaro.es"
+
+  validation {
+    condition     = can(regex("^[A-Za-z0-9][A-Za-z0-9.-]{2,252}[A-Za-z0-9]$", var.roles_anywhere_certificate_subject_cn))
+    error_message = "roles_anywhere_certificate_subject_cn must be a safe DNS-style common name."
+  }
+}
+
+variable "roles_anywhere_session_duration_seconds" {
+  description = "Maximum lifetime of VPS temporary AWS sessions."
+  type        = number
+  default     = 900
+
+  validation {
+    condition     = var.roles_anywhere_session_duration_seconds >= 900 && var.roles_anywhere_session_duration_seconds <= 3600
+    error_message = "Roles Anywhere sessions must last between 15 and 60 minutes."
+  }
 }

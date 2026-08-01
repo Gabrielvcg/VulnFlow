@@ -19,7 +19,8 @@ does not exist yet. Do not commit that state. After an explicitly authorized
 bootstrap apply, migrate the bootstrap state to the new bucket under
 `vulnflow/bootstrap/terraform.tfstate` and configure the application state at
 `vulnflow/demo/terraform.tfstate`, both with S3 native locking enabled through
-`use_lockfile=true`.
+`use_lockfile=true`. `backend.tf.example` is the inactive, credential-free
+bootstrap backend definition used for that migration.
 
 ## Plan-only validation
 

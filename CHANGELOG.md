@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.4.6 - 2026-08-01
+
+- Prepared an opt-in IAM Roles Anywhere identity with a trust-anchor-bound,
+  certificate-CN-bound backend role and a duplicate least-privilege session
+  policy; it remains disabled in the default application plan.
+- Added digest-pinned Java container bases, the checksum-pinned AWS signing
+  helper, temporary-session health gate,
+  explicit AWS Compose override, and safe VPS runtime preparation flow without
+  storing access keys.
+- Completed both remote-state backend examples and added an Identity Center
+  preflight that rejects persistent IAM-user credentials before Terraform work.
+
 ## 0.4.5 - 2026-08-01
 
 - Added an isolated Terraform bootstrap for the private, encrypted, versioned

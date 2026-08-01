@@ -23,10 +23,10 @@ After the bucket exists:
 
 1. Confirm Block Public Access, AES256 encryption, versioning, the TLS-only
    bucket policy, and `prevent_destroy` are effective.
-2. Configure the bootstrap backend with bucket
-   `vulnflow-terraform-state-160172542031-eu-west-1`, key
-   `vulnflow/bootstrap/terraform.tfstate`, region `eu-west-1`, encryption, and
-   `use_lockfile=true`.
+2. Copy `infrastructure/bootstrap/backend.tf.example` to the reviewed active
+   `backend.tf`. It fixes the bucket, `vulnflow/bootstrap/terraform.tfstate`
+   key, `eu-west-1` region, encryption, and `use_lockfile=true` without
+   credentials.
 3. Run `terraform init -migrate-state` from `infrastructure/bootstrap` and
    verify that both the state object and lockfile workflow work.
 4. Copy `infrastructure/aws/backend.tf.example` to the active, reviewed
@@ -39,5 +39,16 @@ After the bucket exists:
 Backend credentials are supplied by the AWS credential provider chain. They
 must not appear in Terraform files, `.tfbackend` files, command history, or CI
 variables. DynamoDB locking is intentionally not used.
+
+Before every `plan`, migration, apply, or destroy, run:
+
+```powershell
+aws sso login --profile vulnflow-admin
+./scripts/aws/assert-temporary-identity.ps1 -Profile vulnflow-admin
+```
+
+The preflight rejects IAM users, unexpected accounts or regions, and Identity
+Center roles other than `VulnFlowTerraformOperator`. It only prints the safe
+caller identity; it does not read or write credential values.
 
 No bootstrap or application apply is part of the preparation phase.
