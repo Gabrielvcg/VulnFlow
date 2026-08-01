@@ -1,11 +1,10 @@
 # VulnFlow
 
-VulnFlow 0.4.0 prepares an AWS migration without deploying or contacting AWS.
-The local/VPS mode remains the default. A shared pure-Java processor now owns
-integrity verification, Trivy parsing, normalization, and risk calculation;
-the PostgreSQL worker and a separate SQS Lambda handler invoke that exact core.
-S3/SQS adapters are available only under explicit AWS wiring, and Terraform is
-limited to format/validate until a production result-store provider is chosen.
+VulnFlow 0.4.1 completes an executable AWS ingestion path without deploying or
+contacting AWS. The local/VPS mode remains the default and unchanged. The
+explicit `aws` profile selects S3 payload storage, a recoverable PostgreSQL SQS
+publication outbox, the shared Lambda processor, and a DynamoDB result store.
+Terraform remains limited to offline format/init/validate in this phase.
 
 ## Current architecture
 
@@ -39,6 +38,18 @@ Findings + Scan(COMPLETED) + Job(COMPLETED)
 The backend remains one modular monolith. The optional agent is outbound-only
 and has no Spring/backend compile-time dependency. Local operation creates no
 AWS client and requires no AWS credentials, service, broker, or cloud runtime.
+
+The AWS profile follows a different, explicit path:
+
+```text
+HTTP upload -> S3 -> PostgreSQL Scan + publication outbox -> 202
+                         |
+                         v (short claim, then no DB lock)
+                        SQS -> Lambda -> shared processor -> DynamoDB
+                                                            |
+                                                            v
+                                      GET /api/v1/scans/{id}/findings
+```
 
 ## Run locally
 
@@ -78,7 +89,7 @@ endpoint requires `X-API-Key`.
 | `VULNFLOW_WORKER_BACKOFF` | `5s,30s,2m` | Deterministic retry delays |
 
 The following settings are bound only when the explicit Spring profile `aws`
-is active; local and VPS `prod` operation creates neither S3 nor SQS clients:
+is active; local and VPS `prod` operation creates no AWS SDK clients:
 
 | Environment variable | Default | Purpose |
 | --- | --- | --- |
@@ -86,9 +97,16 @@ is active; local and VPS `prod` operation creates neither S3 nor SQS clients:
 | `VULNFLOW_S3_BUCKET` | none | Private report bucket; required by `aws` profile |
 | `VULNFLOW_S3_PREFIX` | `reports` | Validated logical object prefix |
 | `VULNFLOW_SQS_QUEUE_URL` | none | Ingestion queue URL; required by `aws` profile |
+| `VULNFLOW_DYNAMODB_TABLE` | none | Result table; required by `aws` profile |
+| `VULNFLOW_DYNAMODB_MAX_FINDINGS` | `100000` | Maximum normalized findings per event |
 | `VULNFLOW_MAX_PAYLOAD_BYTES` | `10485760` | S3 adapter/Lambda bounded-read limit |
 | `VULNFLOW_AWS_API_TIMEOUT` | `10s` | SDK API call/socket timeout |
 | `VULNFLOW_AWS_CONNECTION_TIMEOUT` | `3s` | SDK connection timeout |
+| `VULNFLOW_AWS_OUTBOX_ENABLED` | `true` | Enables scheduled SQS publication in `aws` profile |
+| `VULNFLOW_AWS_OUTBOX_BATCH_SIZE` | `10` | Maximum publication claims per poll |
+| `VULNFLOW_AWS_OUTBOX_MAX_ATTEMPTS` | `5` | Publication retry budget |
+| `VULNFLOW_AWS_OUTBOX_STALE_TIMEOUT` | `2m` | Recovery timeout for abandoned claims |
+| `VULNFLOW_AWS_OUTBOX_BACKOFF` | `5s,30s,2m,10m` | Publication retry delays |
 
 The API key is provisional. A future human-facing interface should use OIDC or
 JWT with explicit authorization.
@@ -114,9 +132,9 @@ $env:VULNFLOW_API_URL = "http://127.0.0.1:8080/"
 $env:VULNFLOW_API_KEY = "configured-value"
 $env:VULNFLOW_AGENT_ID = "developer-machine"
 $env:VULNFLOW_TARGETS_FILE = (Resolve-Path targets.yml)
-java -jar target/vulnflow-agent-0.4.0.jar --check
-java -jar target/vulnflow-agent-0.4.0.jar --once
-java -jar target/vulnflow-agent-0.4.0.jar --status
+java -jar target/vulnflow-agent-0.4.1.jar --check
+java -jar target/vulnflow-agent-0.4.1.jar --once
+java -jar target/vulnflow-agent-0.4.1.jar --status
 ```
 
 The default daemon mode schedules isolated scan, upload, and cleanup cycles.
@@ -264,7 +282,7 @@ filename is scan metadata only. Before parsing, the worker recomputes SHA-256
 and compares it with the scan hash; altered content dead-letters without being
 parsed.
 
-Backend-completed local payloads are intentionally retained in 0.4.0. Retention, cleanup,
+Backend-completed local payloads remain intentionally retained. Retention, cleanup,
 capacity limits, backup, and encryption policies remain future work.
 
 ## Production VPS delivery
@@ -346,8 +364,13 @@ vulnerability count.
 - [ADR-011 agent outbox](docs/decisions/ADR-011-agent-persistent-outbox.md)
 - [ADR-012 safe Trivy execution](docs/decisions/ADR-012-safe-external-process-execution.md)
 - [ADR-013 VPS CI/CD](docs/decisions/ADR-013-vps-cicd.md)
+- [ADR-019 DynamoDB result store](docs/decisions/ADR-019-dynamodb-result-store.md)
+- [ADR-020 AWS publication outbox](docs/decisions/ADR-020-aws-publication-outbox.md)
+- [ADR-021 local/AWS sources of truth](docs/decisions/ADR-021-local-and-aws-sources-of-truth.md)
+- [ADR-022 event idempotency](docs/decisions/ADR-022-event-idempotency-policy.md)
+- [ADR-023 VPS AWS credentials](docs/decisions/ADR-023-vps-aws-credentials.md)
 
 AWS deployment remains intentionally deferred. The code and Terraform are
-preparation artifacts only: 0.4.0 did not use an AWS account, create resources,
-or run Terraform plan/apply/destroy. The Lambda apply gate remains closed until
-the result-storage ADR has a concrete idempotent provider.
+offline execution artifacts only: 0.4.1 did not use an AWS account, create
+resources, or run Terraform plan/apply/destroy. Any future apply requires the
+explicit `result_store_provider="dynamodb"` input and the documented review.

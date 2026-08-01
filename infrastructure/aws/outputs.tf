@@ -13,3 +13,11 @@ output "dead_letter_queue_url" {
 output "lambda_function_name" {
   value = module.lambda.function_name
 }
+
+output "result_table_name" {
+  value = module.results.table_name
+}
+
+output "result_table_arn" {
+  value = module.results.table_arn
+}

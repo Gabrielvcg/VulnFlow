@@ -1,6 +1,6 @@
 # ADR: AWS result storage
 
-Status: Proposed; implementation intentionally deferred.
+Status: Superseded by ADR-019 in 0.4.1. This file records the 0.4.0 evaluation.
 
 ## Context
 

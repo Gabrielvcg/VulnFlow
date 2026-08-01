@@ -66,9 +66,18 @@ vulnflow:
     s3-bucket: ${VULNFLOW_S3_BUCKET:}
     s3-prefix: ${VULNFLOW_S3_PREFIX:reports}
     sqs-queue-url: ${VULNFLOW_SQS_QUEUE_URL:}
+    dynamodb-table: ${VULNFLOW_DYNAMODB_TABLE:}
+    dynamodb-max-findings: ${VULNFLOW_DYNAMODB_MAX_FINDINGS:100000}
     max-payload-bytes: ${VULNFLOW_MAX_PAYLOAD_BYTES:10485760}
     api-call-timeout: ${VULNFLOW_AWS_API_TIMEOUT:10s}
     connection-timeout: ${VULNFLOW_AWS_CONNECTION_TIMEOUT:3s}
+    outbox:
+      enabled: ${VULNFLOW_AWS_OUTBOX_ENABLED:true}
+      poll-interval: ${VULNFLOW_AWS_OUTBOX_POLL_INTERVAL:2s}
+      batch-size: ${VULNFLOW_AWS_OUTBOX_BATCH_SIZE:10}
+      max-attempts: ${VULNFLOW_AWS_OUTBOX_MAX_ATTEMPTS:5}
+      stale-timeout: ${VULNFLOW_AWS_OUTBOX_STALE_TIMEOUT:2m}
+      backoff: ${VULNFLOW_AWS_OUTBOX_BACKOFF:5s,30s,2m,10m}
   security:
     api-key:
       value: ${VULNFLOW_API_KEY:}

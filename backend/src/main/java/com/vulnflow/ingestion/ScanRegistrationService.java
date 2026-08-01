@@ -10,13 +10,15 @@ import java.util.Optional;
 import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionSynchronization;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 @Service
-public class ScanRegistrationService {
+@Profile("!aws")
+public class ScanRegistrationService implements ScanSubmissionService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ScanRegistrationService.class);
 
@@ -37,6 +39,7 @@ public class ScanRegistrationService {
     }
 
     @Transactional
+    @Override
     public IngestionSubmission registerReceived(
             Asset asset,
             String sourceFileName,
@@ -101,7 +104,9 @@ public class ScanRegistrationService {
                 scan.getAsset().getId(),
                 scan.getStatus(),
                 job == null ? null : job.getStatus(),
-                outcome);
+                outcome,
+                null,
+                null);
     }
 
     private void registerRollbackCleanup(String payloadKey) {

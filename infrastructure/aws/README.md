@@ -1,14 +1,15 @@
 # VulnFlow temporary AWS slice
 
 This directory defines the first temporary AWS ingestion slice: private S3
-report storage, encrypted SQS and DLQ queues, a Java 17 Lambda function,
-least-privilege IAM, bounded CloudWatch Logs, and the SQS event source mapping.
+report storage, encrypted SQS and DLQ queues, an on-demand encrypted DynamoDB
+result table, a Java 17 Lambda function, least-privilege IAM, bounded CloudWatch
+Logs, an optional DLQ alarm, and the SQS event source mapping.
 It has no remote Terraform backend.
 
 The configuration intentionally fails closed before deployment while
-`result_store_provider_ready=false`. A reviewed implementation of
-`LambdaProcessingResultStoreProvider` must be packaged before that safety gate
-may be changed. See `docs/decisions/ADR-aws-result-storage.md`.
+`result_store_provider="none"`. After reviewing the packaged DynamoDB adapter,
+an authorized operator must explicitly set it to `"dynamodb"`. See ADR-019 and
+the temporary deployment runbook.
 
 ## Offline-safe validation
 

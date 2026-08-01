@@ -415,7 +415,7 @@ class PostgreSQLFlowIT {
         assertThat(waiting.getStatus()).isEqualTo(IngestionJobStatus.RETRY_WAIT);
         assertThat(waiting.getAvailableAt()).isAfterOrEqualTo(before.plusSeconds(4));
         assertThat(waiting.getLastError()).isEqualTo("Temporary report storage failure");
-        jdbcTemplate.update("UPDATE ingestion_jobs SET available_at = now() - interval '1 second' WHERE id = ?", jobId);
+        makeImmediatelyAvailable(jobId);
 
         worker.pollOnce();
 
@@ -433,9 +433,7 @@ class PostgreSQLFlowIT {
         for (int attempt = 1; attempt <= 3; attempt++) {
             worker.pollOnce();
             if (attempt < 3) {
-                jdbcTemplate.update(
-                        "UPDATE ingestion_jobs SET available_at = now() - interval '1 second' WHERE id = ?",
-                        jobId);
+                makeImmediatelyAvailable(jobId);
             }
         }
 
@@ -457,6 +455,12 @@ class PostgreSQLFlowIT {
 
         assertThat(jobRepository.findById(jobId).orElseThrow().getStatus())
                 .isEqualTo(IngestionJobStatus.DEAD_LETTER);
+    }
+
+    private void makeImmediatelyAvailable(UUID jobId) {
+        assertThat(jdbcTemplate.update(
+                "UPDATE ingestion_jobs SET available_at = TIMESTAMPTZ '2000-01-01 00:00:00+00' WHERE id = ?",
+                jobId)).isOne();
     }
 
     @Test

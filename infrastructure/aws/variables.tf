@@ -53,7 +53,7 @@ variable "report_prefix" {
 variable "lambda_zip_path" {
   description = "Path to the shaded Lambda JAR produced by Maven."
   type        = string
-  default     = "../../aws/lambda-processor/target/vulnflow-lambda-processor-0.4.0.jar"
+  default     = "../../aws/lambda-processor/target/vulnflow-lambda-processor-0.4.1.jar"
 }
 
 variable "lambda_source_code_hash" {
@@ -63,10 +63,49 @@ variable "lambda_source_code_hash" {
   nullable    = true
 }
 
-variable "result_store_provider_ready" {
-  description = "Safety gate: true only after packaging exactly one reviewed Lambda result-store provider."
+variable "result_store_provider" {
+  description = "Explicit deployment gate. Set to dynamodb only after reviewing the packaged adapter and costs."
+  type        = string
+  default     = "none"
+
+  validation {
+    condition     = contains(["none", "dynamodb"], var.result_store_provider)
+    error_message = "result_store_provider must be none or dynamodb."
+  }
+}
+
+variable "dynamodb_max_findings" {
+  type    = number
+  default = 100000
+  validation {
+    condition     = var.dynamodb_max_findings >= 1 && var.dynamodb_max_findings <= 100000
+    error_message = "dynamodb_max_findings must be between 1 and 100000."
+  }
+}
+
+variable "dynamodb_point_in_time_recovery_enabled" {
+  type    = bool
+  default = true
+}
+
+variable "dynamodb_deletion_protection_enabled" {
+  type    = bool
+  default = false
+}
+
+variable "enable_dlq_alarm" {
+  description = "Creates a metric alarm without notification actions when enabled."
   type        = bool
   default     = false
+}
+
+variable "dlq_alarm_threshold" {
+  type    = number
+  default = 1
+  validation {
+    condition     = var.dlq_alarm_threshold >= 1
+    error_message = "dlq_alarm_threshold must be positive."
+  }
 }
 
 variable "s3_lifecycle_days" {
