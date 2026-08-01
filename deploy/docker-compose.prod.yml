@@ -93,6 +93,7 @@ services:
       VULNFLOW_AGENT_UPLOADED_RETENTION: ${VULNFLOW_AGENT_UPLOADED_RETENTION:-7d}
       VULNFLOW_TARGETS_FILE: /etc/vulnflow-agent/targets.yml
       TRIVY_CACHE_DIR: /var/lib/vulnflow-agent/trivy-cache
+      TMPDIR: /var/lib/vulnflow-agent/tmp
     volumes:
       - agent-data:/var/lib/vulnflow-agent
       - type: bind
