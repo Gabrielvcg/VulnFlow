@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.4.2 - 2026-08-01
+
+- Routed Trivy OCI download temporary files to the durable agent volume so the
+  production scan is not constrained by the container's 64 MiB `/tmp` tmpfs.
+- Corrected the VPS bootstrap permissions for the non-secret targets file so
+  the non-root containerized agent can read its bind-mounted configuration.
+
 ## 0.4.1 - 2026-08-01
 
 - Added a production AWS SDK DynamoDB result store with event-identity fencing, deterministic finding batches, hidden partial writes, atomic commit markers, failed-result persistence, and paginated queries.
