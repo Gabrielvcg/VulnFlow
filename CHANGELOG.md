@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.4.7 - 2026-08-01
+
+- Replaced the unexecuted IAM Identity Center design with a single-account,
+  exact-user `VulnFlowTerraformOperator` AssumeRole flow that preserves the AWS
+  Free Plan and keeps Organizations disabled.
+- Added an isolated, plan-only identity bootstrap for one operator role, two
+  scoped policies, and their attachments, with optional real-MFA enforcement
+  and no credential or access-key management.
+- Hardened the Terraform identity preflight to accept only the exact STS role
+  session and expanded CI, tests, runbooks, and policy documentation for the
+  identity, state, application, and future Roles Anywhere boundaries.
+
 ## 0.4.6 - 2026-08-01
 
 - Prepared an opt-in IAM Roles Anywhere identity with a trust-anchor-bound,

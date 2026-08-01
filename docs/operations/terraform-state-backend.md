@@ -40,15 +40,22 @@ Backend credentials are supplied by the AWS credential provider chain. They
 must not appear in Terraform files, `.tfbackend` files, command history, or CI
 variables. DynamoDB locking is intentionally not used.
 
-Before every `plan`, migration, apply, or destroy, run:
+The one-time `infrastructure/identity-bootstrap` root is planned with the
+existing bootstrap user because the operator role does not exist yet. It must
+be explicitly authorized and applied before configuring `vulnflow-admin`.
+
+Before every subsequent state or application `plan`, migration, apply, or
+destroy, run:
 
 ```powershell
-aws sso login --profile vulnflow-admin
 ./scripts/aws/assert-temporary-identity.ps1 -Profile vulnflow-admin
 ```
 
-The preflight rejects IAM users, unexpected accounts or regions, and Identity
-Center roles other than `VulnFlowTerraformOperator`. It only prints the safe
-caller identity; it does not read or write credential values.
+The profile uses `source_profile=default` and the exact role ARN
+`arn:aws:iam::160172542031:role/VulnFlowTerraformOperator`. The preflight
+rejects IAM users, unexpected accounts, regions, and roles. It only prints the
+safe caller identity; it does not read or write credential values. See
+`docs/security/aws-operator-permissions.md` for the full profile and optional
+real-MFA configuration.
 
 No bootstrap or application apply is part of the preparation phase.

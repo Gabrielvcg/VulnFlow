@@ -7,18 +7,25 @@
       "Action": [
         "s3:CreateBucket",
         "s3:DeleteBucket",
+        "s3:GetAccelerateConfiguration",
+        "s3:GetBucketAcl",
+        "s3:GetBucketCors",
+        "s3:GetBucketLifecycleConfiguration",
         "s3:GetBucketLocation",
-        "s3:GetBucketTagging",
-        "s3:PutBucketTagging",
+        "s3:GetBucketLogging",
+        "s3:GetBucketObjectLockConfiguration",
         "s3:GetBucketPublicAccessBlock",
+        "s3:GetBucketRequestPayment",
+        "s3:GetBucketTagging",
+        "s3:GetBucketVersioning",
+        "s3:GetBucketWebsite",
+        "s3:GetEncryptionConfiguration",
+        "s3:PutBucketTagging",
         "s3:PutBucketPublicAccessBlock",
         "s3:DeleteBucketPublicAccessBlock",
-        "s3:GetBucketVersioning",
         "s3:PutBucketVersioning",
-        "s3:GetEncryptionConfiguration",
         "s3:PutEncryptionConfiguration",
         "s3:DeleteBucketEncryption",
-        "s3:GetLifecycleConfiguration",
         "s3:PutLifecycleConfiguration"
       ],
       "Resource": "arn:aws:s3:::vulnflow-demo-160172542031-eu-west-1-reports"
@@ -42,21 +49,20 @@
       "Resource": "arn:aws:s3:::vulnflow-demo-160172542031-eu-west-1-reports/*"
     },
     {
-      "Sid": "CreateAndDiscoverQueues",
+      "Sid": "DiscoverQueues",
       "Effect": "Allow",
-      "Action": [
-        "sqs:CreateQueue",
-        "sqs:GetQueueUrl",
-        "sqs:ListQueues"
-      ],
+      "Action": "sqs:ListQueues",
       "Resource": "*"
     },
     {
       "Sid": "ManageVulnFlowQueues",
       "Effect": "Allow",
       "Action": [
+        "sqs:CreateQueue",
         "sqs:DeleteQueue",
         "sqs:GetQueueAttributes",
+        "sqs:GetQueueUrl",
+        "sqs:ListDeadLetterSourceQueues",
         "sqs:ListQueueTags",
         "sqs:PurgeQueue",
         "sqs:SetQueueAttributes",
@@ -76,6 +82,7 @@
         "dynamodb:DeleteTable",
         "dynamodb:DescribeContinuousBackups",
         "dynamodb:DescribeTable",
+        "dynamodb:DescribeTimeToLive",
         "dynamodb:ListTagsOfResource",
         "dynamodb:TagResource",
         "dynamodb:UntagResource",
@@ -90,12 +97,15 @@
       "Action": [
         "lambda:CreateFunction",
         "lambda:DeleteFunction",
+        "lambda:DeleteFunctionConcurrency",
         "lambda:GetFunction",
         "lambda:GetFunctionCodeSigningConfig",
+        "lambda:GetFunctionConcurrency",
         "lambda:GetPolicy",
         "lambda:GetRuntimeManagementConfig",
         "lambda:ListTags",
         "lambda:ListVersionsByFunction",
+        "lambda:PutFunctionConcurrency",
         "lambda:TagResource",
         "lambda:UntagResource",
         "lambda:UpdateFunctionCode",
@@ -104,15 +114,33 @@
       "Resource": "arn:aws:lambda:eu-west-1:160172542031:function:vulnflow-demo-processor"
     },
     {
-      "Sid": "ManageProcessorEventMapping",
+      "Sid": "CreateAndDiscoverProcessorEventMapping",
       "Effect": "Allow",
       "Action": [
         "lambda:CreateEventSourceMapping",
+        "lambda:ListEventSourceMappings"
+      ],
+      "Resource": "*",
+      "Condition": {
+        "ArnEqualsIfExists": {
+          "lambda:FunctionArn": "arn:aws:lambda:eu-west-1:160172542031:function:vulnflow-demo-processor"
+        }
+      }
+    },
+    {
+      "Sid": "ManageProcessorEventMapping",
+      "Effect": "Allow",
+      "Action": [
         "lambda:DeleteEventSourceMapping",
         "lambda:GetEventSourceMapping",
-        "lambda:ListEventSourceMappings",
         "lambda:UpdateEventSourceMapping"
       ],
+      "Resource": "arn:aws:lambda:eu-west-1:160172542031:event-source-mapping:*"
+    },
+    {
+      "Sid": "DiscoverProcessorLogGroup",
+      "Effect": "Allow",
+      "Action": "logs:DescribeLogGroups",
       "Resource": "*"
     },
     {
@@ -121,7 +149,6 @@
       "Action": [
         "logs:CreateLogGroup",
         "logs:DeleteLogGroup",
-        "logs:DescribeLogGroups",
         "logs:ListTagsForResource",
         "logs:ListTagsLogGroup",
         "logs:PutRetentionPolicy",
@@ -130,7 +157,28 @@
         "logs:UntagLogGroup",
         "logs:UntagResource"
       ],
-      "Resource": "arn:aws:logs:eu-west-1:160172542031:log-group:/aws/lambda/vulnflow-demo-processor:*"
+      "Resource": [
+        "arn:aws:logs:eu-west-1:160172542031:log-group:/aws/lambda/vulnflow-demo-processor",
+        "arn:aws:logs:eu-west-1:160172542031:log-group:/aws/lambda/vulnflow-demo-processor:*"
+      ]
+    },
+    {
+      "Sid": "DiscoverDlqAlarm",
+      "Effect": "Allow",
+      "Action": "cloudwatch:DescribeAlarms",
+      "Resource": "*"
+    },
+    {
+      "Sid": "ManageDlqAlarm",
+      "Effect": "Allow",
+      "Action": [
+        "cloudwatch:DeleteAlarms",
+        "cloudwatch:ListTagsForResource",
+        "cloudwatch:PutMetricAlarm",
+        "cloudwatch:TagResource",
+        "cloudwatch:UntagResource"
+      ],
+      "Resource": "arn:aws:cloudwatch:eu-west-1:160172542031:alarm:vulnflow-demo-dlq-visible-messages"
     },
     {
       "Sid": "ManageProcessorRole",
