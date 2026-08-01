@@ -12,6 +12,8 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
+import software.amazon.awssdk.auth.credentials.AwsCredentialsProvider;
+import software.amazon.awssdk.auth.credentials.DefaultCredentialsProvider;
 import software.amazon.awssdk.core.retry.RetryMode;
 import software.amazon.awssdk.http.urlconnection.UrlConnectionHttpClient;
 import software.amazon.awssdk.regions.Region;
@@ -24,9 +26,15 @@ import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
 @EnableConfigurationProperties(AwsIngestionProperties.class)
 public class AwsAdapterConfiguration {
     @Bean
-    S3Client s3Client(AwsIngestionProperties properties) {
+    DefaultCredentialsProvider awsCredentialsProvider() {
+        return DefaultCredentialsProvider.create();
+    }
+
+    @Bean
+    S3Client s3Client(AwsIngestionProperties properties, AwsCredentialsProvider credentialsProvider) {
         return S3Client.builder()
                 .region(Region.of(properties.region()))
+                .credentialsProvider(credentialsProvider)
                 .httpClientBuilder(UrlConnectionHttpClient.builder()
                         .connectionTimeout(requiredDuration(properties.connectionTimeout(), "connectionTimeout"))
                         .socketTimeout(requiredDuration(properties.apiCallTimeout(), "apiCallTimeout")))
@@ -37,9 +45,10 @@ public class AwsAdapterConfiguration {
     }
 
     @Bean
-    SqsClient sqsClient(AwsIngestionProperties properties) {
+    SqsClient sqsClient(AwsIngestionProperties properties, AwsCredentialsProvider credentialsProvider) {
         return SqsClient.builder()
                 .region(Region.of(properties.region()))
+                .credentialsProvider(credentialsProvider)
                 .httpClientBuilder(UrlConnectionHttpClient.builder()
                         .connectionTimeout(requiredDuration(properties.connectionTimeout(), "connectionTimeout"))
                         .socketTimeout(requiredDuration(properties.apiCallTimeout(), "apiCallTimeout")))
@@ -50,9 +59,10 @@ public class AwsAdapterConfiguration {
     }
 
     @Bean
-    DynamoDbClient dynamoDbClient(AwsIngestionProperties properties) {
+    DynamoDbClient dynamoDbClient(AwsIngestionProperties properties, AwsCredentialsProvider credentialsProvider) {
         return DynamoDbClient.builder()
                 .region(Region.of(properties.region()))
+                .credentialsProvider(credentialsProvider)
                 .httpClientBuilder(UrlConnectionHttpClient.builder()
                         .connectionTimeout(requiredDuration(properties.connectionTimeout(), "connectionTimeout"))
                         .socketTimeout(requiredDuration(properties.apiCallTimeout(), "apiCallTimeout")))

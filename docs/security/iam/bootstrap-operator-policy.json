@@ -1,0 +1,65 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "ManageDedicatedStateBucket",
+      "Effect": "Allow",
+      "Action": [
+        "s3:CreateBucket",
+        "s3:DeleteBucket",
+        "s3:GetBucketLocation",
+        "s3:GetBucketPolicy",
+        "s3:PutBucketPolicy",
+        "s3:DeleteBucketPolicy",
+        "s3:GetBucketPublicAccessBlock",
+        "s3:PutBucketPublicAccessBlock",
+        "s3:DeleteBucketPublicAccessBlock",
+        "s3:GetBucketTagging",
+        "s3:PutBucketTagging",
+        "s3:GetBucketVersioning",
+        "s3:PutBucketVersioning",
+        "s3:GetEncryptionConfiguration",
+        "s3:PutEncryptionConfiguration",
+        "s3:DeleteBucketEncryption"
+      ],
+      "Resource": "arn:aws:s3:::vulnflow-terraform-state-160172542031-eu-west-1"
+    },
+    {
+      "Sid": "ListStateKeys",
+      "Effect": "Allow",
+      "Action": "s3:ListBucket",
+      "Resource": "arn:aws:s3:::vulnflow-terraform-state-160172542031-eu-west-1",
+      "Condition": {
+        "StringLike": {
+          "s3:prefix": [
+            "vulnflow/bootstrap/terraform.tfstate*",
+            "vulnflow/demo/terraform.tfstate*"
+          ]
+        }
+      }
+    },
+    {
+      "Sid": "ReadWriteStateAndLocks",
+      "Effect": "Allow",
+      "Action": [
+        "s3:GetObject",
+        "s3:PutObject"
+      ],
+      "Resource": [
+        "arn:aws:s3:::vulnflow-terraform-state-160172542031-eu-west-1/vulnflow/bootstrap/terraform.tfstate",
+        "arn:aws:s3:::vulnflow-terraform-state-160172542031-eu-west-1/vulnflow/bootstrap/terraform.tfstate.tflock",
+        "arn:aws:s3:::vulnflow-terraform-state-160172542031-eu-west-1/vulnflow/demo/terraform.tfstate",
+        "arn:aws:s3:::vulnflow-terraform-state-160172542031-eu-west-1/vulnflow/demo/terraform.tfstate.tflock"
+      ]
+    },
+    {
+      "Sid": "ReleaseStateLocks",
+      "Effect": "Allow",
+      "Action": "s3:DeleteObject",
+      "Resource": [
+        "arn:aws:s3:::vulnflow-terraform-state-160172542031-eu-west-1/vulnflow/bootstrap/terraform.tfstate.tflock",
+        "arn:aws:s3:::vulnflow-terraform-state-160172542031-eu-west-1/vulnflow/demo/terraform.tfstate.tflock"
+      ]
+    }
+  ]
+}

@@ -15,6 +15,7 @@ previous_release="${deploy_root}/.release.previous.env"
 lock_file="${deploy_root}/.deploy.lock"
 health_check="${script_dir}/health-check.sh"
 compose_file="${script_dir}/docker-compose.prod.yml"
+aws_compose_file="${script_dir}/docker-compose.aws.yml"
 
 for command in docker flock realpath; do
   command -v "${command}" >/dev/null 2>&1 || { echo "Required command is unavailable: ${command}" >&2; exit 69; }
@@ -66,7 +67,15 @@ fi
 compose() {
   local release=$1
   shift
-  docker compose --env-file "${runtime_env}" --env-file "${release}" -f "${compose_file}" "$@"
+  local compose_args=(--env-file "${runtime_env}" --env-file "${release}" -f "${compose_file}")
+  if grep -Eq '^VULNFLOW_AWS_MODE=true$' "${runtime_env}"; then
+    [[ -f "${aws_compose_file}" ]] || {
+      echo "AWS mode is enabled but the Compose override is missing: ${aws_compose_file}" >&2
+      return 1
+    }
+    compose_args+=(-f "${aws_compose_file}")
+  fi
+  docker compose "${compose_args[@]}" "$@"
 }
 
 diagnostics() {
