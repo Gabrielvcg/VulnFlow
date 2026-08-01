@@ -3,6 +3,8 @@ package com.vulnflow.ingestion;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import com.vulnflow.processing.PayloadIntegrityException;
+import com.vulnflow.processing.PayloadIntegrityVerifier;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.util.HexFormat;
