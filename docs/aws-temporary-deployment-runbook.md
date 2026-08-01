@@ -1,6 +1,9 @@
 # Temporary AWS deployment runbook
 
-This runbook is documentation only. It was not executed for 0.4.1. Running it is a separate, explicitly authorized operation that needs reviewed short-lived credentials and current cost/security review.
+This runbook is documentation only. It has not been executed. VulnFlow 0.4.6 prepares remote state,
+temporary human authentication, and the optional VPS workload identity, but every `terraform apply`
+remains a separate explicitly authorized operation that needs reviewed short-lived credentials and a
+current cost/security review.
 
 ## 1. Prechecks
 
@@ -16,7 +19,7 @@ This runbook is documentation only. It was not executed for 0.4.1. Running it is
 ./backend/mvnw -f pom.xml verify
 ```
 
-Confirm `aws/lambda-processor/target/vulnflow-lambda-processor-0.4.5.jar` exists and calculate its base64 SHA-256 for `lambda_source_code_hash`.
+Confirm `aws/lambda-processor/target/vulnflow-lambda-processor-0.4.6.jar` exists and calculate its base64 SHA-256 for `lambda_source_code_hash`.
 
 ## 3. Validate only
 
@@ -34,7 +37,8 @@ Complete `docs/aws-cost-model.md`, inspect IAM scope, timeouts, retention, concu
 
 ## 5. Manual apply
 
-Only an authorized operator may run apply after the safety gate and review. Record the exact commit, plan digest, approver, start time, and destruction deadline. This step was not run in 0.4.1.
+Only an authorized operator may run apply after the safety gate and review. Record the exact commit,
+plan digest, approver, start time, and destruction deadline. This step has not been run.
 
 ## 6. End-to-end evidence
 

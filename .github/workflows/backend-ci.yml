@@ -72,7 +72,7 @@ jobs:
       - name: Require Lambda package and offline AWS demo
         shell: bash
         run: |
-          test -f aws/lambda-processor/target/vulnflow-lambda-processor-0.4.5.jar
+          test -f aws/lambda-processor/target/vulnflow-lambda-processor-0.4.6.jar
           test -f backend/target/failsafe-reports/TEST-com.vulnflow.AwsExecutionPathIT.xml
           forbidden_aws_test_pattern='local''stack|endpoint''Override'
           ! git grep -I -E "$forbidden_aws_test_pattern" -- ':!docs/**'
@@ -80,7 +80,8 @@ jobs:
       - name: Confirm VPS remains local mode
         shell: bash
         run: |
-          ! git grep -I -E 'SPRING_PROFILES_ACTIVE=.*aws|--spring.profiles.active=aws' -- deploy
+          ! grep -E 'SPRING_PROFILES_ACTIVE:.*aws' deploy/docker-compose.prod.yml
+          grep -Eq 'SPRING_PROFILES_ACTIVE: prod,aws' deploy/docker-compose.aws.yml
 
       - name: Validate production Compose contract
         shell: bash
@@ -96,9 +97,16 @@ jobs:
           VULNFLOW_AGENT_ID: ci-agent
           VULNFLOW_BACKEND_IMAGE: example.invalid/vulnflow-backend:ci
           VULNFLOW_AGENT_IMAGE: example.invalid/vulnflow-agent:ci
+          AWS_REGION: eu-west-1
+          VULNFLOW_S3_BUCKET: vulnflow-ci-reports
+          VULNFLOW_SQS_QUEUE_URL: https://sqs.eu-west-1.amazonaws.com/160172542031/vulnflow-ci-ingestion
+          VULNFLOW_DYNAMODB_TABLE: vulnflow-ci-results
+          VULNFLOW_AWS_CREDENTIALS_DIRECTORY: /tmp/vulnflow-aws
         run: |
           docker compose -f deploy/docker-compose.prod.yml config --format json \
             > "$RUNNER_TEMP/vulnflow-compose.json"
+          docker compose -f deploy/docker-compose.prod.yml -f deploy/docker-compose.aws.yml config --format json \
+            > "$RUNNER_TEMP/vulnflow-compose-aws.json"
           python - <<'PY'
           import json
           import os
@@ -107,13 +115,30 @@ jobs:
               compose = json.load(stream)
 
           agent = compose["services"]["agent"]
+          backend = compose["services"]["backend"]
           assert agent["environment"]["TMPDIR"] == "/var/lib/vulnflow-agent/tmp"
           assert agent["read_only"] is True
           assert all("docker.sock" not in str(volume) for volume in agent["volumes"])
+          assert backend["environment"]["SPRING_PROFILES_ACTIVE"] == "prod"
+          assert "AWS_PROFILE" not in backend["environment"]
+
+          with open(os.path.join(os.environ["RUNNER_TEMP"], "vulnflow-compose-aws.json"), encoding="utf-8") as stream:
+              aws_compose = json.load(stream)
+
+          aws_backend = aws_compose["services"]["backend"]
+          assert aws_backend["environment"]["SPRING_PROFILES_ACTIVE"] == "prod,aws"
+          assert aws_backend["environment"]["AWS_PROFILE"] == "vulnflow-roles-anywhere"
+          assert aws_backend["environment"]["AWS_EC2_METADATA_DISABLED"] == "true"
+          assert not any(name in aws_backend["environment"] for name in (
+              "AWS_ACCESS_KEY_ID", "AWS_SECRET_ACCESS_KEY", "AWS_SESSION_TOKEN"))
+          assert any(volume.get("target") == "/run/vulnflow-aws" and volume.get("read_only") is True
+                     for volume in aws_backend["volumes"])
           PY
 
       - name: Build backend image
-        run: docker build --file backend/Dockerfile --tag vulnflow-backend:ci .
+        run: |
+          docker build --file backend/Dockerfile --tag vulnflow-backend:ci .
+          test "$(docker run --rm --entrypoint /usr/local/bin/aws_signing_helper vulnflow-backend:ci version)" = "1.8.4"
 
       - name: Build agent image
         run: docker build --tag vulnflow-agent:ci agent
@@ -149,6 +174,9 @@ jobs:
         run: |
           terraform -chdir=infrastructure/aws validate
           terraform -chdir=infrastructure/bootstrap validate
+
+      - name: Test Terraform plan invariants without AWS credentials
+        run: terraform -chdir=infrastructure/aws test
 
   publish_images:
     name: Publish immutable images

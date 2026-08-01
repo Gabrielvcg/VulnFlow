@@ -1,0 +1,20 @@
+services:
+  backend:
+    environment:
+      SPRING_PROFILES_ACTIVE: prod,aws
+      VULNFLOW_WORKER_ENABLED: "false"
+      AWS_PROFILE: vulnflow-roles-anywhere
+      AWS_CONFIG_FILE: /run/vulnflow-aws/config
+      AWS_REGION: ${AWS_REGION:-eu-west-1}
+      AWS_EC2_METADATA_DISABLED: "true"
+      VULNFLOW_S3_BUCKET: ${VULNFLOW_S3_BUCKET:?VULNFLOW_S3_BUCKET is required in AWS mode}
+      VULNFLOW_S3_PREFIX: ${VULNFLOW_S3_PREFIX:-reports}
+      VULNFLOW_SQS_QUEUE_URL: ${VULNFLOW_SQS_QUEUE_URL:?VULNFLOW_SQS_QUEUE_URL is required in AWS mode}
+      VULNFLOW_DYNAMODB_TABLE: ${VULNFLOW_DYNAMODB_TABLE:?VULNFLOW_DYNAMODB_TABLE is required in AWS mode}
+      VULNFLOW_DYNAMODB_MAX_FINDINGS: ${VULNFLOW_DYNAMODB_MAX_FINDINGS:-100000}
+      VULNFLOW_AWS_OUTBOX_ENABLED: "true"
+    volumes:
+      - type: bind
+        source: ${VULNFLOW_AWS_CREDENTIALS_DIRECTORY:?VULNFLOW_AWS_CREDENTIALS_DIRECTORY is required in AWS mode}
+        target: /run/vulnflow-aws
+        read_only: true

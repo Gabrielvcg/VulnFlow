@@ -1,12 +1,11 @@
 # VulnFlow
 
-VulnFlow 0.4.5 keeps the executable AWS ingestion path disabled by default and
-adds an isolated Terraform state-bucket bootstrap. The local/VPS mode remains
-the default. The explicit `aws` profile selects S3 payload storage, a
-recoverable PostgreSQL SQS publication outbox, the shared Lambda processor,
-and a DynamoDB result store. CI remains limited to offline
-format/init/validate; reviewed operator plans may contact AWS but never apply
-automatically.
+VulnFlow 0.4.6 keeps the executable AWS ingestion path disabled by default and
+prepares temporary workload credentials through IAM Roles Anywhere. The
+local/VPS mode remains the default. An explicit deployment override selects the
+`aws` profile, S3 payload storage, a recoverable PostgreSQL SQS publication
+outbox, the shared Lambda processor, and a DynamoDB result store. CI validates
+the preparation but never runs Terraform apply or activates AWS production.
 
 ## Current architecture
 
@@ -134,9 +133,9 @@ $env:VULNFLOW_API_URL = "http://127.0.0.1:8080/"
 $env:VULNFLOW_API_KEY = "configured-value"
 $env:VULNFLOW_AGENT_ID = "developer-machine"
 $env:VULNFLOW_TARGETS_FILE = (Resolve-Path targets.yml)
-java -jar target/vulnflow-agent-0.4.5.jar --check
-java -jar target/vulnflow-agent-0.4.5.jar --once
-java -jar target/vulnflow-agent-0.4.5.jar --status
+java -jar target/vulnflow-agent-0.4.6.jar --check
+java -jar target/vulnflow-agent-0.4.6.jar --once
+java -jar target/vulnflow-agent-0.4.6.jar --status
 ```
 
 The default daemon mode schedules isolated scan, upload, and cleanup cycles.
@@ -357,8 +356,10 @@ vulnerability count.
 - [Security](docs/security.md)
 - [CI/CD verification](docs/operations/cicd.md)
 - [VPS deployment](docs/operations/vps-deployment.md)
+- [AWS mode deployment](docs/operations/aws-mode-deployment.md)
 - [Terraform state backend](docs/operations/terraform-state-backend.md)
 - [AWS operator permissions](docs/security/aws-operator-permissions.md)
+- [IAM Roles Anywhere](docs/security/iam-roles-anywhere.md)
 - [Migration policy](docs/migrations.md)
 - [AWS roadmap](docs/aws-roadmap.md)
 - [ADR-007 PostgreSQL queue](docs/decisions/ADR-007-postgresql-persistent-job-queue.md)
@@ -374,7 +375,7 @@ vulnerability count.
 - [ADR-022 event idempotency](docs/decisions/ADR-022-event-idempotency-policy.md)
 - [ADR-023 VPS AWS credentials](docs/decisions/ADR-023-vps-aws-credentials.md)
 
-AWS resource creation remains intentionally deferred. VulnFlow 0.4.5 has been
+AWS resource creation remains intentionally deferred. VulnFlow 0.4.6 has been
 validated with real plan-only access, but no Terraform apply or destroy has
 run. Any future apply requires the explicit `result_store_provider="dynamodb"`
 input, a reviewed state-backend bootstrap, temporary operator credentials, and

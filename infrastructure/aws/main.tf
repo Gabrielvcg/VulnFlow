@@ -55,6 +55,24 @@ module "lambda" {
   additional_tags         = local.common_tags
 }
 
+module "vps_identity" {
+  count  = var.enable_vps_roles_anywhere ? 1 : 0
+  source = "./modules/rolesanywhere"
+
+  name_prefix              = local.name_prefix
+  aws_account_id           = var.aws_account_id
+  aws_region               = var.aws_region
+  ca_certificate_pem       = coalesce(var.roles_anywhere_ca_certificate_pem, "")
+  certificate_subject_cn   = var.roles_anywhere_certificate_subject_cn
+  session_duration_seconds = var.roles_anywhere_session_duration_seconds
+  bucket_arn               = module.storage.bucket_arn
+  report_prefix            = var.report_prefix
+  queue_arn                = module.queue.queue_arn
+  result_table_arn         = module.results.table_arn
+  result_table_gsi_arn     = module.results.gsi_arn
+  additional_tags          = local.common_tags
+}
+
 resource "aws_cloudwatch_metric_alarm" "dlq_visible_messages" {
   count = var.enable_dlq_alarm ? 1 : 0
 
