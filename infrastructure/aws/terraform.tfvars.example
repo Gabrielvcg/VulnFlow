@@ -1,6 +1,12 @@
 report_bucket_name         = "replace-with-a-globally-unique-temporary-name"
 result_store_provider       = "none"
 
+# Keep disabled for the initial 14-resource application plan. Enabling this
+# requires a reviewed public CA certificate in an uncommitted tfvars file.
+enable_vps_roles_anywhere = false
+# roles_anywhere_ca_certificate_pem = file("/secure/path/vulnflow-ca.pem")
+# roles_anywhere_certificate_subject_cn = "vulnflow-backend.vacaro.es"
+
 additional_tags = {
   Owner = "replace-me"
 }
