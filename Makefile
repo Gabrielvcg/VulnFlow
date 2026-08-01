@@ -20,7 +20,10 @@ demo:
 
 terraform-format:
 	docker run --rm -v "$(CURDIR)/infrastructure/aws:/workspace" -w /workspace hashicorp/terraform:1.15.8 fmt -check -recursive
+	docker run --rm -v "$(CURDIR)/infrastructure/bootstrap:/workspace" -w /workspace hashicorp/terraform:1.15.8 fmt -check
 
 terraform-validate:
-	docker run --rm -v "$(CURDIR)/infrastructure/aws:/workspace" -w /workspace hashicorp/terraform:1.15.8 init -backend=false
+	docker run --rm -v "$(CURDIR)/infrastructure/aws:/workspace" -w /workspace hashicorp/terraform:1.15.8 init -backend=false -input=false -lockfile=readonly
 	docker run --rm -v "$(CURDIR)/infrastructure/aws:/workspace" -w /workspace hashicorp/terraform:1.15.8 validate
+	docker run --rm -v "$(CURDIR)/infrastructure/bootstrap:/workspace" -w /workspace hashicorp/terraform:1.15.8 init -backend=false -input=false -lockfile=readonly
+	docker run --rm -v "$(CURDIR)/infrastructure/bootstrap:/workspace" -w /workspace hashicorp/terraform:1.15.8 validate

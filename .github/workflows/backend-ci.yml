@@ -72,7 +72,7 @@ jobs:
       - name: Require Lambda package and offline AWS demo
         shell: bash
         run: |
-          test -f aws/lambda-processor/target/vulnflow-lambda-processor-0.4.4.jar
+          test -f aws/lambda-processor/target/vulnflow-lambda-processor-0.4.5.jar
           test -f backend/target/failsafe-reports/TEST-com.vulnflow.AwsExecutionPathIT.xml
           forbidden_aws_test_pattern='local''stack|endpoint''Override'
           ! git grep -I -E "$forbidden_aws_test_pattern" -- ':!docs/**'
@@ -136,13 +136,19 @@ jobs:
           terraform_version: 1.15.8
 
       - name: Check Terraform formatting
-        run: terraform -chdir=infrastructure/aws fmt -check -recursive
+        run: |
+          terraform -chdir=infrastructure/aws fmt -check -recursive
+          terraform -chdir=infrastructure/bootstrap fmt -check
 
       - name: Initialize Terraform without a backend
-        run: terraform -chdir=infrastructure/aws init -backend=false -input=false
+        run: |
+          terraform -chdir=infrastructure/aws init -backend=false -input=false -lockfile=readonly
+          terraform -chdir=infrastructure/bootstrap init -backend=false -input=false -lockfile=readonly
 
       - name: Validate Terraform without AWS credentials
-        run: terraform -chdir=infrastructure/aws validate
+        run: |
+          terraform -chdir=infrastructure/aws validate
+          terraform -chdir=infrastructure/bootstrap validate
 
   publish_images:
     name: Publish immutable images
