@@ -1,11 +1,11 @@
 # Temporary AWS deployment runbook
 
-This runbook is documentation only. It was not executed for 0.4.0. Running it is a separate, explicitly authorized operation that needs reviewed credentials, current cost review, and a completed result-store provider.
+This runbook is documentation only. It was not executed for 0.4.1. Running it is a separate, explicitly authorized operation that needs reviewed short-lived credentials and current cost/security review.
 
 ## 1. Prechecks
 
 - Confirm the branch/commit, clean tree, approved region/account, budget alert, operator identity, and scheduled destruction owner/time.
-- Accept `ADR-aws-result-storage.md`, implement/test exactly one `LambdaProcessingResultStoreProvider`, and set `result_store_provider_ready=true` only after review.
+- Review ADR-019 through ADR-023 and set `result_store_provider="dynamodb"` only in an authorized reviewed input.
 - Choose a globally unique temporary bucket name and non-sensitive tags.
 - Confirm payloads are synthetic and under the configured size limit.
 
@@ -15,7 +15,7 @@ This runbook is documentation only. It was not executed for 0.4.0. Running it is
 ./backend/mvnw -f pom.xml verify
 ```
 
-Confirm `aws/lambda-processor/target/vulnflow-lambda-processor-0.4.0.jar` exists and calculate its base64 SHA-256 for `lambda_source_code_hash`.
+Confirm `aws/lambda-processor/target/vulnflow-lambda-processor-0.4.1.jar` exists and calculate its base64 SHA-256 for `lambda_source_code_hash`.
 
 ## 3. Validate only
 
@@ -33,7 +33,7 @@ Complete `docs/aws-cost-model.md`, inspect IAM scope, timeouts, retention, concu
 
 ## 5. Manual apply
 
-Only an authorized operator may run apply after the safety gate and review. Record the exact commit, plan digest, approver, start time, and destruction deadline. This step was not run in 0.4.0.
+Only an authorized operator may run apply after the safety gate and review. Record the exact commit, plan digest, approver, start time, and destruction deadline. This step was not run in 0.4.1.
 
 ## 6. End-to-end evidence
 
@@ -50,5 +50,15 @@ Run destroy manually from the same reviewed configuration, then independently ve
 - CloudWatch log group and streams;
 - any temporary local state/artifact containing identifiers;
 - any result-store demo records or secrets created outside this Terraform scope.
+- DynamoDB result table, GSI, PITR recovery data, and optional DLQ alarm;
 
 Check the AWS resource inventory and billing/cost explorer later because deletion and billing visibility can lag. Record residual findings and remove them through an explicitly authorized follow-up.
+
+## SQS DLQ inspection and manual redrive
+
+Treat DLQ depth as an AWS operational signal, not the PostgreSQL outbox state. Inspect only message IDs,
+receive counts, timestamps, event IDs, and safe error results; never log or export report bodies. Before a
+manual redrive, confirm the S3 object still exists, the event contract is supported, the permanent cause
+was corrected, and DynamoDB has no conflicting identity. Redrive from the DLQ to the source queue only
+through an explicitly authorized AWS operation. Duplicate delivery is expected and fenced by `eventId`.
+Stop if DLQ depth grows again, and record affected identifiers and operator actions.

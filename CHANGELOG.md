@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.4.1 - 2026-08-01
+
+- Added a production AWS SDK DynamoDB result store with event-identity fencing, deterministic finding batches, hidden partial writes, atomic commit markers, failed-result persistence, and paginated queries.
+- Added the AWS-profile S3 upload and PostgreSQL publication outbox path, including `SKIP LOCKED` claims, stale-claim recovery, bounded backoff, claim-token fencing, and SQS publication outside database transactions.
+- Added AWS result endpoints backed by DynamoDB while preserving the unchanged filesystem/PostgreSQL worker path under local and VPS profiles.
+- Hardened the Lambda batch handler with finalized-event short-circuiting, permanent/transient classification, safe failed-result storage, and per-record retry responses.
+- Added on-demand encrypted DynamoDB Terraform, table-scoped Lambda IAM, optional DLQ depth alarm, explicit `result_store_provider=dynamodb` deployment gate, and updated offline runbooks and ADRs.
+- Added mocked DynamoDB coverage and a PostgreSQL-backed, fully simulated HTTP-to-Lambda-to-query demo with no AWS endpoint access.
+
 ## 0.4.0 - 2026-07-31
 
 - Extracted the infrastructure-neutral report processor and versioned V1 ingestion event into a shared Maven module used by both the local worker and the SQS Lambda handler.

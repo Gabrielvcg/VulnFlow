@@ -9,5 +9,17 @@ public record IngestionSubmission(
         UUID assetId,
         ScanStatus scanStatus,
         IngestionJobStatus jobStatus,
-        ScanIngestionOutcome outcome) {
+        ScanIngestionOutcome outcome,
+        UUID eventId,
+        String publicationStatus) {
+
+    public IngestionSubmission(
+            UUID scanId,
+            UUID jobId,
+            UUID assetId,
+            ScanStatus scanStatus,
+            IngestionJobStatus jobStatus,
+            ScanIngestionOutcome outcome) {
+        this(scanId, jobId, assetId, scanStatus, jobStatus, outcome, null, null);
+    }
 }

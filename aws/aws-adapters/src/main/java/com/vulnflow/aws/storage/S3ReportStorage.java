@@ -2,7 +2,7 @@ package com.vulnflow.aws.storage;
 
 import com.vulnflow.processing.port.PayloadNotFoundException;
 import com.vulnflow.processing.port.ReportStorage;
-import com.vulnflow.processing.port.ReportStorageException;
+import com.vulnflow.processing.PayloadIntegrityException;
 import com.vulnflow.processing.port.TransientReportStorageException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -80,7 +80,7 @@ public final class S3ReportStorage implements ReportStorage {
             String expected = response.response().metadata().get(SHA_METADATA);
             if (expected == null || !MessageDigest.isEqual(
                     HexFormat.of().parseHex(expected), sha256(content))) {
-                throw new ReportStorageException("The S3 report payload checksum is missing or invalid", null);
+                throw new PayloadIntegrityException("The S3 report payload checksum is missing or invalid");
             }
             return content;
         } catch (NoSuchKeyException exception) {
@@ -91,7 +91,7 @@ public final class S3ReportStorage implements ReportStorage {
             }
             throw new TransientReportStorageException("The report payload could not be read from S3", exception);
         } catch (IllegalArgumentException exception) {
-            throw new ReportStorageException("The S3 report payload checksum is invalid", exception);
+            throw new PayloadIntegrityException("The S3 report payload checksum is invalid");
         } catch (IOException exception) {
             throw new TransientReportStorageException("The report payload could not be read from S3", exception);
         } catch (SdkException exception) {

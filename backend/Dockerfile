@@ -12,8 +12,9 @@ COPY agent/pom.xml agent/pom.xml
 RUN chmod +x backend/mvnw && backend/mvnw -B -ntp -f pom.xml -pl backend -am dependency:go-offline
 COPY processing-core/src/ processing-core/src/
 COPY aws/aws-adapters/src/ aws/aws-adapters/src/
+COPY aws/lambda-processor/src/ aws/lambda-processor/src/
 COPY backend/src/ backend/src/
-RUN backend/mvnw -B -ntp -f pom.xml -pl backend -am -DskipTests package
+RUN backend/mvnw -B -ntp -f pom.xml -pl backend -am -Dmaven.test.skip=true package
 
 FROM eclipse-temurin:17-jre-alpine
 

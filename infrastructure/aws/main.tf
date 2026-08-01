@@ -19,24 +19,58 @@ module "queue" {
   additional_tags            = local.common_tags
 }
 
+module "results" {
+  source = "./modules/dynamodb"
+
+  table_name                     = "${local.name_prefix}-results"
+  point_in_time_recovery_enabled = var.dynamodb_point_in_time_recovery_enabled
+  deletion_protection_enabled    = var.dynamodb_deletion_protection_enabled
+  additional_tags                = local.common_tags
+}
+
 module "lambda" {
   source = "./modules/lambda"
 
-  function_name               = "${local.name_prefix}-processor"
-  lambda_zip_path             = var.lambda_zip_path
-  lambda_source_code_hash     = var.lambda_source_code_hash
-  handler                     = "com.vulnflow.aws.lambda.SqsVulnerabilityReportHandler::handleRequest"
-  timeout_seconds             = var.lambda_timeout_seconds
-  memory_size_mb              = var.lambda_memory_size_mb
-  reserved_concurrency        = var.lambda_reserved_concurrency
-  log_retention_days          = var.cloudwatch_log_retention_days
-  queue_arn                   = module.queue.queue_arn
-  bucket_arn                  = module.storage.bucket_arn
-  bucket_name                 = module.storage.bucket_name
-  report_prefix               = var.report_prefix
-  batch_size                  = var.sqs_batch_size
-  maximum_batching_window     = var.sqs_maximum_batching_window_seconds
-  max_payload_bytes           = var.max_payload_bytes
-  result_store_provider_ready = var.result_store_provider_ready
-  additional_tags             = local.common_tags
+  function_name           = "${local.name_prefix}-processor"
+  lambda_zip_path         = var.lambda_zip_path
+  lambda_source_code_hash = var.lambda_source_code_hash
+  handler                 = "com.vulnflow.aws.lambda.SqsVulnerabilityReportHandler::handleRequest"
+  timeout_seconds         = var.lambda_timeout_seconds
+  memory_size_mb          = var.lambda_memory_size_mb
+  reserved_concurrency    = var.lambda_reserved_concurrency
+  log_retention_days      = var.cloudwatch_log_retention_days
+  queue_arn               = module.queue.queue_arn
+  bucket_arn              = module.storage.bucket_arn
+  bucket_name             = module.storage.bucket_name
+  report_prefix           = var.report_prefix
+  batch_size              = var.sqs_batch_size
+  maximum_batching_window = var.sqs_maximum_batching_window_seconds
+  max_payload_bytes       = var.max_payload_bytes
+  result_store_provider   = var.result_store_provider
+  result_table_name       = module.results.table_name
+  result_table_arn        = module.results.table_arn
+  result_table_gsi_arn    = module.results.gsi_arn
+  dynamodb_max_findings   = var.dynamodb_max_findings
+  additional_tags         = local.common_tags
+}
+
+resource "aws_cloudwatch_metric_alarm" "dlq_visible_messages" {
+  count = var.enable_dlq_alarm ? 1 : 0
+
+  alarm_name          = "${local.name_prefix}-dlq-visible-messages"
+  alarm_description   = "VulnFlow ingestion messages are visible in the dead-letter queue."
+  namespace           = "AWS/SQS"
+  metric_name         = "ApproximateNumberOfMessagesVisible"
+  statistic           = "Maximum"
+  period              = 60
+  evaluation_periods  = 1
+  comparison_operator = "GreaterThanOrEqualToThreshold"
+  threshold           = var.dlq_alarm_threshold
+  treat_missing_data  = "notBreaching"
+
+  dimensions = {
+    QueueName = module.queue.dlq_name
+  }
+
+  tags = local.common_tags
 }

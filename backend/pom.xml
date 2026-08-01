@@ -7,7 +7,7 @@
     <parent>
         <groupId>com.vulnflow</groupId>
         <artifactId>vulnflow</artifactId>
-        <version>0.4.0</version>
+        <version>0.4.1</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
@@ -96,6 +96,12 @@
             <groupId>org.testcontainers</groupId>
             <artifactId>postgresql</artifactId>
             <version>${testcontainers.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.vulnflow</groupId>
+            <artifactId>lambda-processor</artifactId>
+            <version>${project.version}</version>
             <scope>test</scope>
         </dependency>
     </dependencies>

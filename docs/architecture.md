@@ -223,9 +223,10 @@ The agent's future transport seam is:
 FileAgentOutbox -> presigned S3 uploader -> SQS submission
 ```
 
-The S3/SQS implementations and Lambda handler are migration seams. The local
-profile creates no AWS SDK clients. No cloud resource is created or contacted
-by 0.4.0; see `docs/aws-architecture.md` for the prepared path.
-SQS will use receipt handles and visibility timeouts rather than copying the
-current PostgreSQL row-locking protocol. S3 calls must not be introduced under
-long-held database locks.
+The S3/SQS implementations, PostgreSQL publication outbox, Lambda handler,
+DynamoDB result store, and AWS query adapter are executable under the explicit
+`aws` profile. The local profile creates no AWS SDK clients. No cloud resource
+is created or contacted by 0.4.1; see `docs/aws-architecture.md` for transaction
+boundaries and failure windows. SQS uses receipt handles and visibility timeouts
+rather than copying the local job protocol, while the backend outbox uses only
+short PostgreSQL claims and never holds a row lock during S3/SQS calls.

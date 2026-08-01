@@ -1,8 +1,17 @@
 # AWS readiness assessment
 
+## 0.4.1 implementation update
+
+The 0.4.0 blockers now have concrete offline implementations: `DynamoDbProcessingResultStore`, the
+PostgreSQL AWS publication outbox, a profile-selected query reader, and hardened partial-batch Lambda
+behavior. The automated demo exercises HTTP upload through fake S3/SQS/DynamoDB services and real
+PostgreSQL. This demonstrates code-path readiness, not operational AWS readiness. An authorized account,
+current plan/cost review, workload credentials, alarms, backup/restore rehearsal, and create-test-destroy
+evidence still precede any first apply.
+
 ## Scope and evidence
 
-This assessment describes the code on `main` at commit `beca0ca` before the 0.4.0 refactor. It is based on direct inspection of the backend source, migrations, configuration, and tests performed before changing the architecture. The generated service graph (retained privately) captures the resulting 0.4.0 topology and is complementary evidence; the baseline conclusions below do not depend on that post-refactor graph.
+This assessment describes the code on `main` at commit `beca0ca` before the 0.4.0 refactor. It is based on direct inspection of the backend source, migrations, configuration, and tests performed before changing the architecture. The generated service graph captures the resulting 0.4.0 topology and is complementary internal evidence; the baseline conclusions below do not depend on that post-refactor graph.
 
 ## Current ingestion path
 
