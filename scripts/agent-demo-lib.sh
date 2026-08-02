@@ -169,7 +169,7 @@ run_agent_demo() (
     VULNFLOW_AGENT_MAX_CONCURRENT_SCANS=1 \
     VULNFLOW_AGENT_UPLOAD_RETRY_INTERVAL=1s \
     VULNFLOW_TARGETS_FILE="${java_targets}" \
-      agent_demo_java -jar "$(agent_demo_java_path "${agent_demo_root}/agent/target/vulnflow-agent-0.4.7.jar")" --once
+      agent_demo_java -jar "$(agent_demo_java_path "${agent_demo_root}/agent/target/vulnflow-agent-0.4.8.jar")" --once
   }
 
   echo "Running the first agent cycle..."

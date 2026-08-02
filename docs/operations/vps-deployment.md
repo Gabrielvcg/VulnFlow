@@ -1,7 +1,7 @@
 # VPS deployment
 
 The repository `deploy/` directory is the versioned, runtime-only production
-bundle for VulnFlow 0.4.7. GitHub Actions builds and publishes the backend and
+bundle for VulnFlow 0.4.8. GitHub Actions builds and publishes the backend and
 agent images. The VPS only pulls immutable commit-SHA images and runs them with
 Docker Compose; it does not clone source code or build Maven projects.
 

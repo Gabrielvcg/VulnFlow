@@ -1,5 +1,23 @@
 # Changelog
 
+## 0.4.8 - 2026-08-02
+
+- Enforced the real `arn:aws:iam::160172542031:mfa/movil` device in the exact-user
+  Terraform operator trust and documented the temporary `vulnflow-admin` role
+  session boundary.
+- Activated encrypted, versioned S3 remote state with native lockfiles and
+  tightened the state/application operator policies to the provider metadata,
+  and Lambda event-source tagging actions demonstrated by reviewed applies;
+  one-time verification and service-linked-role permissions were removed after
+  use.
+- Applied and verified the VulnFlow-only S3, SQS/DLQ, DynamoDB, Lambda,
+  CloudWatch, IAM, and IAM Roles Anywhere resources in `eu-west-1`, without
+  destroy actions or changes to unrelated infrastructure.
+- Activated `prod,aws` on the VPS with short-lived Roles Anywhere credentials,
+  disabled the local worker, retained PostgreSQL and all local volumes, and
+  proved the agent-to-public-API path, duplicate handling, bounded retries,
+  DLQ redrive, recovery, health checks, and local-mode rollback.
+
 ## 0.4.7 - 2026-08-01
 
 - Replaced the unexecuted IAM Identity Center design with a single-account,

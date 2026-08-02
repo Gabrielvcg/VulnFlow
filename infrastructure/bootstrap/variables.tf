@@ -36,6 +36,17 @@ variable "application_state_key" {
   }
 }
 
+variable "operator_role_arn" {
+  description = "Exact MFA-protected Terraform operator allowed to inspect this dedicated bucket."
+  type        = string
+  default     = "arn:aws:iam::160172542031:role/VulnFlowTerraformOperator"
+
+  validation {
+    condition     = var.operator_role_arn == "arn:aws:iam::160172542031:role/VulnFlowTerraformOperator"
+    error_message = "Only the reviewed VulnFlow Terraform operator role may inspect the state bucket."
+  }
+}
+
 variable "additional_tags" {
   description = "Additional non-sensitive tags for the state bucket."
   type        = map(string)

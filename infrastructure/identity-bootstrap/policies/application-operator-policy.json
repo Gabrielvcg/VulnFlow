@@ -10,16 +10,20 @@
         "s3:GetAccelerateConfiguration",
         "s3:GetBucketAcl",
         "s3:GetBucketCors",
-        "s3:GetBucketLifecycleConfiguration",
         "s3:GetBucketLocation",
         "s3:GetBucketLogging",
         "s3:GetBucketObjectLockConfiguration",
+        "s3:GetBucketOwnershipControls",
+        "s3:GetBucketPolicy",
+        "s3:GetBucketPolicyStatus",
         "s3:GetBucketPublicAccessBlock",
         "s3:GetBucketRequestPayment",
         "s3:GetBucketTagging",
         "s3:GetBucketVersioning",
         "s3:GetBucketWebsite",
         "s3:GetEncryptionConfiguration",
+        "s3:GetLifecycleConfiguration",
+        "s3:GetReplicationConfiguration",
         "s3:PutBucketTagging",
         "s3:PutBucketPublicAccessBlock",
         "s3:DeleteBucketPublicAccessBlock",
@@ -128,11 +132,38 @@
       }
     },
     {
+      "Sid": "TagProcessorEventMappingOnCreate",
+      "Effect": "Allow",
+      "Action": "lambda:TagResource",
+      "Resource": "*",
+      "Condition": {
+        "StringEquals": {
+          "aws:RequestTag/Project": "vulnflow",
+          "aws:RequestTag/Environment": "demo",
+          "aws:RequestTag/ManagedBy": "Terraform"
+        },
+        "ForAllValues:StringEquals": {
+          "aws:TagKeys": [
+            "Project",
+            "Environment",
+            "ManagedBy",
+            "CostModel",
+            "Owner",
+            "Purpose",
+            "ReviewState"
+          ]
+        }
+      }
+    },
+    {
       "Sid": "ManageProcessorEventMapping",
       "Effect": "Allow",
       "Action": [
         "lambda:DeleteEventSourceMapping",
         "lambda:GetEventSourceMapping",
+        "lambda:ListTags",
+        "lambda:TagResource",
+        "lambda:UntagResource",
         "lambda:UpdateEventSourceMapping"
       ],
       "Resource": "arn:aws:lambda:eu-west-1:160172542031:event-source-mapping:*"
