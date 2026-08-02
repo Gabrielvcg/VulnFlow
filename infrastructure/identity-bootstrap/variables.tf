@@ -32,17 +32,13 @@ variable "trusted_user_arn" {
 }
 
 variable "mfa_serial" {
-  description = "Optional real MFA device ARN. Keep null until the trusted IAM user has an assigned MFA device."
+  description = "Exact MFA device ARN assigned to the trusted IAM user."
   type        = string
-  default     = null
-  nullable    = true
+  default     = "arn:aws:iam::160172542031:mfa/movil"
 
   validation {
-    condition = (
-      var.mfa_serial == null ||
-      can(regex("^arn:aws:iam::160172542031:mfa/[A-Za-z0-9+=,.@_-]+$", var.mfa_serial))
-    )
-    error_message = "mfa_serial must be null or an MFA device ARN in the reviewed account."
+    condition     = var.mfa_serial == "arn:aws:iam::160172542031:mfa/movil"
+    error_message = "mfa_serial must match the reviewed MFA device assigned to vacaro."
   }
 }
 

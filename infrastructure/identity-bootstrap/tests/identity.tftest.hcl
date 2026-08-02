@@ -1,6 +1,6 @@
 mock_provider "aws" {}
 
-run "operator_is_exact_and_mfa_is_not_invented" {
+run "operator_is_exact_and_requires_reviewed_mfa" {
   command = plan
 
   assert {
@@ -14,8 +14,8 @@ run "operator_is_exact_and_mfa_is_not_invented" {
   }
 
   assert {
-    condition     = length(aws_iam_policy.operator) == 2 && length(aws_iam_role_policy_attachment.operator) == 2
-    error_message = "The identity bootstrap must create only the state and application policies and attachments."
+    condition     = length(aws_iam_policy.operator) == 3 && length(aws_iam_role_policy_attachment.operator) == 3
+    error_message = "The identity bootstrap must create only state, application, and workload-identity policies and attachments."
   }
 
   assert {
@@ -27,17 +27,26 @@ run "operator_is_exact_and_mfa_is_not_invented" {
   }
 
   assert {
-    condition     = !strcontains(aws_iam_role.operator.assume_role_policy, "aws:MultiFactorAuthPresent")
-    error_message = "MFA must not be claimed until the trusted IAM user has a real MFA device."
+    condition = (
+      jsondecode(aws_iam_role.operator.assume_role_policy).Statement[0].Condition.Bool["aws:MultiFactorAuthPresent"] == "true"
+    )
+    error_message = "The operator trust policy must require MFA."
+  }
+
+  assert {
+    condition     = var.mfa_serial == "arn:aws:iam::160172542031:mfa/movil"
+    error_message = "The bootstrap must use the reviewed MFA device assigned to vacaro."
   }
 
   assert {
     condition = alltrue(flatten([
-      for statement in jsondecode(aws_iam_policy.operator["app"].policy).Statement : [
-        for action in try(tolist(statement.Action), [statement.Action]) : action != "*"
+      for policy in aws_iam_policy.operator : [
+        for statement in jsondecode(policy.policy).Statement : [
+          for action in try(tolist(statement.Action), [statement.Action]) : action != "*"
+        ]
       ]
     ]))
-    error_message = "The application operator policy must never grant a wildcard action."
+    error_message = "No operator policy may grant a wildcard action."
   }
 
   assert {
@@ -57,17 +66,100 @@ run "operator_is_exact_and_mfa_is_not_invented" {
     )
     error_message = "PassRole must target only the exact processor role and Lambda service."
   }
-}
 
-run "real_mfa_serial_enables_trust_condition" {
-  command = plan
-
-  variables {
-    mfa_serial = "arn:aws:iam::160172542031:mfa/vacaro"
+  assert {
+    condition = (
+      one([
+        for statement in jsondecode(aws_iam_policy.operator["workload"].policy).Statement : statement
+        if statement.Sid == "PassOnlyBackendRoleToRolesAnywhere"
+      ]).Resource == "arn:aws:iam::160172542031:role/vulnflow-demo-backend-role" &&
+      one([
+        for statement in jsondecode(aws_iam_policy.operator["workload"].policy).Statement : statement
+        if statement.Sid == "PassOnlyBackendRoleToRolesAnywhere"
+      ]).Condition.StringEquals["iam:PassedToService"] == "rolesanywhere.amazonaws.com"
+    )
+    error_message = "PassRole must target only the exact backend role and Roles Anywhere service."
   }
 
   assert {
-    condition     = strcontains(aws_iam_role.operator.assume_role_policy, "aws:MultiFactorAuthPresent")
-    error_message = "A reviewed real MFA serial must enable the trust-policy MFA condition."
+    condition = alltrue([
+      for action in [
+        "s3:GetBucketOwnershipControls",
+        "s3:GetBucketPolicy",
+        "s3:GetBucketPolicyStatus",
+        "s3:GetLifecycleConfiguration",
+        "s3:GetReplicationConfiguration"
+        ] : contains(
+        tolist(one([
+          for statement in jsondecode(aws_iam_policy.operator["app"].policy).Statement : statement
+          if statement.Sid == "ManageReportsBucket"
+        ]).Action),
+        action
+      )
+    ])
+    error_message = "The application operator must be able to refresh every report-bucket metadata API used by the AWS provider."
   }
+
+  assert {
+    condition = alltrue([
+      for action in [
+        "s3:GetBucketOwnershipControls",
+        "s3:GetBucketPolicy",
+        "s3:GetBucketPolicyStatus",
+        "s3:GetLifecycleConfiguration",
+        "s3:GetReplicationConfiguration"
+        ] : contains(
+        tolist(one([
+          for statement in jsondecode(aws_iam_policy.operator["state"].policy).Statement : statement
+          if statement.Sid == "ManageDedicatedStateBucket"
+        ]).Action),
+        action
+      )
+    ])
+    error_message = "The state operator must be able to refresh every state-bucket metadata API used by the AWS provider."
+  }
+
+  assert {
+    condition = alltrue([
+      for action in [
+        "lambda:ListTags",
+        "lambda:TagResource",
+        "lambda:UntagResource"
+        ] : contains(
+        tolist(one([
+          for statement in jsondecode(aws_iam_policy.operator["app"].policy).Statement : statement
+          if statement.Sid == "ManageProcessorEventMapping"
+        ]).Action),
+        action
+      )
+    ])
+    error_message = "The application operator must manage Terraform tags on the exact processor event mapping resource type."
+  }
+
+  assert {
+    condition = (
+      one([
+        for statement in jsondecode(aws_iam_policy.operator["app"].policy).Statement : statement
+        if statement.Sid == "TagProcessorEventMappingOnCreate"
+      ]).Action == "lambda:TagResource" &&
+      one([
+        for statement in jsondecode(aws_iam_policy.operator["app"].policy).Statement : statement
+        if statement.Sid == "TagProcessorEventMappingOnCreate"
+      ]).Resource == "*" &&
+      one([
+        for statement in jsondecode(aws_iam_policy.operator["app"].policy).Statement : statement
+        if statement.Sid == "TagProcessorEventMappingOnCreate"
+      ]).Condition.StringEquals["aws:RequestTag/Project"] == "vulnflow" &&
+      one([
+        for statement in jsondecode(aws_iam_policy.operator["app"].policy).Statement : statement
+        if statement.Sid == "TagProcessorEventMappingOnCreate"
+      ]).Condition.StringEquals["aws:RequestTag/Environment"] == "demo" &&
+      one([
+        for statement in jsondecode(aws_iam_policy.operator["app"].policy).Statement : statement
+        if statement.Sid == "TagProcessorEventMappingOnCreate"
+      ]).Condition.StringEquals["aws:RequestTag/ManagedBy"] == "Terraform"
+    )
+    error_message = "Tag-on-create must be limited to the reviewed VulnFlow demo tag boundary."
+  }
+
 }

@@ -7,19 +7,19 @@ boundary used by later VulnFlow Terraform work:
 IAM user vacaro -> sts:AssumeRole -> VulnFlowTerraformOperator -> temporary STS
 ```
 
-It creates one role, two scoped customer-managed policies, and two policy
-attachments. The trust policy names only
+It creates one role, three scoped customer-managed policies, and three policy
+attachments. State, application, and workload-identity permissions are split
+to stay below the AWS managed-policy size quota. The trust policy names only
 `arn:aws:iam::160172542031:user/vacaro`; it has no account-root, wildcard,
-cross-account, or external principal. `mfa_serial` defaults to `null` because
-the user currently has no assigned MFA device. Set it only to a verified real
-device ARN in a newly reviewed plan.
+cross-account, or external principal. The trust policy requires MFA and the
+reviewed device assigned to `vacaro` is fixed as
+`arn:aws:iam::160172542031:mfa/movil`.
 
 This root intentionally uses the existing bootstrap IAM user once. It does not
 manage access keys, the user, its groups, AWS Organizations, IAM Identity
-Center, the state bucket, or application infrastructure. It also does not grant
-the Roles Anywhere profile's required `iam:PassRole`; that future workload
-identity needs a separate explicit authorization because this role may pass
-only the Lambda execution role.
+Center, the state bucket, or application infrastructure. The application
+policy can pass only the exact Lambda execution role to Lambda and the exact
+backend role to IAM Roles Anywhere.
 
 ## Plan-only validation
 

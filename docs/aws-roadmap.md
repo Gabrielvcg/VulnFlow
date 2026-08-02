@@ -1,11 +1,12 @@
 # AWS roadmap
 
-## 0.4.7 update
+## 0.4.8 update
 
-The executable path is complete offline: the AWS profile selects S3 storage, a PostgreSQL SQS
-publication outbox, Lambda, DynamoDB result persistence, and DynamoDB result queries. The original local
-filesystem/PostgreSQL worker path remains the default and the production VPS continues to use only
-`prod`.
+The executable path is active on the production VPS: the `prod,aws` profiles
+select S3 storage, a PostgreSQL SQS publication outbox, Lambda, DynamoDB result
+persistence, and DynamoDB result queries. The original local
+filesystem/PostgreSQL worker path remains the repository default and is kept as
+the tested rollback configuration.
 
 Remote state has a separate bootstrap root and distinct bootstrap/application
 keys. Human apply access uses an exact-user IAM trust and the
@@ -16,14 +17,17 @@ enabled: the human role requires an explicitly authorized identity-bootstrap
 apply, and the workload identity requires an explicit Terraform variable plus
 a reviewed public CA certificate.
 
-The next phase is an explicitly authorized create-test-destroy exercise. It still requires a current
-saved-plan/cost review, the temporary human session, certificate issuance, alarm notification ownership,
-backup/restore evidence, and residual-resource checks. No apply has been run.
+The controlled create-and-test exercise completed on 2026-08-02. Remote state,
+the application slice, IAM Roles Anywhere, duplicate handling, retries, DLQ
+redrive, and the public API path were verified. Destruction was not authorized;
+the active resources and residual test records are documented in the runtime
+activation record.
 
 ## Current position
 
-VulnFlow 0.4.7 remains entirely local/VPS at runtime by default. PostgreSQL supplies the backend job
-queue, named volumes store backend payloads, and an independent Linux agent
+VulnFlow 0.4.8 remains local by default in source configuration, while the
+production VPS explicitly enables AWS mode. PostgreSQL supplies the publication
+outbox, named volumes preserve local payloads and rollback data, and an independent Linux agent
 uses a filesystem outbox for continuous scans. AWS SDK adapters and a Lambda
 artifact are compiled but inactive by default; no credentials, AWS API calls,
 or resources are used by default.
@@ -108,6 +112,7 @@ Before any future deployment:
 4. Configure budgets, retention, and alarms.
 5. Run `terraform destroy`, verify deletion, and inspect for orphaned resources.
 
-Terraform in 0.4.7 describes the human identity bootstrap, S3/SQS/Lambda/DynamoDB slice, its alarms,
-remote-state bootstrap, and optional Roles Anywhere identity. CI formats, validates, tests, and resolves
-both local and AWS runtime configurations; applying any plan remains a manual authorization gate.
+Terraform in 0.4.8 manages the human identity bootstrap, S3/SQS/Lambda/DynamoDB
+slice, its alarms, remote-state bootstrap, and Roles Anywhere identity. CI
+formats, validates, tests, and resolves both local and AWS runtime
+configurations; applying any plan remains a manual authorization gate.

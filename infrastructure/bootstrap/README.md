@@ -11,16 +11,18 @@ any resource under `infrastructure/aws`.
 - S3-managed encryption enabled.
 - Bucket versioning enabled.
 - Non-TLS requests denied by bucket policy.
+- Bucket metadata access granted only to the exact MFA-protected
+  `VulnFlowTerraformOperator` role so Terraform can refresh and import the
+  dedicated bucket without account-wide bucket-list permissions.
 - `force_destroy=false` and Terraform `prevent_destroy=true`.
 - No credentials or backend secrets in source control.
 
 The initial bootstrap necessarily uses local state because the backend bucket
-does not exist yet. Do not commit that state. After an explicitly authorized
-bootstrap apply, migrate the bootstrap state to the new bucket under
-`vulnflow/bootstrap/terraform.tfstate` and configure the application state at
-`vulnflow/demo/terraform.tfstate`, both with S3 native locking enabled through
-`use_lockfile=true`. `backend.tf.example` is the inactive, credential-free
-bootstrap backend definition used for that migration.
+does not exist yet. Do not commit that state. After the authorized bootstrap
+apply, `backend.tf` migrates the bootstrap state to the new bucket under
+`vulnflow/bootstrap/terraform.tfstate`; the application root uses
+`vulnflow/demo/terraform.tfstate`. Both active backends use S3 native locking
+through `use_lockfile=true` and contain no credentials.
 
 ## Plan-only validation
 
