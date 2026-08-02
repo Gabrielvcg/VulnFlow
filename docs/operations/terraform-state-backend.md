@@ -14,23 +14,22 @@ each other's purpose.
 
 ## Bootstrap sequence
 
-The bucket cannot be its own backend before it exists. The first authorized
-bootstrap apply therefore uses local state and must be performed from a clean,
-access-controlled workstation. Keep the resulting state outside source control
-and protect it until migration succeeds.
+The bucket could not be its own backend before it existed. The first authorized
+bootstrap apply therefore used local state from an access-controlled
+workstation. The migration is complete and no local state is used by either
+active root.
 
 After the bucket exists:
 
 1. Confirm Block Public Access, AES256 encryption, versioning, the TLS-only
    bucket policy, and `prevent_destroy` are effective.
-2. Copy `infrastructure/bootstrap/backend.tf.example` to the reviewed active
-   `backend.tf`. It fixes the bucket, `vulnflow/bootstrap/terraform.tfstate`
+2. Use the reviewed `infrastructure/bootstrap/backend.tf`. It fixes the bucket,
+   `vulnflow/bootstrap/terraform.tfstate`
    key, `eu-west-1` region, encryption, and `use_lockfile=true` without
    credentials.
 3. Run `terraform init -migrate-state` from `infrastructure/bootstrap` and
    verify that both the state object and lockfile workflow work.
-4. Copy `infrastructure/aws/backend.tf.example` to the active, reviewed
-   `backend.tf` configuration.
+4. Use the active, reviewed `infrastructure/aws/backend.tf` configuration.
 5. Run `terraform init -migrate-state` from `infrastructure/aws`, using key
    `vulnflow/demo/terraform.tfstate` and `use_lockfile=true`.
 6. Only after both migrations are verified should protected local state copies
@@ -58,4 +57,7 @@ safe caller identity; it does not read or write credential values. See
 `docs/security/aws-operator-permissions.md` for the full profile and optional
 real-MFA configuration.
 
-No bootstrap or application apply is part of the preparation phase.
+The 2026-08-02 activation completed both migrations, proved lock contention and
+release, read both encrypted state objects, and ended with no-change bootstrap
+and application plans. Future state operations still require the exact
+temporary operator identity and the same review gate.

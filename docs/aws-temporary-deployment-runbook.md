@@ -1,9 +1,11 @@
 # Temporary AWS deployment runbook
 
-This runbook is documentation only. It has not been executed. VulnFlow 0.4.7 prepares remote state,
-temporary human authentication, and the optional VPS workload identity, but every `terraform apply`
-remains a separate explicitly authorized operation that needs reviewed short-lived credentials and a
-current cost/security review.
+This runbook was exercised for the controlled VulnFlow 0.4.8 activation on
+2026-08-02. Remote state, temporary human authentication, the application
+slice, and the VPS workload identity are active. Every future `terraform apply`
+remains a separate authorized operation requiring a reviewed plan, short-lived
+credentials, and a current cost/security review. See the runtime activation
+record for the exact evidence and retained resources.
 
 ## 1. Prechecks
 
@@ -19,7 +21,7 @@ current cost/security review.
 ./backend/mvnw -f pom.xml verify
 ```
 
-Confirm `aws/lambda-processor/target/vulnflow-lambda-processor-0.4.7.jar` exists and calculate its base64 SHA-256 for `lambda_source_code_hash`.
+Confirm `aws/lambda-processor/target/vulnflow-lambda-processor-0.4.8.jar` exists and calculate its base64 SHA-256 for `lambda_source_code_hash`.
 
 ## 3. Validate only
 
@@ -42,11 +44,12 @@ Complete `docs/aws-cost-model.md`, inspect IAM scope, timeouts, retention, concu
 ## 5. Manual apply
 
 The existing `vacaro` bootstrap user may apply only the independently reviewed
-identity plan first. After that, configure `vulnflow-admin`, pass the temporary
-identity preflight, and use only that role session for state/application work.
-Only an authorized operator may run apply after the safety gate and review.
-Record the exact commit, plan digest, approver, start time, and destruction
-deadline. No apply described here has been run.
+identity plan. Configure `vulnflow-admin`, pass the temporary identity
+preflight, and use only that role session for state/application work. Only an
+authorized operator may run apply after the safety gate and review. Record the
+exact commit, plan digest, operator, start time, and retention or destruction
+decision. The 2026-08-02 activation followed this sequence and did not run any
+destroy operation.
 
 ## 6. End-to-end evidence
 
