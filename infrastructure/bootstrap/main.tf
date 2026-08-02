@@ -8,6 +8,38 @@ locals {
     },
     var.additional_tags
   )
+
+  state_bucket_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Sid       = "AllowExactTerraformOperatorBucketMetadata"
+        Effect    = "Allow"
+        Principal = { AWS = var.operator_role_arn }
+        Action = [
+          "s3:GetBucketOwnershipControls",
+          "s3:GetBucketPolicyStatus",
+          "s3:GetLifecycleConfiguration",
+          "s3:GetReplicationConfiguration",
+          "s3:ListBucket"
+        ]
+        Resource = "arn:aws:s3:::${var.state_bucket_name}"
+      },
+      {
+        Sid       = "DenyInsecureTransport"
+        Effect    = "Deny"
+        Principal = "*"
+        Action    = "s3:*"
+        Resource = [
+          "arn:aws:s3:::${var.state_bucket_name}",
+          "arn:aws:s3:::${var.state_bucket_name}/*"
+        ]
+        Condition = {
+          Bool = { "aws:SecureTransport" = "false" }
+        }
+      }
+    ]
+  })
 }
 
 resource "aws_s3_bucket" "terraform_state" {
@@ -46,33 +78,7 @@ resource "aws_s3_bucket_versioning" "terraform_state" {
   }
 }
 
-data "aws_iam_policy_document" "require_tls" {
-  statement {
-    sid    = "DenyInsecureTransport"
-    effect = "Deny"
-
-    principals {
-      type        = "*"
-      identifiers = ["*"]
-    }
-
-    actions = ["s3:*"]
-    resources = [
-      aws_s3_bucket.terraform_state.arn,
-      "${aws_s3_bucket.terraform_state.arn}/*"
-    ]
-
-    condition {
-      test     = "Bool"
-      variable = "aws:SecureTransport"
-      values   = ["false"]
-    }
-  }
-}
-
 resource "aws_s3_bucket_policy" "require_tls" {
-  bucket = aws_s3_bucket.terraform_state.id
-  policy = data.aws_iam_policy_document.require_tls.json
-
-  depends_on = [aws_s3_bucket_public_access_block.terraform_state]
+  bucket = var.state_bucket_name
+  policy = local.state_bucket_policy
 }
