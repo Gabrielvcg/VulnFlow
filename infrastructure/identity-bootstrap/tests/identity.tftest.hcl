@@ -80,4 +80,86 @@ run "operator_is_exact_and_requires_reviewed_mfa" {
     )
     error_message = "PassRole must target only the exact backend role and Roles Anywhere service."
   }
+
+  assert {
+    condition = alltrue([
+      for action in [
+        "s3:GetBucketOwnershipControls",
+        "s3:GetBucketPolicy",
+        "s3:GetBucketPolicyStatus",
+        "s3:GetLifecycleConfiguration",
+        "s3:GetReplicationConfiguration"
+        ] : contains(
+        tolist(one([
+          for statement in jsondecode(aws_iam_policy.operator["app"].policy).Statement : statement
+          if statement.Sid == "ManageReportsBucket"
+        ]).Action),
+        action
+      )
+    ])
+    error_message = "The application operator must be able to refresh every report-bucket metadata API used by the AWS provider."
+  }
+
+  assert {
+    condition = alltrue([
+      for action in [
+        "s3:GetBucketOwnershipControls",
+        "s3:GetBucketPolicy",
+        "s3:GetBucketPolicyStatus",
+        "s3:GetLifecycleConfiguration",
+        "s3:GetReplicationConfiguration"
+        ] : contains(
+        tolist(one([
+          for statement in jsondecode(aws_iam_policy.operator["state"].policy).Statement : statement
+          if statement.Sid == "ManageDedicatedStateBucket"
+        ]).Action),
+        action
+      )
+    ])
+    error_message = "The state operator must be able to refresh every state-bucket metadata API used by the AWS provider."
+  }
+
+  assert {
+    condition = alltrue([
+      for action in [
+        "lambda:ListTags",
+        "lambda:TagResource",
+        "lambda:UntagResource"
+        ] : contains(
+        tolist(one([
+          for statement in jsondecode(aws_iam_policy.operator["app"].policy).Statement : statement
+          if statement.Sid == "ManageProcessorEventMapping"
+        ]).Action),
+        action
+      )
+    ])
+    error_message = "The application operator must manage Terraform tags on the exact processor event mapping resource type."
+  }
+
+  assert {
+    condition = (
+      one([
+        for statement in jsondecode(aws_iam_policy.operator["app"].policy).Statement : statement
+        if statement.Sid == "TagProcessorEventMappingOnCreate"
+      ]).Action == "lambda:TagResource" &&
+      one([
+        for statement in jsondecode(aws_iam_policy.operator["app"].policy).Statement : statement
+        if statement.Sid == "TagProcessorEventMappingOnCreate"
+      ]).Resource == "*" &&
+      one([
+        for statement in jsondecode(aws_iam_policy.operator["app"].policy).Statement : statement
+        if statement.Sid == "TagProcessorEventMappingOnCreate"
+      ]).Condition.StringEquals["aws:RequestTag/Project"] == "vulnflow" &&
+      one([
+        for statement in jsondecode(aws_iam_policy.operator["app"].policy).Statement : statement
+        if statement.Sid == "TagProcessorEventMappingOnCreate"
+      ]).Condition.StringEquals["aws:RequestTag/Environment"] == "demo" &&
+      one([
+        for statement in jsondecode(aws_iam_policy.operator["app"].policy).Statement : statement
+        if statement.Sid == "TagProcessorEventMappingOnCreate"
+      ]).Condition.StringEquals["aws:RequestTag/ManagedBy"] == "Terraform"
+    )
+    error_message = "Tag-on-create must be limited to the reviewed VulnFlow demo tag boundary."
+  }
+
 }

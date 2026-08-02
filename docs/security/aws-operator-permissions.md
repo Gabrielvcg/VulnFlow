@@ -48,7 +48,7 @@ The trust policy accepts only
 cross-account, external, service, or wildcard principal. The role session is
 limited to one hour.
 
-The root fixes `mfa_serial` to the verified
+The identity root fixes `mfa_serial` to the verified
 `arn:aws:iam::160172542031:mfa/movil` device and the trust policy requires
 `aws:MultiFactorAuthPresent=true`. A device rotation requires a new read-only
 audit and reviewed code change; never reuse a root-device ARN or invent a
@@ -101,10 +101,10 @@ only lockfile deletion is allowed.
 
 The application policy is limited to the reviewed demo report bucket, two SQS
 queues, DynamoDB table, Lambda function, Lambda execution role, Lambda log
-group, optional DLQ alarm, and the tagged VulnFlow Roles Anywhere resources.
-Its two independent `iam:PassRole` statements target only the processor role
-for `lambda.amazonaws.com` and the backend role for
-`rolesanywhere.amazonaws.com`.
+group, and optional DLQ alarm. The separate workload policy is limited to the
+tagged VulnFlow Roles Anywhere resources. Their independent `iam:PassRole`
+statements target only the processor role for `lambda.amazonaws.com` and the
+backend role for `rolesanywhere.amazonaws.com`, respectively.
 
 No policy grants `Action="*"`. The remaining `Resource="*"` statements are
 isolated to APIs that cannot be scoped to a known ARN at authorization time:

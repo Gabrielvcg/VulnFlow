@@ -1,12 +1,12 @@
 # VulnFlow
 
-VulnFlow 0.4.7 keeps the executable AWS ingestion path disabled by default,
-prepares temporary human Terraform sessions through a scoped IAM AssumeRole
-flow, and prepares temporary workload credentials through IAM Roles Anywhere.
-The local/VPS mode remains the default. An explicit deployment override selects
-the `aws` profile, S3 payload storage, a recoverable PostgreSQL SQS publication
-outbox, the shared Lambda processor, and a DynamoDB result store. CI validates
-the preparation but never runs Terraform apply or activates AWS production.
+VulnFlow 0.4.8 keeps the local processing path as the safe default while the
+production VPS runs the explicitly activated `prod,aws` profile. Human
+Terraform access uses MFA-protected AssumeRole sessions and the VPS obtains
+temporary workload credentials through IAM Roles Anywhere. The AWS path uses
+S3 payload storage, a recoverable PostgreSQL SQS publication outbox, the shared
+Lambda processor, and a DynamoDB result store. Terraform apply remains a
+reviewed manual operation; CI builds, verifies, and deploys immutable images.
 
 ## Current architecture
 
@@ -134,9 +134,9 @@ $env:VULNFLOW_API_URL = "http://127.0.0.1:8080/"
 $env:VULNFLOW_API_KEY = "configured-value"
 $env:VULNFLOW_AGENT_ID = "developer-machine"
 $env:VULNFLOW_TARGETS_FILE = (Resolve-Path targets.yml)
-java -jar target/vulnflow-agent-0.4.7.jar --check
-java -jar target/vulnflow-agent-0.4.7.jar --once
-java -jar target/vulnflow-agent-0.4.7.jar --status
+java -jar target/vulnflow-agent-0.4.8.jar --check
+java -jar target/vulnflow-agent-0.4.8.jar --once
+java -jar target/vulnflow-agent-0.4.8.jar --status
 ```
 
 The default daemon mode schedules isolated scan, upload, and cleanup cycles.
@@ -358,6 +358,7 @@ vulnerability count.
 - [CI/CD verification](docs/operations/cicd.md)
 - [VPS deployment](docs/operations/vps-deployment.md)
 - [AWS mode deployment](docs/operations/aws-mode-deployment.md)
+- [AWS runtime activation record](docs/operations/aws-runtime-activation-2026-08-02.md)
 - [Terraform state backend](docs/operations/terraform-state-backend.md)
 - [AWS operator permissions](docs/security/aws-operator-permissions.md)
 - [IAM Roles Anywhere](docs/security/iam-roles-anywhere.md)
@@ -376,9 +377,9 @@ vulnerability count.
 - [ADR-022 event idempotency](docs/decisions/ADR-022-event-idempotency-policy.md)
 - [ADR-023 VPS AWS credentials](docs/decisions/ADR-023-vps-aws-credentials.md)
 
-AWS resource creation remains intentionally deferred. VulnFlow 0.4.7 has been
-validated with real plan-only access, but no Terraform apply or destroy has
-run. Any future apply requires the explicit `result_store_provider="dynamodb"`
-input, an explicitly authorized identity and state bootstrap, temporary
-operator credentials, and the documented cost and security review. AWS
-Organizations and IAM Identity Center intentionally remain disabled.
+The scoped VulnFlow AWS resources and remote state are active in account
+`160172542031`, region `eu-west-1`. VulnFlow 0.4.8 was applied only from
+reviewed plans with no destroy actions and was verified end to end from the
+agent through the public API. The local `prod` configuration, PostgreSQL data,
+and Docker volumes remain available for rollback. AWS Organizations and IAM
+Identity Center remain disabled.

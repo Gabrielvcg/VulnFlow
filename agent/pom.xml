@@ -6,7 +6,7 @@
 
     <groupId>com.vulnflow</groupId>
     <artifactId>vulnflow-agent</artifactId>
-        <version>0.4.7</version>
+        <version>0.4.8</version>
     <name>vulnflow-agent</name>
     <description>Continuous Trivy scanner and durable uploader for VulnFlow</description>
 
