@@ -55,6 +55,21 @@ validate_release() {
   [[ "${backend_sha}" == "${release_sha}" && "${agent_sha}" == "${release_sha}" && "${web_sha}" == "${release_sha}" ]] || return 1
 }
 
+validate_legacy_release() {
+  local release=$1
+  local backend_sha
+  local agent_sha
+  local release_sha
+  [[ $(wc -l < "${release}") -eq 3 ]] || return 1
+  grep -Eq '^VULNFLOW_BACKEND_IMAGE=ghcr\.io/[a-z0-9][a-z0-9._/-]*/vulnflow-backend:[0-9a-f]{40}$' "${release}" || return 1
+  grep -Eq '^VULNFLOW_AGENT_IMAGE=ghcr\.io/[a-z0-9][a-z0-9._/-]*/vulnflow-agent:[0-9a-f]{40}$' "${release}" || return 1
+  grep -Eq '^VULNFLOW_RELEASE_SHA=[0-9a-f]{40}$' "${release}" || return 1
+  backend_sha=$(sed -n 's/^VULNFLOW_BACKEND_IMAGE=.*://p' "${release}")
+  agent_sha=$(sed -n 's/^VULNFLOW_AGENT_IMAGE=.*://p' "${release}")
+  release_sha=$(sed -n 's/^VULNFLOW_RELEASE_SHA=//p' "${release}")
+  [[ "${backend_sha}" == "${release_sha}" && "${agent_sha}" == "${release_sha}" ]] || return 1
+}
+
 if ! validate_release "${candidate_real}"; then
   echo "Candidate release manifest is invalid; only immutable GHCR SHA references are accepted." >&2
   exit 65
@@ -78,7 +93,16 @@ compose() {
     }
     compose_args+=(-f "${aws_compose_file}")
   fi
-  docker compose "${compose_args[@]}" "$@"
+  if grep -q '^VULNFLOW_WEB_IMAGE=' "${release}"; then
+    docker compose "${compose_args[@]}" "$@"
+    return
+  fi
+
+  [[ -n "${candidate_web_image:-}" ]] || {
+    echo "Legacy release requires the candidate web image for Compose validation." >&2
+    return 1
+  }
+  VULNFLOW_WEB_IMAGE="${candidate_web_image}" docker compose "${compose_args[@]}" "$@"
 }
 
 diagnostics() {
@@ -90,19 +114,35 @@ diagnostics() {
 
 deploy_release() {
   local release=$1
+  local legacy=false
+  if ! grep -q '^VULNFLOW_WEB_IMAGE=' "${release}"; then
+    legacy=true
+  fi
   compose "${release}" config --quiet >/dev/null || return 1
-  compose "${release}" pull backend agent web || return 1
-  compose "${release}" up -d --remove-orphans || return 1
-  "${health_check}" "${runtime_env}" "${release}" || return 1
+  compose "${release}" pull backend agent || return 1
+  if [[ "${legacy}" == "true" ]]; then
+    compose "${release}" rm -sf web >/dev/null 2>&1 || true
+    compose "${release}" up -d --remove-orphans postgres backend agent || return 1
+    VULNFLOW_WEB_IMAGE="${candidate_web_image}" "${health_check}" "${runtime_env}" "${release}" || return 1
+  else
+    compose "${release}" pull web || return 1
+    compose "${release}" up -d --remove-orphans || return 1
+    "${health_check}" "${runtime_env}" "${release}" || return 1
+  fi
 }
 
 had_current=false
+candidate_web_image=$(sed -n 's/^VULNFLOW_WEB_IMAGE=//p' "${candidate_real}")
 if [[ -f "${current_release}" ]]; then
-  if ! validate_release "${current_release}"; then
+  if validate_release "${current_release}"; then
+    had_current=true
+  elif validate_legacy_release "${current_release}"; then
+    had_current=true
+    echo "Legacy current release detected; rollback compatibility enabled."
+  else
     echo "Current release manifest is invalid; refusing to replace rollback state." >&2
     exit 65
   fi
-  had_current=true
 fi
 
 atomic_install() {

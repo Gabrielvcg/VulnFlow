@@ -7,6 +7,7 @@
 - Added allowlisted on-demand scan requests with quotas, Agent health and capacity gates, leased claims, fencing tokens, heartbeat recovery, and backward-compatible Trivy uploads.
 - Added read-only SQS/DLQ telemetry permission, safe publication retry, production web routing and security headers, three-image release manifests, and web/backend/Agent health gates.
 - Reduced uploaded Agent outbox retention to 24 hours while preserving pending and dead-letter reports, and kept all UI and scan execution flags disabled by default.
+- Made the immutable deployer compatible with the pre-UI three-line release manifest during the first-console migration, while keeping new release validation strict.
 
 ## 0.4.8 - 2026-08-02
 
