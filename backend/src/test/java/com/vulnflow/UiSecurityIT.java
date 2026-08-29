@@ -55,6 +55,35 @@ class UiSecurityIT {
         mvc.perform(get("/api/ui/v1/admin/users").cookie(sessionCookie))
                 .andExpect(status().isForbidden());
     }
+    @Test void passwordChangeRefreshesTheExistingSessionPrincipal() throws Exception {
+        users.deleteAll();
+        users.save(new UiUser("first-access", encoder.encode(PASSWORD), UiRole.OPERATOR, true));
+        SessionMaterial material = csrf();
+        MvcResult login = mvc.perform(post("/api/ui/v1/auth/login")
+                        .cookie(material.cookie())
+                        .header("X-XSRF-TOKEN", material.token())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(mapper.writeValueAsBytes(java.util.Map.of(
+                                "username", "first-access", "password", PASSWORD))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.passwordChangeRequired").value(true))
+                .andReturn();
+        Cookie sessionCookie = login.getResponse().getCookie("VULNFLOW_SESSION");
+        assertThat(sessionCookie).isNotNull();
+
+        mvc.perform(post("/api/ui/v1/auth/change-password")
+                        .cookie(material.cookie(), sessionCookie)
+                        .header("X-XSRF-TOKEN", material.token())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(mapper.writeValueAsBytes(java.util.Map.of(
+                                "currentPassword", PASSWORD,
+                                "newPassword", "PermanentPassword2B"))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.passwordChangeRequired").value(false));
+
+        mvc.perform(get("/api/ui/v1/targets").cookie(sessionCookie))
+                .andExpect(status().isOk());
+    }
     private SessionMaterial csrf() throws Exception {MvcResult result=mvc.perform(get("/api/ui/v1/auth/csrf")).andExpect(status().isOk()).andReturn();return new SessionMaterial(mapper.readTree(result.getResponse().getContentAsByteArray()).path("token").asText(),result.getResponse().getCookie("XSRF-TOKEN"));}
     private record SessionMaterial(String token,Cookie cookie){}
 }
