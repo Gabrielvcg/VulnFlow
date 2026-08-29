@@ -75,6 +75,11 @@ public class VulnFlowHttpClient implements VulnFlowClient {
 
     @Override
     public UploadReceipt uploadTrivyReport(UUID assetId, Path report) {
+        return uploadTrivyReport(assetId, report, null, null);
+    }
+
+    @Override
+    public UploadReceipt uploadTrivyReport(UUID assetId, Path report, UUID scanRequestId, UUID claimToken) {
         String boundary = "vulnflow-agent-" + UUID.randomUUID();
         byte[] prefix = ("--" + boundary + "\r\n"
                 + "Content-Disposition: form-data; name=\"file\"; filename=\"report.json\"\r\n"
@@ -93,7 +98,12 @@ public class VulnFlowHttpClient implements VulnFlowClient {
                     exception);
         }
         String encodedAsset = URLEncoder.encode(assetId.toString(), StandardCharsets.UTF_8);
-        HttpRequest request = HttpRequest.newBuilder(endpoint("api/v1/scans/trivy?assetId=" + encodedAsset))
+        String query = "api/v1/scans/trivy?assetId=" + encodedAsset;
+        if (scanRequestId != null && claimToken != null) {
+            query += "&scanRequestId=" + URLEncoder.encode(scanRequestId.toString(), StandardCharsets.UTF_8)
+                    + "&claimToken=" + URLEncoder.encode(claimToken.toString(), StandardCharsets.UTF_8);
+        }
+        HttpRequest request = HttpRequest.newBuilder(endpoint(query))
                 .timeout(requestTimeout)
                 .header("X-API-Key", apiKey)
                 .header("Content-Type", "multipart/form-data; boundary=" + boundary)
@@ -116,6 +126,31 @@ public class VulnFlowHttpClient implements VulnFlowClient {
         }
         throw classify(response.status(), true);
     }
+
+    @Override
+    public AgentClaim claimScan(String agentId, AgentHeartbeat heartbeat) {
+        HttpResult response = jsonPost("api/v1/agents/" + encode(agentId) + "/scan-requests/claim", heartbeat);
+        if (response.status() == 200 && response.body().length == 0) return null;
+        if (response.status() == 200) {
+            try { return objectMapper.readValue(response.body(), AgentClaim.class); }
+            catch (IOException exception) { throw new VulnFlowClientException(ClientFailureKind.RETRYABLE,"VulnFlow returned an invalid claim",exception); }
+        }
+        throw classify(response.status(), false);
+    }
+
+    @Override public void heartbeat(String agentId, AgentHeartbeat heartbeat) { requireNoContent(jsonPost("api/v1/agents/"+encode(agentId)+"/heartbeat",heartbeat)); }
+    @Override public void startScan(String agentId, UUID requestId, UUID claimToken) { requireNoContent(jsonPost("api/v1/agents/"+encode(agentId)+"/scan-requests/"+requestId+"/start",Map.of("claimToken",claimToken))); }
+    @Override public void failScan(String agentId, UUID requestId, UUID claimToken, String safeError) { requireNoContent(jsonPost("api/v1/agents/"+encode(agentId)+"/scan-requests/"+requestId+"/fail",Map.of("claimToken",claimToken,"safeError",safeError==null?"Scan failed":safeError))); }
+
+    private HttpResult jsonPost(String relative,Object value) {
+        try {
+            HttpRequest request=HttpRequest.newBuilder(endpoint(relative)).timeout(requestTimeout).header("X-API-Key",apiKey)
+                    .header("Content-Type","application/json").POST(HttpRequest.BodyPublishers.ofByteArray(objectMapper.writeValueAsBytes(value))).build();
+            return send(request);
+        } catch(IOException exception){throw new IllegalStateException("Agent request could not be serialized",exception);}
+    }
+    private void requireNoContent(HttpResult response){if(response.status()!=204&&response.status()!=200)throw classify(response.status(),false);}
+    private String encode(String value){return URLEncoder.encode(value,StandardCharsets.UTF_8);}
 
     private HttpResult send(HttpRequest request) {
         try {

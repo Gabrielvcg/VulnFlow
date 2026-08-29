@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.4.9 - 2026-08-29
+
+- Added a separate immutable React console image with a static, sanitized public case study and a private operational surface for assets, scans, findings, runtime health, users, targets, and audit events.
+- Added JDBC sessions, CSRF, BCrypt 12 passwords, `ADMIN`/`OPERATOR` authorization, temporary-password first access, login throttling, and an additive PostgreSQL UI control-plane migration.
+- Added allowlisted on-demand scan requests with quotas, Agent health and capacity gates, leased claims, fencing tokens, heartbeat recovery, and backward-compatible Trivy uploads.
+- Added read-only SQS/DLQ telemetry permission, safe publication retry, production web routing and security headers, three-image release manifests, and web/backend/Agent health gates.
+- Reduced uploaded Agent outbox retention to 24 hours while preserving pending and dead-letter reports, and kept all UI and scan execution flags disabled by default.
+
 ## 0.4.8 - 2026-08-02
 
 - Enforced the real `arn:aws:iam::160172542031:mfa/movil` device in the exact-user

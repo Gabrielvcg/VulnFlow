@@ -18,7 +18,7 @@ RUN groupadd --gid ${AGENT_GID} vulnflow-agent \
     && mkdir -p /var/lib/vulnflow-agent/tmp /etc/vulnflow-agent \
     && chown -R vulnflow-agent:vulnflow-agent /var/lib/vulnflow-agent
 COPY --from=trivy /usr/local/bin/trivy /usr/local/bin/trivy
-COPY --from=build /workspace/target/vulnflow-agent-0.4.8.jar /opt/vulnflow-agent/vulnflow-agent.jar
+COPY --from=build /workspace/target/vulnflow-agent-*.jar /opt/vulnflow-agent/vulnflow-agent.jar
 USER vulnflow-agent:vulnflow-agent
 VOLUME ["/var/lib/vulnflow-agent"]
 ENTRYPOINT ["java", "-jar", "/opt/vulnflow-agent/vulnflow-agent.jar"]

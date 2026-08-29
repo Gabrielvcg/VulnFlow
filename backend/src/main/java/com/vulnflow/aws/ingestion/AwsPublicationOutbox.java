@@ -129,6 +129,19 @@ public class AwsPublicationOutbox {
         markPublicationFailure(now, backoff, "Publication claim expired", false);
     }
 
+    public void retryFailed(Instant now) {
+        if (status != AwsPublicationStatus.FAILED) {
+            throw new IllegalStateException("Only failed publications can be retried");
+        }
+        status = AwsPublicationStatus.PUBLISH_PENDING;
+        attemptCount = 0;
+        availableAt = now;
+        lastError = null;
+        publishedAt = null;
+        lockedAt = null;
+        claimToken = null;
+    }
+
     private void requirePublishing() {
         if (status != AwsPublicationStatus.PUBLISHING) {
             throw new IllegalStateException("The outbox event is not being published");

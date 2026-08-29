@@ -43,10 +43,16 @@ services:
       VULNFLOW_MAX_FILE_SIZE: ${VULNFLOW_MAX_FILE_SIZE:-10MB}
       VULNFLOW_REPORT_STORAGE_DIRECTORY: /var/lib/vulnflow/reports
       VULNFLOW_WORKER_ENABLED: "true"
+      VULNFLOW_UI_ENABLED: ${VULNFLOW_UI_ENABLED:-false}
+      VULNFLOW_UI_SCANS_ENABLED: ${VULNFLOW_UI_SCANS_ENABLED:-false}
+      VULNFLOW_UI_SQS_TELEMETRY_ENABLED: ${VULNFLOW_UI_SQS_TELEMETRY_ENABLED:-false}
+      VULNFLOW_UI_BOOTSTRAP_USERNAME: ${VULNFLOW_UI_BOOTSTRAP_USERNAME:-}
+      VULNFLOW_UI_BOOTSTRAP_PASSWORD_HASH: ${VULNFLOW_UI_BOOTSTRAP_PASSWORD_HASH:-}
+      VULNFLOW_SESSION_COOKIE_SECURE: "true"
     volumes:
       - backend-reports:/var/lib/vulnflow/reports
     ports:
-      - "127.0.0.1:${VULNFLOW_BACKEND_PORT:-8080}:8080"
+      - "127.0.0.1:${VULNFLOW_BACKEND_PORT:-8085}:8080"
     networks:
       - internal
     read_only: true
@@ -90,7 +96,9 @@ services:
       VULNFLOW_AGENT_MAX_REPORT_SIZE: ${VULNFLOW_AGENT_MAX_REPORT_SIZE:-10MB}
       VULNFLOW_AGENT_MAX_OUTBOX_BYTES: ${VULNFLOW_AGENT_MAX_OUTBOX_BYTES:-1GB}
       VULNFLOW_AGENT_MAX_OUTBOX_ITEMS: ${VULNFLOW_AGENT_MAX_OUTBOX_ITEMS:-1000}
-      VULNFLOW_AGENT_UPLOADED_RETENTION: ${VULNFLOW_AGENT_UPLOADED_RETENTION:-7d}
+      VULNFLOW_AGENT_UPLOADED_RETENTION: ${VULNFLOW_AGENT_UPLOADED_RETENTION:-24h}
+      VULNFLOW_AGENT_COMMANDS_ENABLED: ${VULNFLOW_AGENT_COMMANDS_ENABLED:-false}
+      VULNFLOW_AGENT_COMMAND_POLL_INTERVAL: ${VULNFLOW_AGENT_COMMAND_POLL_INTERVAL:-5s}
       VULNFLOW_TARGETS_FILE: /etc/vulnflow-agent/targets.yml
       TRIVY_CACHE_DIR: /var/lib/vulnflow-agent/trivy-cache
       TMPDIR: /var/lib/vulnflow-agent/tmp
@@ -110,6 +118,38 @@ services:
     cap_drop:
       - ALL
     stop_grace_period: 45s
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "5"
+
+  web:
+    image: ${VULNFLOW_WEB_IMAGE:?VULNFLOW_WEB_IMAGE is required}
+    restart: unless-stopped
+    init: true
+    depends_on:
+      backend:
+        condition: service_healthy
+    ports:
+      - "127.0.0.1:${VULNFLOW_WEB_PORT:-8086}:8080"
+    networks:
+      - internal
+    read_only: true
+    tmpfs:
+      - /tmp:size=32m,mode=1777
+      - /var/cache/nginx:size=16m,mode=0755
+      - /var/run:size=4m,mode=0755
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O - http://127.0.0.1:8080/healthz | grep -q ok"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+      start_period: 5s
     logging:
       driver: json-file
       options:

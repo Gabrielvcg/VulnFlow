@@ -54,23 +54,26 @@ for (( attempt = 1; attempt <= attempts; attempt++ )); do
   postgres_id=$(container_id postgres)
   backend_id=$(container_id backend)
   agent_id=$(container_id agent)
+  web_id=$(container_id web)
 
   postgres_state=$(container_state "${postgres_id}")
   backend_state=$(container_state "${backend_id}")
   agent_state=$(container_state "${agent_id}")
+  web_state=$(container_state "${web_id}")
 
-  if [[ "${postgres_state}" == "healthy" && "${backend_state}" == "healthy" && "${agent_state}" == "running" ]] \
+  if [[ "${postgres_state}" == "healthy" && "${backend_state}" == "healthy" && "${agent_state}" == "running" && "${web_state}" == "healthy" ]] \
       && backend_endpoint_is_up "${backend_id}"; then
     sleep 10
     agent_state=$(container_state "$(container_id agent)")
     backend_state=$(container_state "$(container_id backend)")
-    if [[ "${agent_state}" == "running" && "${backend_state}" == "healthy" ]]; then
-      echo "Deployment health check passed: PostgreSQL and backend are healthy; agent is running."
+    web_state=$(container_state "$(container_id web)")
+    if [[ "${agent_state}" == "running" && "${backend_state}" == "healthy" && "${web_state}" == "healthy" ]]; then
+      echo "Deployment health check passed: web, PostgreSQL, and backend are healthy; agent is running."
       exit 0
     fi
   fi
 
-  echo "Health attempt ${attempt}/${attempts}: postgres=${postgres_state} backend=${backend_state} agent=${agent_state}"
+  echo "Health attempt ${attempt}/${attempts}: postgres=${postgres_state} backend=${backend_state} agent=${agent_state} web=${web_state}"
   sleep "${delay_seconds}"
 done
 

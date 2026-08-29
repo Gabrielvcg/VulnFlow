@@ -3,4 +3,12 @@ spring:
     url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/vulnflow}
   jpa:
     show-sql: false
+vulnflow:
+  ui:
+    enabled: ${VULNFLOW_UI_ENABLED:true}
 
+server:
+  servlet:
+    session:
+      cookie:
+        secure: ${VULNFLOW_SESSION_COOKIE_SECURE:false}

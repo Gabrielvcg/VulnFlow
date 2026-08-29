@@ -11,6 +11,11 @@ public interface AgentOutbox {
 
     OutboxItem enqueue(String agentId, ScanTarget target, Instant scannedAt, Path report);
 
+    default OutboxItem enqueue(String agentId, ScanTarget target, Instant scannedAt, Path report,
+                               UUID scanRequestId, UUID claimToken) {
+        return enqueue(agentId, target, scannedAt, report);
+    }
+
     List<OutboxItem> claimReady(Instant now, int limit);
 
     void assignAsset(UUID itemId, UUID assetId, Instant now);

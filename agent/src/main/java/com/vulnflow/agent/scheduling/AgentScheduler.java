@@ -22,6 +22,8 @@ public class AgentScheduler implements AutoCloseable {
     private final Duration uploadInterval;
     private final Duration retention;
     private final Duration shutdownTimeout;
+    private final CommandCoordinator commandCoordinator;
+    private final Duration commandPollInterval;
 
     public AgentScheduler(
             String agentId,
@@ -34,6 +36,15 @@ public class AgentScheduler implements AutoCloseable {
             Duration uploadInterval,
             Duration retention,
             Duration shutdownTimeout) {
+        this(agentId, scanCoordinator, uploadCoordinator, outbox, scheduler, scanExecutor, scanInterval,
+                uploadInterval, retention, shutdownTimeout, null, Duration.ofSeconds(5));
+    }
+
+    public AgentScheduler(
+            String agentId, ScanCoordinator scanCoordinator, UploadCoordinator uploadCoordinator,
+            AgentOutbox outbox, ScheduledExecutorService scheduler, ExecutorService scanExecutor,
+            Duration scanInterval, Duration uploadInterval, Duration retention, Duration shutdownTimeout,
+            CommandCoordinator commandCoordinator, Duration commandPollInterval) {
         this.agentId = agentId;
         this.scanCoordinator = scanCoordinator;
         this.uploadCoordinator = uploadCoordinator;
@@ -44,6 +55,8 @@ public class AgentScheduler implements AutoCloseable {
         this.uploadInterval = uploadInterval;
         this.retention = retention;
         this.shutdownTimeout = shutdownTimeout;
+        this.commandCoordinator = commandCoordinator;
+        this.commandPollInterval = commandPollInterval;
     }
 
     public void start() {
@@ -62,6 +75,10 @@ public class AgentScheduler implements AutoCloseable {
                 0,
                 Duration.ofHours(24).toMillis(),
                 TimeUnit.MILLISECONDS);
+        if (commandCoordinator != null) {
+            scheduler.scheduleWithFixedDelay(isolated("command", commandCoordinator::runCycle), 0,
+                    commandPollInterval.toMillis(), TimeUnit.MILLISECONDS);
+        }
         LOGGER.info("event=agent_started agentId={} result=scheduled", agentId);
     }
 

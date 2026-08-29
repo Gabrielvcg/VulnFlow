@@ -1,4 +1,4 @@
-# VulnFlow Agent 0.4.8
+# VulnFlow Agent 0.4.9
 
 The VulnFlow Agent is a standalone Java 17 process for explicitly configured
 Linux hosts. It runs Trivy image scans, stores reports in a durable local
@@ -50,7 +50,9 @@ Operational variables and defaults:
 | `VULNFLOW_AGENT_MAX_REPORT_SIZE` | `10MB` |
 | `VULNFLOW_AGENT_MAX_OUTBOX_BYTES` | `1GB` |
 | `VULNFLOW_AGENT_MAX_OUTBOX_ITEMS` | `1000` |
-| `VULNFLOW_AGENT_UPLOADED_RETENTION` | `7d` |
+| `VULNFLOW_AGENT_UPLOADED_RETENTION` | `24h` |
+| `VULNFLOW_AGENT_COMMANDS_ENABLED` | `false` |
+| `VULNFLOW_AGENT_COMMAND_POLL_INTERVAL` | `5s` |
 | `VULNFLOW_AGENT_HTTP_CONNECT_TIMEOUT` | `10s` |
 | `VULNFLOW_AGENT_HTTP_REQUEST_TIMEOUT` | `2m` |
 | `VULNFLOW_AGENT_SHUTDOWN_TIMEOUT` | `30s` |
@@ -61,10 +63,10 @@ Sizes accept `B`, `KB`, `MB`, or `GB`.
 ## Commands
 
 ```bash
-java -jar target/vulnflow-agent-0.4.8.jar --check
-java -jar target/vulnflow-agent-0.4.8.jar --once
-java -jar target/vulnflow-agent-0.4.8.jar --status
-java -jar target/vulnflow-agent-0.4.8.jar
+java -jar target/vulnflow-agent-0.4.9.jar --check
+java -jar target/vulnflow-agent-0.4.9.jar --once
+java -jar target/vulnflow-agent-0.4.9.jar --status
+java -jar target/vulnflow-agent-0.4.9.jar
 ```
 
 `--check` validates configuration and prints a secret-free effective view.

@@ -43,6 +43,8 @@ public class AgentConfigLoader {
         Duration httpConnectTimeout = duration(environment, "VULNFLOW_AGENT_HTTP_CONNECT_TIMEOUT", "10s");
         Duration httpRequestTimeout = duration(environment, "VULNFLOW_AGENT_HTTP_REQUEST_TIMEOUT", "2m");
         Duration shutdownTimeout = duration(environment, "VULNFLOW_AGENT_SHUTDOWN_TIMEOUT", "30s");
+        boolean commandsEnabled = bool(environment, "VULNFLOW_AGENT_COMMANDS_ENABLED", "false");
+        Duration commandPollInterval = duration(environment, "VULNFLOW_AGENT_COMMAND_POLL_INTERVAL", "5s");
         Path targetsFile = normalizedPath(environment, "VULNFLOW_TARGETS_FILE", "./targets.yml");
         List<ScanTarget> targets = readTargets(targetsFile);
         validateTargets(targets);
@@ -64,6 +66,8 @@ public class AgentConfigLoader {
                 httpConnectTimeout,
                 httpRequestTimeout,
                 shutdownTimeout,
+                commandsEnabled,
+                commandPollInterval,
                 targetsFile,
                 targets);
     }
@@ -152,6 +156,14 @@ public class AgentConfigLoader {
         } catch (NumberFormatException exception) {
             throw new AgentConfigurationException(key + " must be a positive integer", exception);
         }
+    }
+
+    private boolean bool(Map<String, String> environment, String key, String defaultValue) {
+        String raw = value(environment, key, defaultValue).toLowerCase(Locale.ROOT);
+        if (!"true".equals(raw) && !"false".equals(raw)) {
+            throw new AgentConfigurationException(key + " must be true or false");
+        }
+        return Boolean.parseBoolean(raw);
     }
 
     private Duration duration(Map<String, String> environment, String key, String defaultValue) {

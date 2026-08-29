@@ -36,6 +36,11 @@ services:
       VULNFLOW_WORKER_MAX_ATTEMPTS: ${VULNFLOW_WORKER_MAX_ATTEMPTS:-3}
       VULNFLOW_WORKER_STALE_TIMEOUT: ${VULNFLOW_WORKER_STALE_TIMEOUT:-15m}
       VULNFLOW_WORKER_BACKOFF: ${VULNFLOW_WORKER_BACKOFF:-5s,30s,2m}
+      VULNFLOW_UI_ENABLED: ${VULNFLOW_UI_ENABLED:-false}
+      VULNFLOW_UI_SCANS_ENABLED: ${VULNFLOW_UI_SCANS_ENABLED:-false}
+      VULNFLOW_UI_BOOTSTRAP_USERNAME: ${VULNFLOW_UI_BOOTSTRAP_USERNAME:-}
+      VULNFLOW_UI_BOOTSTRAP_PASSWORD_HASH: ${VULNFLOW_UI_BOOTSTRAP_PASSWORD_HASH:-}
+      VULNFLOW_SESSION_COOKIE_SECURE: ${VULNFLOW_SESSION_COOKIE_SECURE:-false}
     volumes:
       - vulnflow-report-data:/var/lib/vulnflow/reports
     ports:
@@ -51,6 +56,24 @@ services:
       timeout: 5s
       retries: 12
       start_period: 30s
+
+  web:
+    build: web
+    ports:
+      - "127.0.0.1:${WEB_PORT:-8081}:8080"
+    depends_on:
+      backend:
+        condition: service_healthy
+    read_only: true
+    tmpfs:
+      - /tmp:size=32m
+      - /var/cache/nginx:size=16m
+      - /var/run:size=4m
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O - http://127.0.0.1:8080/healthz | grep -q ok"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
 
 volumes:
   vulnflow-postgres-data:

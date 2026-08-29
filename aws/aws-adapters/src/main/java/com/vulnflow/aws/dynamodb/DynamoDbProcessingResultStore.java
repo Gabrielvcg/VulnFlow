@@ -18,9 +18,11 @@ import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Base64;
+import java.util.Collection;
 import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -31,11 +33,13 @@ import java.util.regex.Pattern;
 import software.amazon.awssdk.core.exception.SdkException;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
 import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
+import software.amazon.awssdk.services.dynamodb.model.BatchGetItemRequest;
 import software.amazon.awssdk.services.dynamodb.model.BatchWriteItemRequest;
 import software.amazon.awssdk.services.dynamodb.model.BatchWriteItemResponse;
 import software.amazon.awssdk.services.dynamodb.model.DynamoDbException;
 import software.amazon.awssdk.services.dynamodb.model.GetItemRequest;
 import software.amazon.awssdk.services.dynamodb.model.GetItemResponse;
+import software.amazon.awssdk.services.dynamodb.model.KeysAndAttributes;
 import software.amazon.awssdk.services.dynamodb.model.Put;
 import software.amazon.awssdk.services.dynamodb.model.PutRequest;
 import software.amazon.awssdk.services.dynamodb.model.QueryRequest;
@@ -56,6 +60,7 @@ public final class DynamoDbProcessingResultStore
     private static final String STATUS_COMPLETED = "COMPLETED";
     private static final String STATUS_FAILED = "FAILED";
     private static final int DYNAMODB_BATCH_LIMIT = 25;
+    private static final int DYNAMODB_BATCH_GET_LIMIT = 100;
     private static final int MAX_CURSOR_LENGTH = 1024;
 
     private final DynamoDbClient client;
@@ -156,6 +161,36 @@ public final class DynamoDbProcessingResultStore
             return Optional.empty();
         }
         return Optional.of(toSummary(item));
+    }
+
+    @Override
+    public Map<UUID, ProcessingResultSummary> findScans(Collection<UUID> scanIds) {
+        Objects.requireNonNull(scanIds, "scanIds");
+        List<UUID> uniqueIds = new ArrayList<>(new LinkedHashSet<>(scanIds));
+        Map<UUID, ProcessingResultSummary> results = new LinkedHashMap<>();
+        try {
+            for (int offset = 0; offset < uniqueIds.size(); offset += DYNAMODB_BATCH_GET_LIMIT) {
+                List<UUID> batch = uniqueIds.subList(offset, Math.min(offset + DYNAMODB_BATCH_GET_LIMIT, uniqueIds.size()));
+                Map<String, KeysAndAttributes> pending = Map.of(tableName, KeysAndAttributes.builder()
+                        .consistentRead(true)
+                        .keys(batch.stream().map(id -> key(scanPk(id), META)).toList())
+                        .build());
+                for (int attempt = 0; !pending.isEmpty() && attempt < 3; attempt++) {
+                    var response = client.batchGetItem(BatchGetItemRequest.builder().requestItems(pending).build());
+                    for (Map<String, AttributeValue> item : response.responses().getOrDefault(tableName, List.of())) {
+                        ProcessingResultSummary summary = toSummary(item);
+                        results.put(summary.scanId(), summary);
+                    }
+                    pending = response.unprocessedKeys();
+                }
+                if (!pending.isEmpty()) {
+                    throw new TransientProcessingStoreException("The result summary batch was not fully read", null);
+                }
+            }
+            return results;
+        } catch (SdkException exception) {
+            throw mapSdkFailure("The result summary batch could not be read", exception);
+        }
     }
 
     @Override

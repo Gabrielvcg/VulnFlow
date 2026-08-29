@@ -80,9 +80,17 @@ data "aws_iam_policy_document" "backend_access" {
   }
 
   statement {
+    sid       = "ReadQueueTelemetry"
+    effect    = "Allow"
+    actions   = ["sqs:GetQueueAttributes"]
+    resources = [var.queue_arn, var.dlq_arn]
+  }
+
+  statement {
     sid    = "ReadProcessingResults"
     effect = "Allow"
     actions = [
+      "dynamodb:BatchGetItem",
       "dynamodb:GetItem",
       "dynamodb:Query"
     ]

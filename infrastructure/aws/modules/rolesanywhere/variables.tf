@@ -35,6 +35,10 @@ variable "queue_arn" {
   type = string
 }
 
+variable "dlq_arn" {
+  type = string
+}
+
 variable "result_table_arn" {
   type = string
 }
