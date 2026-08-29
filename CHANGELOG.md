@@ -8,7 +8,7 @@
 - Added read-only SQS/DLQ telemetry permission, safe publication retry, production web routing and security headers, three-image release manifests, and web/backend/Agent health gates.
 - Reduced uploaded Agent outbox retention to 24 hours while preserving pending and dead-letter reports, and kept all UI and scan execution flags disabled by default.
 - Made the immutable deployer compatible with the pre-UI three-line release manifest during the first-console migration, while keeping new release validation strict.
-- Replaced the oversized inline Roles Anywhere session policy with the same least-privilege managed policy so temporary sessions remain within AWS packed-policy limits.
+- Minified the Roles Anywhere session policy and removed optional statement IDs while retaining the exact least-privilege actions and resources, keeping temporary sessions within AWS packed-policy limits.
 
 ## 0.4.8 - 2026-08-02
 
