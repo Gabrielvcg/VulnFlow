@@ -39,7 +39,7 @@ jobs:
             aws/lambda-processor/pom.xml
 
       - name: Set up Node.js
-        uses: actions/setup-node@1e60f620b9541d26c24345f766fe2e2c7b0866bc # v4.0.3
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version: "22.14.0"
           cache: npm
