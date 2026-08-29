@@ -98,10 +98,15 @@ data "aws_iam_policy_document" "backend_access" {
   }
 }
 
-resource "aws_iam_role_policy" "backend" {
+resource "aws_iam_policy" "backend" {
   name   = "${var.name_prefix}-backend-least-privilege"
-  role   = aws_iam_role.backend.id
   policy = data.aws_iam_policy_document.backend_access.json
+  tags   = var.additional_tags
+}
+
+resource "aws_iam_role_policy_attachment" "backend" {
+  role       = aws_iam_role.backend.name
+  policy_arn = aws_iam_policy.backend.arn
 }
 
 resource "aws_rolesanywhere_profile" "vps" {
@@ -111,6 +116,6 @@ resource "aws_rolesanywhere_profile" "vps" {
   require_instance_properties = false
   duration_seconds            = var.session_duration_seconds
   role_arns                   = [aws_iam_role.backend.arn]
-  session_policy              = data.aws_iam_policy_document.backend_access.json
+  managed_policy_arns         = [aws_iam_policy.backend.arn]
   tags                        = var.additional_tags
 }
