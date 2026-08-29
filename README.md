@@ -127,6 +127,16 @@ is active; local and VPS `prod` operation creates no AWS SDK clients:
 The API key is retained for the Agent and existing integrations. Human access
 never accepts it and uses the separate session-based security chain.
 
+## Public repository boundary
+
+This repository is suitable for public inspection of the implementation and
+architecture. The public landing page and sample reports are sanitized. Keep
+`.env`, runtime target files, cloud account details, credentials, certificates,
+private reports, and generated `.codex/` analysis artifacts outside Git.
+
+See [SECURITY.md](SECURITY.md) for responsible disclosure and
+[CONTRIBUTING.md](CONTRIBUTING.md) for development boundaries.
+
 ## Continuous scanning agent
 
 Targets are declared explicitly in YAML:

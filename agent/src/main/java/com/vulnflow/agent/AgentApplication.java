@@ -91,9 +91,10 @@ public final class AgentApplication {
             ScheduledExecutorService scheduledExecutor = Executors.newScheduledThreadPool(
                     4,
                     runnable -> namedThread(runnable, "vulnflow-cycle"));
+            ConfiguredTargetRegistry targetRegistry = new ConfiguredTargetRegistry(config.targets());
             ScanCoordinator scanCoordinator = new ScanCoordinator(
                     config.agentId(),
-                    new ConfiguredTargetRegistry(config.targets()),
+                    targetRegistry,
                     scanner,
                     outbox,
                     stateStore,
@@ -106,7 +107,7 @@ public final class AgentApplication {
                     stateStore,
                     config.uploadRetryInterval());
             CommandCoordinator commandCoordinator = new CommandCoordinator(config.agentId(), config.commandsEnabled(),
-                    config.dataDirectory(), client, scanner, outbox, scanExecutor);
+                    config.dataDirectory(), client, scanner, outbox, scanExecutor, targetRegistry);
             AgentScheduler scheduler = new AgentScheduler(
                     config.agentId(),
                     scanCoordinator,
