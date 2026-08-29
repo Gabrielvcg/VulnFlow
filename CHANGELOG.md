@@ -5,6 +5,9 @@
 - Added a separate immutable React console image with a static, sanitized public case study and a private operational surface for assets, scans, findings, runtime health, users, targets, and audit events.
 - Added JDBC sessions, CSRF, BCrypt 12 passwords, `ADMIN`/`OPERATOR` authorization, temporary-password first access, login throttling, and an additive PostgreSQL UI control-plane migration.
 - Added allowlisted on-demand scan requests with quotas, Agent health and capacity gates, leased claims, fencing tokens, heartbeat recovery, and backward-compatible Trivy uploads.
+- Added Agent-side target identity validation so an enabled control-plane target
+  cannot execute unless it is also present in the Agent allowlist.
+- Improved safe command-scan failure diagnostics with a non-sensitive cause type.
 - Added read-only SQS/DLQ telemetry permission, safe publication retry, production web routing and security headers, three-image release manifests, and web/backend/Agent health gates.
 - Reduced uploaded Agent outbox retention to 24 hours while preserving pending and dead-letter reports, and kept all UI and scan execution flags disabled by default.
 - Made the immutable deployer compatible with the pre-UI three-line release manifest during the first-console migration, while keeping new release validation strict.
