@@ -6,6 +6,12 @@ Keep `VULNFLOW_UI_SCANS_ENABLED=false` and `VULNFLOW_AGENT_COMMANDS_ENABLED=fals
 
 The Agent remains outbound-only. It polls for one command, receives a leased claim and fencing token, runs the existing 15-minute Trivy path, persists the report to its durable outbox, and uploads with the optional request identity. Scheduled `targets.yml` cycles remain available.
 
+The Agent validates the claimed target identity against its local `targets.yml`
+before invoking Trivy. A target that is enabled in PostgreSQL but absent from
+that file is failed safely and is never executed. Keep the control-plane target
+catalog and the Agent allowlist synchronized; historical or test assets must
+remain disabled in the UI catalog.
+
 ## Guardrails
 
 - one active request per user and one Agent execution at a time;
