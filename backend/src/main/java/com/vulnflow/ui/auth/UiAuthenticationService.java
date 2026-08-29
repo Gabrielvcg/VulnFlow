@@ -77,7 +77,8 @@ public class UiAuthenticationService implements ApplicationRunner {
     }
 
     @Transactional
-    public UiPrincipal changePassword(UiPrincipal principal, String currentPassword, String newPassword) {
+    public UiPrincipal changePassword(UiPrincipal principal, String currentPassword, String newPassword,
+                                      HttpServletRequest request) {
         UiUser user = users.findById(principal.id()).orElseThrow(() -> new UiAuthenticationException(
                 "INVALID_SESSION", "The authenticated user no longer exists"));
         if (!encoder.matches(currentPassword, user.getPasswordHash())) {
@@ -88,8 +89,13 @@ public class UiAuthenticationService implements ApplicationRunner {
         audit.record(user, user.getUsername(), "PASSWORD_CHANGED", "USER", user.getId().toString(),
                 "SUCCESS", null, "Password changed by user");
         UiPrincipal updated=principal(user);
-        SecurityContextHolder.getContext().setAuthentication(new UsernamePasswordAuthenticationToken(
+        SecurityContext context = SecurityContextHolder.getContext();
+        context.setAuthentication(new UsernamePasswordAuthenticationToken(
                 updated,null,List.of(new SimpleGrantedAuthority("ROLE_"+user.getRole().name()))));
+        HttpSession session = request.getSession(false);
+        if (session != null) {
+            session.setAttribute(HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY, context);
+        }
         return updated;
     }
 

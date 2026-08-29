@@ -42,8 +42,9 @@ public class UiAuthController {
 
     @PostMapping("/change-password")
     public UiPrincipal changePassword(@AuthenticationPrincipal UiPrincipal principal,
-                                      @Valid @RequestBody ChangePasswordRequest body) {
-        return authentication.changePassword(principal, body.currentPassword(), body.newPassword());
+                                      @Valid @RequestBody ChangePasswordRequest body,
+                                      HttpServletRequest request) {
+        return authentication.changePassword(principal, body.currentPassword(), body.newPassword(), request);
     }
 
     public record LoginRequest(@NotBlank @Size(max = 100) String username,
