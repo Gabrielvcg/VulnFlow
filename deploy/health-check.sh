@@ -47,6 +47,11 @@ backend_endpoint_is_up() {
     'wget -q -O - http://127.0.0.1:8080/actuator/health | grep -q '\''"status":"UP"'\'''
 }
 
+has_web_image=false
+if grep -q '^VULNFLOW_WEB_IMAGE=' "${release_env}"; then
+  has_web_image=true
+fi
+
 attempts=30
 delay_seconds=5
 
@@ -61,13 +66,15 @@ for (( attempt = 1; attempt <= attempts; attempt++ )); do
   agent_state=$(container_state "${agent_id}")
   web_state=$(container_state "${web_id}")
 
-  if [[ "${postgres_state}" == "healthy" && "${backend_state}" == "healthy" && "${agent_state}" == "running" && "${web_state}" == "healthy" ]] \
+  if [[ "${postgres_state}" == "healthy" && "${backend_state}" == "healthy" && "${agent_state}" == "running" ]] \
+      && ( [[ "${has_web_image}" == "false" ]] || [[ "${web_state}" == "healthy" ]] ) \
       && backend_endpoint_is_up "${backend_id}"; then
     sleep 10
     agent_state=$(container_state "$(container_id agent)")
     backend_state=$(container_state "$(container_id backend)")
     web_state=$(container_state "$(container_id web)")
-    if [[ "${agent_state}" == "running" && "${backend_state}" == "healthy" && "${web_state}" == "healthy" ]]; then
+    if [[ "${agent_state}" == "running" && "${backend_state}" == "healthy" ]] \
+        && ( [[ "${has_web_image}" == "false" ]] || [[ "${web_state}" == "healthy" ]] ); then
       echo "Deployment health check passed: web, PostgreSQL, and backend are healthy; agent is running."
       exit 0
     fi
