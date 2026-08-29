@@ -9,6 +9,7 @@
 - Reduced uploaded Agent outbox retention to 24 hours while preserving pending and dead-letter reports, and kept all UI and scan execution flags disabled by default.
 - Made the immutable deployer compatible with the pre-UI three-line release manifest during the first-console migration, while keeping new release validation strict.
 - Minified the Roles Anywhere session policy and removed optional statement IDs while retaining the exact least-privilege actions and resources, keeping temporary sessions within AWS packed-policy limits.
+- Authenticated private GHCR pulls during deployment with the workflow's short-lived read-only package token instead of requiring a persistent registry PAT.
 
 ## 0.4.8 - 2026-08-02
 
