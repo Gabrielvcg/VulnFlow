@@ -11,6 +11,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 public interface AwsPublicationOutboxRepository extends JpaRepository<AwsPublicationOutbox, UUID> {
+    long countByStatus(AwsPublicationStatus status);
     Optional<AwsPublicationOutbox> findByScanId(UUID scanId);
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)

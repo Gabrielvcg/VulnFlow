@@ -24,7 +24,9 @@ public record OutboxItem(
         Instant uploadedAt,
         UUID backendScanId,
         UUID backendJobId,
-        String backendOutcome) {
+        String backendOutcome,
+        UUID scanRequestId,
+        UUID claimToken) {
 
     public OutboxItem claimed(Instant now) {
         return copy(assetId, uploadAttempts + 1, now, null, OutboxStatus.UPLOADING,
@@ -72,6 +74,6 @@ public record OutboxItem(
         return new OutboxItem(
                 id, agentId, target, nextAssetId, scannedAt, reportFile, sha256, sizeBytes,
                 nextUploadAttempts, nextAttempt, nextLastError, nextStatus, createdAt, nextUpdatedAt,
-                nextUploadedAt, nextBackendScanId, nextBackendJobId, nextBackendOutcome);
+                nextUploadedAt, nextBackendScanId, nextBackendJobId, nextBackendOutcome, scanRequestId, claimToken);
     }
 }

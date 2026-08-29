@@ -14,6 +14,7 @@ import com.vulnflow.agent.scheduling.AgentStatus;
 import com.vulnflow.agent.scheduling.AssetCache;
 import com.vulnflow.agent.scheduling.ScanCoordinator;
 import com.vulnflow.agent.scheduling.UploadCoordinator;
+import com.vulnflow.agent.scheduling.CommandCoordinator;
 import com.vulnflow.agent.shared.AgentObjectMapper;
 import com.vulnflow.agent.target.ConfiguredTargetRegistry;
 import java.io.PrintStream;
@@ -88,7 +89,7 @@ public final class AgentApplication {
                     config.maxConcurrentScans(),
                     runnable -> namedThread(runnable, "vulnflow-scan"));
             ScheduledExecutorService scheduledExecutor = Executors.newScheduledThreadPool(
-                    3,
+                    4,
                     runnable -> namedThread(runnable, "vulnflow-cycle"));
             ScanCoordinator scanCoordinator = new ScanCoordinator(
                     config.agentId(),
@@ -104,6 +105,8 @@ public final class AgentApplication {
                     client,
                     stateStore,
                     config.uploadRetryInterval());
+            CommandCoordinator commandCoordinator = new CommandCoordinator(config.agentId(), config.commandsEnabled(),
+                    config.dataDirectory(), client, scanner, outbox, scanExecutor);
             AgentScheduler scheduler = new AgentScheduler(
                     config.agentId(),
                     scanCoordinator,
@@ -114,7 +117,9 @@ public final class AgentApplication {
                     config.scanInterval(),
                     config.uploadRetryInterval(),
                     config.uploadedRetention(),
-                    config.shutdownTimeout());
+                    config.shutdownTimeout(),
+                    commandCoordinator,
+                    config.commandPollInterval());
             if (mode == Mode.ONCE) {
                 try (scheduler) {
                     scheduler.runOnce();

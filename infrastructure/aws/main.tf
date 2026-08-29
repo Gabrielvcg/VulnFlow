@@ -68,6 +68,7 @@ module "vps_identity" {
   bucket_arn               = module.storage.bucket_arn
   report_prefix            = var.report_prefix
   queue_arn                = module.queue.queue_arn
+  dlq_arn                  = module.queue.dlq_arn
   result_table_arn         = module.results.table_arn
   result_table_gsi_arn     = module.results.gsi_arn
   additional_tags          = local.common_tags

@@ -1,8 +1,8 @@
 # VPS deployment
 
 The repository `deploy/` directory is the versioned, runtime-only production
-bundle for VulnFlow 0.4.8. GitHub Actions builds and publishes the backend and
-agent images. The VPS only pulls immutable commit-SHA images and runs them with
+bundle for VulnFlow 0.4.9. GitHub Actions builds and publishes the backend,
+Agent, and web images. The VPS only pulls immutable commit-SHA images and runs them with
 Docker Compose; it does not clone source code or build Maven projects.
 
 ## Runtime layout
@@ -24,6 +24,12 @@ The workflow synchronizes only `deploy/` and the non-secret candidate release
 manifest. It never overwrites `runtime/.env.prod` or `runtime/targets.yml`.
 The optional `runtime/aws/` directory is also VPS-owned and never synchronized
 from GitHub Actions.
+
+The shared production host reserves `127.0.0.1:8085` for the VulnFlow backend
+and `127.0.0.1:8086` for the VulnFlow web image. Keep
+`VULNFLOW_BACKEND_PORT=8085` and `VULNFLOW_WEB_PORT=8086` explicit in
+`runtime/.env.prod`; port `8081` belongs to another application. The versioned
+Nginx site proxies only to these loopback listeners.
 
 ## One-time VPS preparation
 

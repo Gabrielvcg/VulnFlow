@@ -78,7 +78,7 @@ Response policy:
 
 Concurrency defaults to one Trivy process. Report size defaults to 10 MiB, the
 outbox to 1 GiB and 1,000 items, stdout/stderr capture to 16 KiB, and uploaded
-retention to seven days. Memory use is bounded for process output and backend
+retention to 24 hours. Memory use is bounded for process output and backend
 responses; Jackson still builds the bounded Trivy JSON tree once to validate
 and normalize it.
 

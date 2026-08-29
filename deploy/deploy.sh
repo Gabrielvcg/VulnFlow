@@ -41,15 +41,18 @@ validate_release() {
   local release=$1
   local backend_sha
   local agent_sha
+  local web_sha
   local release_sha
-  [[ $(wc -l < "${release}") -eq 3 ]] || return 1
+  [[ $(wc -l < "${release}") -eq 4 ]] || return 1
   grep -Eq '^VULNFLOW_BACKEND_IMAGE=ghcr\.io/[a-z0-9][a-z0-9._/-]*/vulnflow-backend:[0-9a-f]{40}$' "${release}" || return 1
   grep -Eq '^VULNFLOW_AGENT_IMAGE=ghcr\.io/[a-z0-9][a-z0-9._/-]*/vulnflow-agent:[0-9a-f]{40}$' "${release}" || return 1
+  grep -Eq '^VULNFLOW_WEB_IMAGE=ghcr\.io/[a-z0-9][a-z0-9._/-]*/vulnflow-web:[0-9a-f]{40}$' "${release}" || return 1
   grep -Eq '^VULNFLOW_RELEASE_SHA=[0-9a-f]{40}$' "${release}" || return 1
   backend_sha=$(sed -n 's/^VULNFLOW_BACKEND_IMAGE=.*://p' "${release}")
   agent_sha=$(sed -n 's/^VULNFLOW_AGENT_IMAGE=.*://p' "${release}")
+  web_sha=$(sed -n 's/^VULNFLOW_WEB_IMAGE=.*://p' "${release}")
   release_sha=$(sed -n 's/^VULNFLOW_RELEASE_SHA=//p' "${release}")
-  [[ "${backend_sha}" == "${release_sha}" && "${agent_sha}" == "${release_sha}" ]] || return 1
+  [[ "${backend_sha}" == "${release_sha}" && "${agent_sha}" == "${release_sha}" && "${web_sha}" == "${release_sha}" ]] || return 1
 }
 
 if ! validate_release "${candidate_real}"; then
@@ -82,13 +85,13 @@ diagnostics() {
   local release=$1
   echo "Deployment diagnostics (bounded to the latest 100 log lines per service):" >&2
   compose "${release}" ps >&2 || true
-  compose "${release}" logs --no-color --tail 100 postgres backend agent >&2 || true
+  compose "${release}" logs --no-color --tail 100 postgres backend agent web >&2 || true
 }
 
 deploy_release() {
   local release=$1
   compose "${release}" config --quiet >/dev/null || return 1
-  compose "${release}" pull backend agent || return 1
+  compose "${release}" pull backend agent web || return 1
   compose "${release}" up -d --remove-orphans || return 1
   "${health_check}" "${runtime_env}" "${release}" || return 1
 }

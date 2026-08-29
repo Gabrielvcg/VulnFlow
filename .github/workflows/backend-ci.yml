@@ -38,6 +38,30 @@ jobs:
             aws/aws-adapters/pom.xml
             aws/lambda-processor/pom.xml
 
+      - name: Set up Node.js
+        uses: actions/setup-node@1e60f620b9541d26c24345f766fe2e2c7b0866bc # v4.0.3
+        with:
+          node-version: "22.14.0"
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+
+      - name: Verify web console
+        working-directory: web
+        run: |
+          npm ci --ignore-scripts
+          npm test
+          npm run build
+          npx playwright install --with-deps chromium
+          npm run test:e2e
+          ! grep -R -E 'AKIA[0-9A-Z]{16}|VULNFLOW_API_KEY|BEGIN .*PRIVATE KEY' dist
+
+      - name: Enforce landing Lighthouse budgets
+        uses: treosh/lighthouse-ci-action@3e7e23fb74242897f95c0ba9cabad3d0227b9b18 # v12
+        with:
+          configPath: ./web/lighthouserc.json
+          uploadArtifacts: false
+          temporaryPublicStorage: false
+
       - name: Reject committed credentials
         shell: bash
         run: |
@@ -72,7 +96,7 @@ jobs:
       - name: Require Lambda package and offline AWS demo
         shell: bash
         run: |
-          test -f aws/lambda-processor/target/vulnflow-lambda-processor-0.4.8.jar
+          test -f aws/lambda-processor/target/vulnflow-lambda-processor-0.4.9.jar
           test -f backend/target/failsafe-reports/TEST-com.vulnflow.AwsExecutionPathIT.xml
           forbidden_aws_test_pattern='local''stack|endpoint''Override'
           ! git grep -I -E "$forbidden_aws_test_pattern" -- ':!docs/**'
@@ -97,9 +121,11 @@ jobs:
           VULNFLOW_AGENT_ID: ci-agent
           VULNFLOW_BACKEND_IMAGE: example.invalid/vulnflow-backend:ci
           VULNFLOW_AGENT_IMAGE: example.invalid/vulnflow-agent:ci
+          VULNFLOW_WEB_IMAGE: example.invalid/vulnflow-web:ci
           AWS_REGION: eu-west-1
           VULNFLOW_S3_BUCKET: vulnflow-ci-reports
           VULNFLOW_SQS_QUEUE_URL: https://sqs.eu-west-1.amazonaws.com/160172542031/vulnflow-ci-ingestion
+          VULNFLOW_SQS_DLQ_URL: https://sqs.eu-west-1.amazonaws.com/160172542031/vulnflow-ci-ingestion-dlq
           VULNFLOW_DYNAMODB_TABLE: vulnflow-ci-results
           VULNFLOW_AWS_CREDENTIALS_DIRECTORY: /tmp/vulnflow-aws
         run: |
@@ -116,11 +142,14 @@ jobs:
 
           agent = compose["services"]["agent"]
           backend = compose["services"]["backend"]
+          web = compose["services"]["web"]
           assert agent["environment"]["TMPDIR"] == "/var/lib/vulnflow-agent/tmp"
           assert agent["read_only"] is True
           assert all("docker.sock" not in str(volume) for volume in agent["volumes"])
           assert backend["environment"]["SPRING_PROFILES_ACTIVE"] == "prod"
           assert "AWS_PROFILE" not in backend["environment"]
+          assert web["read_only"] is True
+          assert web["image"] == "example.invalid/vulnflow-web:ci"
 
           with open(os.path.join(os.environ["RUNNER_TEMP"], "vulnflow-compose-aws.json"), encoding="utf-8") as stream:
               aws_compose = json.load(stream)
@@ -142,6 +171,9 @@ jobs:
 
       - name: Build agent image
         run: docker build --tag vulnflow-agent:ci agent
+
+      - name: Build web image
+        run: docker build --tag vulnflow-web:ci web
 
   terraform_validate:
     name: Format and validate temporary AWS Terraform
@@ -197,6 +229,7 @@ jobs:
     outputs:
       backend_image: ${{ steps.images.outputs.backend_image }}
       agent_image: ${{ steps.images.outputs.agent_image }}
+      web_image: ${{ steps.images.outputs.web_image }}
 
     steps:
       - name: Check out repository
@@ -211,6 +244,7 @@ jobs:
           owner="${GITHUB_REPOSITORY_OWNER,,}"
           echo "backend_image=ghcr.io/${owner}/vulnflow-backend:${GITHUB_SHA}" >> "$GITHUB_OUTPUT"
           echo "agent_image=ghcr.io/${owner}/vulnflow-agent:${GITHUB_SHA}" >> "$GITHUB_OUTPUT"
+          echo "web_image=ghcr.io/${owner}/vulnflow-web:${GITHUB_SHA}" >> "$GITHUB_OUTPUT"
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@bb05f3f5519dd87d3ba754cc423b652a5edd6d2c # v4.2.0
@@ -240,6 +274,15 @@ jobs:
           tags: ${{ steps.images.outputs.agent_image }}
           cache-from: type=gha,scope=vulnflow-agent
           cache-to: type=gha,mode=max,scope=vulnflow-agent
+
+      - name: Build and publish web image
+        uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a # v7.3.0
+        with:
+          context: web
+          push: true
+          tags: ${{ steps.images.outputs.web_image }}
+          cache-from: type=gha,scope=vulnflow-web
+          cache-to: type=gha,mode=max,scope=vulnflow-web
 
   deploy_production:
     name: Deploy production VPS
@@ -313,9 +356,10 @@ jobs:
         env:
           BACKEND_IMAGE: ${{ needs.publish_images.outputs.backend_image }}
           AGENT_IMAGE: ${{ needs.publish_images.outputs.agent_image }}
+          WEB_IMAGE: ${{ needs.publish_images.outputs.web_image }}
         run: |
-          printf 'VULNFLOW_BACKEND_IMAGE=%s\nVULNFLOW_AGENT_IMAGE=%s\nVULNFLOW_RELEASE_SHA=%s\n' \
-            "$BACKEND_IMAGE" "$AGENT_IMAGE" "$GITHUB_SHA" > "$RUNNER_TEMP/vulnflow-release.env"
+          printf 'VULNFLOW_BACKEND_IMAGE=%s\nVULNFLOW_AGENT_IMAGE=%s\nVULNFLOW_WEB_IMAGE=%s\nVULNFLOW_RELEASE_SHA=%s\n' \
+            "$BACKEND_IMAGE" "$AGENT_IMAGE" "$WEB_IMAGE" "$GITHUB_SHA" > "$RUNNER_TEMP/vulnflow-release.env"
           chmod 600 "$RUNNER_TEMP/vulnflow-release.env"
 
       - name: Synchronize deployment files

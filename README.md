@@ -1,12 +1,18 @@
 # VulnFlow
 
-VulnFlow 0.4.8 keeps the local processing path as the safe default while the
+VulnFlow 0.4.9 keeps the local processing path as the safe default while the
 production VPS runs the explicitly activated `prod,aws` profile. Human
 Terraform access uses MFA-protected AssumeRole sessions and the VPS obtains
 temporary workload credentials through IAM Roles Anywhere. The AWS path uses
 S3 payload storage, a recoverable PostgreSQL SQS publication outbox, the shared
 Lambda processor, and a DynamoDB result store. Terraform apply remains a
-reviewed manual operation; CI builds, verifies, and deploys immutable images.
+reviewed manual operation; CI builds, verifies, and deploys immutable backend,
+Agent, and web images.
+
+The public `/` route is a static, sanitized engineering case study. `/login`
+and `/app/**` form a private operations console backed by JDBC sessions, CSRF,
+local `ADMIN`/`OPERATOR` accounts, and a closed target catalog. The console and
+on-demand scans are independent feature flags and remain disabled by default.
 
 ## Current architecture
 
@@ -67,13 +73,15 @@ docker compose ps
 Default local endpoints:
 
 - API: `http://127.0.0.1:8080`
+- Web case study: `http://127.0.0.1:8081`
 - Swagger UI: `http://127.0.0.1:8080/swagger-ui.html`
 - Health: `http://127.0.0.1:8080/actuator/health`
 - Metrics catalog: `http://127.0.0.1:8080/actuator/metrics`
 - PostgreSQL: `127.0.0.1:5432`
 
-Only health, metrics, OpenAPI, and Swagger are public. Every `/api/v1/**`
-endpoint requires `X-API-Key`.
+Every machine `/api/v1/**` endpoint requires `X-API-Key`. Browser
+`/api/ui/v1/**` endpoints use an independent session and CSRF security chain;
+the static landing never calls either API.
 
 ## Configuration
 
@@ -89,6 +97,11 @@ endpoint requires `X-API-Key`.
 | `VULNFLOW_WORKER_MAX_ATTEMPTS` | `3` | Maximum processing attempts |
 | `VULNFLOW_WORKER_STALE_TIMEOUT` | `15m` | Processing lease timeout |
 | `VULNFLOW_WORKER_BACKOFF` | `5s,30s,2m` | Deterministic retry delays |
+| `VULNFLOW_UI_ENABLED` | `false` | Enables the authenticated UI API; the static landing remains available |
+| `VULNFLOW_UI_SCANS_ENABLED` | `false` | Enables allowlisted on-demand scan requests |
+| `VULNFLOW_UI_BOOTSTRAP_USERNAME` | none | First admin username, used only while no users exist |
+| `VULNFLOW_UI_BOOTSTRAP_PASSWORD_HASH` | none | BCrypt 12 first-admin hash; remove after initialization |
+| `VULNFLOW_UI_SQS_TELEMETRY_ENABLED` | `false` | Enables read-only source queue and DLQ counters |
 
 The following settings are bound only when the explicit Spring profile `aws`
 is active; local and VPS `prod` operation creates no AWS SDK clients:
@@ -99,6 +112,7 @@ is active; local and VPS `prod` operation creates no AWS SDK clients:
 | `VULNFLOW_S3_BUCKET` | none | Private report bucket; required by `aws` profile |
 | `VULNFLOW_S3_PREFIX` | `reports` | Validated logical object prefix |
 | `VULNFLOW_SQS_QUEUE_URL` | none | Ingestion queue URL; required by `aws` profile |
+| `VULNFLOW_SQS_DLQ_URL` | none | DLQ URL used only for read-only operational telemetry |
 | `VULNFLOW_DYNAMODB_TABLE` | none | Result table; required by `aws` profile |
 | `VULNFLOW_DYNAMODB_MAX_FINDINGS` | `100000` | Maximum normalized findings per event |
 | `VULNFLOW_MAX_PAYLOAD_BYTES` | `10485760` | S3 adapter/Lambda bounded-read limit |
@@ -110,8 +124,8 @@ is active; local and VPS `prod` operation creates no AWS SDK clients:
 | `VULNFLOW_AWS_OUTBOX_STALE_TIMEOUT` | `2m` | Recovery timeout for abandoned claims |
 | `VULNFLOW_AWS_OUTBOX_BACKOFF` | `5s,30s,2m,10m` | Publication retry delays |
 
-The API key is provisional. A future human-facing interface should use OIDC or
-JWT with explicit authorization.
+The API key is retained for the Agent and existing integrations. Human access
+never accepts it and uses the separate session-based security chain.
 
 ## Continuous scanning agent
 
@@ -134,15 +148,15 @@ $env:VULNFLOW_API_URL = "http://127.0.0.1:8080/"
 $env:VULNFLOW_API_KEY = "configured-value"
 $env:VULNFLOW_AGENT_ID = "developer-machine"
 $env:VULNFLOW_TARGETS_FILE = (Resolve-Path targets.yml)
-java -jar target/vulnflow-agent-0.4.8.jar --check
-java -jar target/vulnflow-agent-0.4.8.jar --once
-java -jar target/vulnflow-agent-0.4.8.jar --status
+java -jar target/vulnflow-agent-0.4.9.jar --check
+java -jar target/vulnflow-agent-0.4.9.jar --once
+java -jar target/vulnflow-agent-0.4.9.jar --status
 ```
 
 The default daemon mode schedules isolated scan, upload, and cleanup cycles.
 Reports enter a filesystem outbox before network access, survive restarts, and
 are checked against their SHA-256 before upload. `UPLOADED` reports are retained
-for seven days by default; pending, retrying, and dead-letter reports are never
+for 24 hours by default; pending, retrying, and dead-letter reports are never
 deleted automatically. See [the agent guide](docs/agent.md) for all variables,
 systemd, Docker, security, capacity, and failure behavior.
 

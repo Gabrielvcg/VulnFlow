@@ -27,11 +27,23 @@ spring:
     web:
       pageable:
         max-page-size: 100
+  session:
+    store-type: jdbc
+    timeout: 8h
+    jdbc:
+      initialize-schema: never
 
 server:
   shutdown: graceful
   tomcat:
     connection-timeout: 5s
+  servlet:
+    session:
+      cookie:
+        name: VULNFLOW_SESSION
+        http-only: true
+        secure: ${VULNFLOW_SESSION_COOKIE_SECURE:true}
+        same-site: lax
 
 management:
   endpoints:
@@ -81,6 +93,21 @@ vulnflow:
   security:
     api-key:
       value: ${VULNFLOW_API_KEY:}
+  ui:
+    enabled: ${VULNFLOW_UI_ENABLED:false}
+    scans-enabled: ${VULNFLOW_UI_SCANS_ENABLED:false}
+    sqs-telemetry-enabled: ${VULNFLOW_UI_SQS_TELEMETRY_ENABLED:false}
+    bootstrap-username: ${VULNFLOW_UI_BOOTSTRAP_USERNAME:}
+    bootstrap-password-hash: ${VULNFLOW_UI_BOOTSTRAP_PASSWORD_HASH:}
+    agent-offline-after: ${VULNFLOW_UI_AGENT_OFFLINE_AFTER:45s}
+    claim-lease: ${VULNFLOW_UI_CLAIM_LEASE:2m}
+    request-expiry: ${VULNFLOW_UI_REQUEST_EXPIRY:30m}
+    target-cooldown: ${VULNFLOW_UI_TARGET_COOLDOWN:10m}
+    queue-capacity: ${VULNFLOW_UI_QUEUE_CAPACITY:25}
+    max-hourly-per-user: ${VULNFLOW_UI_MAX_HOURLY_PER_USER:5}
+    max-daily-per-user: ${VULNFLOW_UI_MAX_DAILY_PER_USER:20}
+    max-recovery-attempts: ${VULNFLOW_UI_MAX_RECOVERY_ATTEMPTS:2}
+    agent-min-free-bytes: ${VULNFLOW_UI_AGENT_MIN_FREE_BYTES:536870912}
 
 logging:
   structured:

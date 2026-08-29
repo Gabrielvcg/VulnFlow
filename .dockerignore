@@ -1,7 +1,12 @@
 .git
 .github
 .codex
-**/target
+/target
+/backend/target
+/agent/target
+/processing-core/target
+/aws/aws-adapters/target
+/aws/lambda-processor/target
 **/.terraform
 data
 infra

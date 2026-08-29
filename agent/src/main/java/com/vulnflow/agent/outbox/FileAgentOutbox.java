@@ -45,6 +45,12 @@ public class FileAgentOutbox implements AgentOutbox {
 
     @Override
     public synchronized OutboxItem enqueue(String agentId, ScanTarget target, Instant scannedAt, Path report) {
+        return enqueue(agentId, target, scannedAt, report, null, null);
+    }
+
+    @Override
+    public synchronized OutboxItem enqueue(String agentId, ScanTarget target, Instant scannedAt, Path report,
+                                           UUID scanRequestId, UUID claimToken) {
         try {
             long reportSize = Files.size(report);
             List<OutboxItem> existing = loadAll();
@@ -72,7 +78,9 @@ public class FileAgentOutbox implements AgentOutbox {
                     null,
                     null,
                     null,
-                    null);
+                    null,
+                    scanRequestId,
+                    claimToken);
             Path temporaryDirectory = itemsDirectory.resolve("." + id + ".tmp");
             Path finalDirectory = itemDirectory(id);
             Files.createDirectory(temporaryDirectory);

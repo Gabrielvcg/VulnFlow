@@ -26,6 +26,9 @@ import org.springframework.web.method.annotation.MethodArgumentTypeMismatchExcep
 import org.springframework.web.multipart.MaxUploadSizeExceededException;
 import org.springframework.web.multipart.support.MissingServletRequestPartException;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
+import com.vulnflow.ui.auth.UiAuthenticationException;
+import com.vulnflow.ui.scan.ScanRequestRejectedException;
+import com.vulnflow.ui.scan.StaleScanClaimException;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
@@ -96,6 +99,27 @@ public class GlobalExceptionHandler {
                 "The request body is missing or invalid",
                 request,
                 Map.of());
+    }
+
+    @ExceptionHandler(UiAuthenticationException.class)
+    ResponseEntity<ApiError> handleUiAuthentication(UiAuthenticationException exception, HttpServletRequest request) {
+        return response(HttpStatus.UNAUTHORIZED, exception.getCode(), exception.getMessage(), request, Map.of());
+    }
+
+    @ExceptionHandler(ScanRequestRejectedException.class)
+    ResponseEntity<ApiError> handleScanRejected(ScanRequestRejectedException exception, HttpServletRequest request) {
+        HttpStatus status = "AGENT_OFFLINE".equals(exception.getCode()) ? HttpStatus.SERVICE_UNAVAILABLE : HttpStatus.CONFLICT;
+        return response(status, exception.getCode(), exception.getMessage(), request, Map.of());
+    }
+
+    @ExceptionHandler(StaleScanClaimException.class)
+    ResponseEntity<ApiError> handleStaleClaim(StaleScanClaimException exception, HttpServletRequest request) {
+        return response(HttpStatus.CONFLICT, "STALE_SCAN_CLAIM", exception.getMessage(), request, Map.of());
+    }
+
+    @ExceptionHandler(IllegalArgumentException.class)
+    ResponseEntity<ApiError> handleIllegalArgument(IllegalArgumentException exception, HttpServletRequest request) {
+        return response(HttpStatus.BAD_REQUEST, "INVALID_REQUEST", exception.getMessage(), request, Map.of());
     }
 
     @ExceptionHandler(MissingServletRequestPartException.class)

@@ -26,6 +26,8 @@ public record AgentConfig(
         Duration httpConnectTimeout,
         Duration httpRequestTimeout,
         Duration shutdownTimeout,
+        boolean commandsEnabled,
+        Duration commandPollInterval,
         Path targetsFile,
         List<ScanTarget> targets) {
 
@@ -52,6 +54,8 @@ public record AgentConfig(
         safe.put("httpConnectTimeout", httpConnectTimeout.toString());
         safe.put("httpRequestTimeout", httpRequestTimeout.toString());
         safe.put("shutdownTimeout", shutdownTimeout.toString());
+        safe.put("commandsEnabled", commandsEnabled);
+        safe.put("commandPollInterval", commandPollInterval.toString());
         safe.put("targetsFile", targetsFile.toString());
         safe.put("targets", targets);
         return Map.copyOf(safe);

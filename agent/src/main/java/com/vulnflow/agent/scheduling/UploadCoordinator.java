@@ -67,14 +67,14 @@ public class UploadCoordinator {
             OutboxItem item = ensureAsset(claimed, now, false);
             UploadReceipt receipt;
             try {
-                receipt = client.uploadTrivyReport(item.assetId(), outbox.reportPath(item));
+                receipt = client.uploadTrivyReport(item.assetId(), outbox.reportPath(item), item.scanRequestId(), item.claimToken());
             } catch (VulnFlowClientException exception) {
                 if (exception.kind() != ClientFailureKind.ASSET_NOT_FOUND) {
                     throw exception;
                 }
                 assetCache.invalidate(item.target());
                 item = ensureAsset(item.withAsset(null, now), now, true);
-                receipt = client.uploadTrivyReport(item.assetId(), outbox.reportPath(item));
+                receipt = client.uploadTrivyReport(item.assetId(), outbox.reportPath(item), item.scanRequestId(), item.claimToken());
             }
             outbox.markUploaded(item.id(), receipt, now);
             stateStore.recordSuccessfulUpload(now);

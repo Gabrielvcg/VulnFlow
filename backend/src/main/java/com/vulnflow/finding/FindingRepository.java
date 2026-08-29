@@ -1,6 +1,7 @@
 package com.vulnflow.finding;
 
 import java.util.UUID;
+import java.util.Collection;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -34,6 +35,12 @@ public interface FindingRepository extends JpaRepository<Finding, UUID> {
     long countByScanId(UUID scanId);
 
     long countByScanIdAndSeverity(UUID scanId, FindingSeverity severity);
+
+    long countByScanIdIn(Collection<UUID> scanIds);
+
+    long countByScanIdInAndSeverity(Collection<UUID> scanIds, FindingSeverity severity);
+
+    Page<Finding> findByScanId(UUID scanId, Pageable pageable);
 
     @Modifying
     @Query("DELETE FROM Finding finding WHERE finding.scan.id = :scanId")
