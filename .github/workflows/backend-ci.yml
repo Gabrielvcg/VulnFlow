@@ -296,6 +296,7 @@ jobs:
     environment: production
     permissions:
       contents: read
+      packages: read
     concurrency:
       group: vulnflow-production
       cancel-in-progress: false
@@ -305,7 +306,7 @@ jobs:
       VPS_USER: ${{ vars.VPS_USER }}
       VPS_DEPLOY_PATH: ${{ vars.VPS_DEPLOY_PATH }}
       GHCR_USERNAME: ${{ vars.GHCR_USERNAME }}
-      GHCR_TOKEN: ${{ secrets.GHCR_TOKEN }}
+      GHCR_TOKEN: ${{ github.token }}
       VPS_SSH_PRIVATE_KEY: ${{ secrets.VPS_SSH_PRIVATE_KEY }}
       VPS_SSH_KNOWN_HOSTS: ${{ secrets.VPS_SSH_KNOWN_HOSTS }}
 
