@@ -9,13 +9,15 @@ describe('public case study',()=>{
     render(<QueryClientProvider client={new QueryClient()}><MemoryRouter initialEntries={['/']}><App/></MemoryRouter></QueryClientProvider>);
     expect(screen.getByRole('heading',{name:/Vulnerability data/i})).toBeInTheDocument();
     expect(screen.getByText(/Historical sanitized data/i)).toBeInTheDocument();
-    expect(screen.getAllByText('190')).toHaveLength(2);
+    expect(screen.getAllByText('190')).toHaveLength(1);
+    expect(screen.getByText(/Sanitized fixture manifest/i)).toBeInTheDocument();
   });
 
-  it('plays the public replay without submitting a scan request',()=>{
+  it('replays the public fixture without submitting a scan request',()=>{
     render(<QueryClientProvider client={new QueryClient()}><MemoryRouter initialEntries={['/']}><App/></MemoryRouter></QueryClientProvider>);
-    fireEvent.click(screen.getAllByRole('button',{name:/Play public scan replay/i})[0]);
-    expect(screen.getByText(/Replay running through the pipeline/i)).toBeInTheDocument();
+    fireEvent.click(screen.getAllByRole('button',{name:/Inspect public scan replay/i})[0]);
     expect(screen.getAllByText('RUNNING').length).toBeGreaterThan(0);
+    expect(screen.getByText(/EVENT evt_demo_01/i)).toBeInTheDocument();
   });
+
 });
