@@ -99,13 +99,13 @@ class UiSecurityIT {
         Cookie operatorSession = login("operator");
         mvc.perform(get("/api/ui/v1/scan-requests").cookie(operatorSession))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.totalElements").value(1))
+                .andExpect(jsonPath("$.content.length()").value(1))
                 .andExpect(jsonPath("$.content[0].requestedBy").value("operator"));
 
         Cookie adminSession = login("admin");
         mvc.perform(get("/api/ui/v1/scan-requests").cookie(adminSession))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.totalElements").value(2));
+                .andExpect(jsonPath("$.content.length()").value(2));
     }
     private SessionMaterial csrf() throws Exception {MvcResult result=mvc.perform(get("/api/ui/v1/auth/csrf")).andExpect(status().isOk()).andReturn();return new SessionMaterial(mapper.readTree(result.getResponse().getContentAsByteArray()).path("token").asText(),result.getResponse().getCookie("XSRF-TOKEN"));}
     private Cookie login(String username) throws Exception {SessionMaterial material=csrf();return mvc.perform(post("/api/ui/v1/auth/login").cookie(material.cookie()).header("X-XSRF-TOKEN",material.token()).contentType(MediaType.APPLICATION_JSON).content(mapper.writeValueAsBytes(java.util.Map.of("username",username,"password",PASSWORD)))).andExpect(status().isOk()).andReturn().getResponse().getCookie("VULNFLOW_SESSION");}
