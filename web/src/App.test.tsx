@@ -11,6 +11,9 @@ describe('public case study',()=>{
     expect(screen.getByText(/Historical sanitized data/i)).toBeInTheDocument();
     expect(screen.getAllByText('190')).toHaveLength(1);
     expect(screen.getByText(/Sanitized fixture manifest/i)).toBeInTheDocument();
+    expect(screen.getByText('req_demo_01HZX7K4')).toBeInTheDocument();
+    expect(screen.getByText('corr_demo_01HZX7K4')).toBeInTheDocument();
+    expect(screen.getByText(/evt_demo_01.*evt_demo_06/i)).toBeInTheDocument();
   });
 
   it('replays the public fixture without submitting a scan request',()=>{
@@ -18,6 +21,8 @@ describe('public case study',()=>{
     fireEvent.click(screen.getAllByRole('button',{name:/Inspect public scan replay/i})[0]);
     expect(screen.getAllByText('RUNNING').length).toBeGreaterThan(0);
     expect(screen.getByText(/EVENT evt_demo_01/i)).toBeInTheDocument();
+    expect(screen.getAllByText('req_demo_01HZX7K4').length).toBeGreaterThan(0);
+    expect(screen.getAllByText('corr_demo_01HZX7K4').length).toBeGreaterThan(0);
   });
 
 });

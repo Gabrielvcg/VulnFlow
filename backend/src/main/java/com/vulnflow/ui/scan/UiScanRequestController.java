@@ -20,7 +20,7 @@ public class UiScanRequestController {
     private final UiScanRequestService service;
     public UiScanRequestController(UiScanRequestService service){this.service=service;}
     @PostMapping public UiScanRequestService.ScanRequestResponse create(@AuthenticationPrincipal UiPrincipal principal,@Valid @RequestBody CreateRequest body){return service.create(body.targetId(),principal);}
-    @GetMapping public Page<UiScanRequestService.ScanRequestResponse> list(@RequestParam(defaultValue="0")int page,@RequestParam(defaultValue="25")int size){return service.list(PageRequest.of(page,Math.min(100,size)));}
+    @GetMapping public Page<UiScanRequestService.ScanRequestResponse> list(@AuthenticationPrincipal UiPrincipal principal,@RequestParam(defaultValue="0")int page,@RequestParam(defaultValue="25")int size,@RequestParam(required=false)UiScanRequestStatus status,@RequestParam(required=false)UUID targetId,@RequestParam(required=false)UUID assetId){return service.list(PageRequest.of(page,Math.min(100,size)),principal,status,targetId,assetId);}
     @GetMapping("/{id}") public UiScanRequestService.ScanRequestResponse get(@PathVariable UUID id,@AuthenticationPrincipal UiPrincipal principal){return service.get(id,principal);}
     public record CreateRequest(@NotNull UUID targetId){}
 }
