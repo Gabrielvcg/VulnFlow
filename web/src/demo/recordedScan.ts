@@ -18,6 +18,7 @@ export const recordedScan = {
   requestId: 'req_demo_01HZX7K4',
   scanId: 'scan_demo_01HZX7K4',
   eventId: 'evt_demo_01HZX7K4',
+  correlationId: 'corr_demo_01HZX7K4',
   summary: { CRITICAL: 7, HIGH: 42, MEDIUM: 93, LOW: 48 },
   stages: [
     { state: 'REQUESTED', label: 'Policy accepted', eventId: 'evt_demo_01', timestamp: '10:14:02.000', latency: '0 ms', detail: 'The target matched the approved catalog. No free-form reference was accepted.' },

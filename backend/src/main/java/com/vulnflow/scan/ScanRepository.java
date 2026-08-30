@@ -2,6 +2,8 @@ package com.vulnflow.scan;
 
 import jakarta.persistence.LockModeType;
 import java.time.Instant;
+import java.util.Collection;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -17,6 +19,18 @@ public interface ScanRepository extends JpaRepository<Scan, UUID> {
     Page<Scan> findByAssetIdOrderByReceivedAtDesc(UUID assetId, Pageable pageable);
 
     Page<Scan> findByReceivedAtAfterOrderByReceivedAtDesc(Instant after, Pageable pageable);
+
+    @Query("""
+            SELECT scan
+            FROM Scan scan
+            WHERE scan.asset.id IN :assetIds
+              AND scan.receivedAt = (
+                  SELECT MAX(latest.receivedAt)
+                  FROM Scan latest
+                  WHERE latest.asset.id = scan.asset.id
+              )
+            """)
+    List<Scan> findLatestByAssetIds(@Param("assetIds") Collection<UUID> assetIds);
 
     long countByReceivedAtAfter(Instant after);
 

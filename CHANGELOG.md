@@ -1,5 +1,37 @@
 # Changelog
 
+## 0.4.16 - 2026-08-30
+
+- Show the sanitized request, scan, correlation, and event-chain identifiers in the public fixture manifest before replay starts.
+
+## 0.4.15 - 2026-08-30
+
+- Propagated the persisted correlation identifier into the authenticated scan detail evidence panel.
+
+## 0.4.14 - 2026-08-30
+
+- Added the sanitized request, scan, event, and correlation identifiers to the public replay inspector.
+- Marked fixture identifiers explicitly as synthetic and non-production telemetry.
+
+## 0.4.13 - 2026-08-30
+
+- Added latest scan status and completion context to the asset catalog.
+- Made asset-to-scan navigation use the server-side asset filter instead of a decorative URL parameter.
+
+## 0.4.12 - 2026-08-30
+
+- Added server-side scan history filters for status and approved target.
+- Restricted operator scan history to the operator's own requests while preserving admin visibility.
+- Added an authorized result-summary endpoint backed by local findings or DynamoDB, with real finding counts, severities, scanner metadata, and processing duration in the detail view.
+- Made severity bars scale to the actual result instead of assuming a fixed finding count.
+
+## 0.4.11 - 2026-08-30
+
+- Added real findings pagination to keep scan-scoped exploration usable for large reports.
+- Exposed read-only main queue and DLQ telemetry in Operations, including degraded and unavailable states.
+- Added explicit error states to administrative users, targets, and audit views.
+- Removed the unused legacy public landing implementation to keep the public/private boundary unambiguous.
+
 ## 0.4.10 - 2026-08-30
 
 - Reworked the public scan replay into an evidence explorer with a stable sanitized fixture manifest, deterministic event IDs, stage timings, technical event details, and a terminal-only findings summary.

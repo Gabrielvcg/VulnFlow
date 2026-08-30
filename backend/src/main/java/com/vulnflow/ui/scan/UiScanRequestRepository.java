@@ -7,6 +7,15 @@ public interface UiScanRequestRepository extends JpaRepository<UiScanRequest,UUI
  long countByRequestedByIdAndRequestedAtAfter(UUID user,Instant after); long countByTargetIdAndRequestedAtAfter(UUID target,Instant after);
  List<UiScanRequest> findByStatusInAndClaimExpiresAtBefore(Collection<UiScanRequestStatus>s,Instant cutoff);
  List<UiScanRequest> findByStatusAndRequestedAtBefore(UiScanRequestStatus status,Instant cutoff);
- Page<UiScanRequest> findAllByOrderByRequestedAtDesc(Pageable pageable);
+ @Query("""
+        SELECT r FROM UiScanRequest r
+        LEFT JOIN r.target.asset asset
+        WHERE (:userId IS NULL OR r.requestedBy.id = :userId)
+          AND (:status IS NULL OR r.status = :status)
+          AND (:targetId IS NULL OR r.target.id = :targetId)
+          AND (:assetId IS NULL OR asset.id = :assetId)
+        ORDER BY r.requestedAt DESC
+        """)
+ Page<UiScanRequest> findFiltered(@Param("userId")UUID userId,@Param("status")UiScanRequestStatus status,@Param("targetId")UUID targetId,@Param("assetId")UUID assetId,Pageable pageable);
  Optional<UiScanRequest> findByIdAndRequestedById(UUID id,UUID userId);
 }
