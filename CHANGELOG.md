@@ -3,6 +3,7 @@
 ## 0.4.16 - 2026-08-30
 
 - Show the sanitized request, scan, correlation, and event-chain identifiers in the public fixture manifest before replay starts.
+- Hardened the RBAC integration assertion around the paginated scan-history response.
 
 ## 0.4.15 - 2026-08-30
 
