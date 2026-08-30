@@ -2,8 +2,8 @@
 
 ## 0.4.10 - 2026-08-30
 
-- Added a browser-only public replay of a prebuilt sanitized scan so visitors can follow the pipeline without production API access, credentials, or an anonymous scan capability.
-- Clarified the public/private boundary in the landing copy and kept real on-demand scans restricted to the authenticated console.
+- Reworked the public scan replay into an evidence explorer with a stable sanitized fixture manifest, deterministic event IDs, stage timings, technical event details, and a terminal-only findings summary.
+- Removed the misleading pre-completed result state so the public page distinguishes fixture evidence from private production telemetry.
 
 ## 0.4.9 - 2026-08-29
 
