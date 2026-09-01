@@ -11,6 +11,10 @@ test('public case study keeps navigation and the complete flow usable on mobile'
   await expect(flow).toBeVisible();
   await expect(flow.getByRole('listitem')).toHaveCount(6);
   expect(await flow.evaluate(element=>element.scrollWidth<=element.clientWidth)).toBe(true);
+  const stageNumber=flow.locator('.flow-node span').first();
+  const decisionNumber=page.locator('.decision-grid article > span').first();
+  expect(parseFloat(await stageNumber.evaluate(element=>getComputedStyle(element).fontSize))).toBeGreaterThanOrEqual(14);
+  expect(parseFloat(await decisionNumber.evaluate(element=>getComputedStyle(element).fontSize))).toBeGreaterThanOrEqual(14);
 });
 
 test('operator can sign in and follow an approved scan',async({page})=>{

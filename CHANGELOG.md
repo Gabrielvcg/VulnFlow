@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.4.18 - 2026-09-01
+
+- Increased mobile architecture and failure-engineering step indices to a readable 14 px with stronger contrast.
+- Extended responsive browser coverage to enforce the minimum rendered index size.
+
 ## 0.4.17 - 2026-09-01
 
 - Restored the VulnFlow brand and private-console entry point in the public mobile header.
