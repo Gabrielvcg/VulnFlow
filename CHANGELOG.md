@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.4.17 - 2026-09-01
+
+- Restored the VulnFlow brand and private-console entry point in the public mobile header.
+- Reworked the six-stage architecture flow into a readable vertical sequence on small screens instead of relying on a native horizontal scrollbar.
+- Added responsive browser coverage for mobile navigation and the complete processing flow.
+
 ## 0.4.16 - 2026-08-30
 
 - Show the sanitized request, scan, correlation, and event-chain identifiers in the public fixture manifest before replay starts.
