@@ -7,6 +7,9 @@ test('public case study keeps navigation and the complete flow usable on mobile'
   await page.goto('/');
   await expect(page.getByRole('link',{name:'VulnFlow'})).toBeVisible();
   await expect(page.getByRole('link',{name:'Private console'})).toBeVisible();
+  await expect(page.getByRole('link',{name:'Architecture',exact:true})).toBeVisible();
+  await expect(page.getByRole('link',{name:'Evidence',exact:true})).toBeVisible();
+  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth)).toBe(true);
   const flow=page.getByRole('list',{name:'Processing flow'});
   await expect(flow).toBeVisible();
   await expect(flow.getByRole('listitem')).toHaveCount(6);

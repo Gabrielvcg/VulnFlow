@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.4.19 - 2026-09-05
+
+- Improved public typography, correlation-label readability, mobile navigation and tablet architecture layout.
+- Balanced hero spacing and recovery cards, corrected footer mark alignment and enlarged login inputs.
+
 ## 0.4.18 - 2026-09-01
 
 - Increased mobile architecture and failure-engineering step indices to a readable 14 px with stronger contrast.
