@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.4.21 - 2026-09-06
+
+- Reconcile processing console requests automatically in bounded batches, independent of browser polling.
+- Isolate transient result-store failures per request and serialize detail updates with reconciliation.
+- Cover local completion, AWS completion recovery, terminal failures, and batch traversal with regression tests.
+
 ## 0.4.20 - 2026-09-06
 
 - Revoke existing console sessions after an administrator disables an account or rotates its password.
