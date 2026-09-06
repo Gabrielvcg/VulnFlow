@@ -26,6 +26,10 @@ public interface AgentOutbox {
 
     void markUploaded(UUID itemId, UploadReceipt receipt, Instant now);
 
+    boolean isFailureReported(UUID itemId);
+
+    void markFailureReported(UUID itemId);
+
     Path reportPath(OutboxItem item);
 
     List<OutboxItem> list();

@@ -1,6 +1,7 @@
 package com.vulnflow;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.*;
 
 import com.vulnflow.asset.*;
@@ -73,6 +74,17 @@ class UiScanReconciliationIT {
         UiScanRequest stored = requests.findById(request.getId()).orElseThrow();
         assertThat(stored.getStatus()).isEqualTo(UiScanRequestStatus.FAILED);
         assertThat(stored.getSafeError()).isEqualTo("Report validation failed");
+    }
+
+    @Test
+    void duplicateFailureAcknowledgementPreservesTheOriginalFailureAndAgentBoundary() {
+        UiScanRequest request = processingRequest(false);
+        request.fail(null, "Original failure");
+        requests.save(request);
+        service.fail(request.getAgent().getId(), request.getId(), UUID.randomUUID(), "Repeated notification");
+        assertThat(requests.findById(request.getId()).orElseThrow().getSafeError()).isEqualTo("Original failure");
+        assertThatThrownBy(() -> service.fail("different-agent", request.getId(), UUID.randomUUID(), "Rejected"))
+                .isInstanceOf(StaleScanClaimException.class);
     }
 
     private UiScanRequest processingRequest(boolean completed) {
