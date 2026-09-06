@@ -19,6 +19,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.context.HttpSessionSecurityContextRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.context.ApplicationEventPublisher;
+import com.vulnflow.ui.auth.UiSessionRevocation.AccountCredentialsChanged;
 
 @Service
 public class UiAuthenticationService implements ApplicationRunner {
@@ -27,10 +29,12 @@ public class UiAuthenticationService implements ApplicationRunner {
     private final PasswordEncoder encoder;
     private final UiProperties properties;
     private final UiAuditService audit;
+    private final ApplicationEventPublisher events;
 
     public UiAuthenticationService(UiUserRepository users, PasswordEncoder encoder,
-                                   UiProperties properties, UiAuditService audit) {
+                                   UiProperties properties, UiAuditService audit, ApplicationEventPublisher events) {
         this.users = users; this.encoder = encoder; this.properties = properties; this.audit = audit;
+        this.events = events;
     }
 
     @Override @Transactional
@@ -96,6 +100,7 @@ public class UiAuthenticationService implements ApplicationRunner {
         if (session != null) {
             session.setAttribute(HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY, context);
         }
+        events.publishEvent(new AccountCredentialsChanged(user.getUsername(), session == null ? null : session.getId()));
         return updated;
     }
 
