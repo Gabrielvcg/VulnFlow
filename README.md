@@ -400,6 +400,7 @@ vulnerability count.
 - [ADR-021 local/AWS sources of truth](docs/decisions/ADR-021-local-and-aws-sources-of-truth.md)
 - [ADR-022 event idempotency](docs/decisions/ADR-022-event-idempotency-policy.md)
 - [ADR-023 VPS AWS credentials](docs/decisions/ADR-023-vps-aws-credentials.md)
+- [Console session revocation](docs/security/session-revocation.md)
 
 The scoped VulnFlow AWS resources and remote state are active in account
 `160172542031`, region `eu-west-1`. VulnFlow 0.4.8 was applied only from
