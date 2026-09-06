@@ -23,6 +23,23 @@ class FileAgentOutboxTest {
     @TempDir Path temporaryDirectory;
 
     @Test
+    void failureAcknowledgementSurvivesRestartWithoutDeletingTheReport() throws Exception {
+        FileAgentOutbox original = outbox(10_000, 10);
+        OutboxItem item = original.enqueue("agent-a", target(), Instant.now(), report("{}"));
+        assertThat(original.isFailureReported(item.id())).isFalse();
+        assertThatThrownBy(() -> original.markFailureReported(item.id())).isInstanceOf(IllegalStateException.class);
+        original.markDeadLetter(item.id(), "Rejected", Instant.now());
+        original.markFailureReported(item.id());
+        FileAgentOutbox restarted = outbox(10_000, 10);
+        assertThat(restarted.isFailureReported(item.id())).isTrue();
+        assertThat(restarted.list()).singleElement().satisfies(stored -> {
+            assertThat(stored.status()).isEqualTo(OutboxStatus.DEAD_LETTER);
+            assertThat(restarted.reportPath(stored)).hasContent("{}");
+        });
+        assertThat(restarted.cleanupUploadedBefore(Instant.now().plusSeconds(3600))).isZero();
+    }
+
+    @Test
     void persistsAtomicallyAndSurvivesRestart() throws Exception {
         Path report = report("{\"Results\":[]}");
         FileAgentOutbox first = outbox(10_000, 10);

@@ -402,6 +402,7 @@ vulnerability count.
 - [ADR-023 VPS AWS credentials](docs/decisions/ADR-023-vps-aws-credentials.md)
 - [Console session revocation](docs/security/session-revocation.md)
 - [Console result reconciliation](docs/operations/console-reconciliation.md)
+- [Agent failure notifications](docs/operations/agent-failure-notifications.md)
 
 The scoped VulnFlow AWS resources and remote state are active in account
 `160172542031`, region `eu-west-1`. VulnFlow 0.4.8 was applied only from

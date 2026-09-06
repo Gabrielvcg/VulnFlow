@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.4.22 - 2026-09-06
+
+- Keep retained Agent dead letters from blocking new command claims.
+- Persist successful failure notifications separately from report metadata and retry unavailable notifications.
+- Accept repeated failure notifications for the same failed request and agent, preserving terminal results.
+- Test recovery across Agent restarts while retaining failed report data.
+
 ## 0.4.21 - 2026-09-06
 
 - Reconcile processing console requests automatically in bounded batches, independent of browser polling.
