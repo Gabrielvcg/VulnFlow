@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.4.20 - 2026-09-06
+
+- Revoke existing console sessions after an administrator disables an account or rotates its password.
+- Revoke other browser sessions after a password change while retaining the current session.
+- Add PostgreSQL integration coverage for multi-session revocation and administrator session isolation.
+
 ## 0.4.19 - 2026-09-05
 
 - Improved public typography, correlation-label readability, mobile navigation and tablet architecture layout.

@@ -11,6 +11,8 @@ import com.vulnflow.ui.auth.UiPrincipal;
 import com.vulnflow.ui.auth.UiRole;
 import com.vulnflow.ui.auth.UiUser;
 import com.vulnflow.ui.auth.UiUserRepository;
+import com.vulnflow.ui.auth.UiSessionRevocation.AccountCredentialsChanged;
+import org.springframework.context.ApplicationEventPublisher;
 import com.vulnflow.ui.target.UiTarget;
 import com.vulnflow.ui.target.UiTargetRepository;
 import jakarta.validation.Valid;
@@ -43,11 +45,13 @@ public class UiAdminController {
     private final UiUserRepository users; private final UiTargetRepository targets; private final AssetRepository assets;
     private final UiAuditRepository audits; private final UiAuditService audit; private final PasswordEncoder encoder;
     private final UiAuthenticationService authentication; private final SecureRandom random = new SecureRandom();
+    private final ApplicationEventPublisher events;
     public UiAdminController(UiUserRepository users, UiTargetRepository targets, AssetRepository assets,
                              UiAuditRepository audits, UiAuditService audit, PasswordEncoder encoder,
-                             UiAuthenticationService authentication) {
+                             UiAuthenticationService authentication, ApplicationEventPublisher events) {
         this.users=users; this.targets=targets; this.assets=assets; this.audits=audits; this.audit=audit;
         this.encoder=encoder; this.authentication=authentication;
+        this.events = events;
     }
 
     @GetMapping("/users") public List<UserResponse> users() { return users.findAll().stream().map(UserResponse::from).toList(); }
@@ -67,6 +71,9 @@ public class UiAdminController {
         user.setEnabled(body.enabled());
         String password = null;
         if (body.rotatePassword()) { password = temporaryPassword(); user.requirePasswordChange(encoder.encode(password)); }
+        if (!body.enabled() || body.rotatePassword()) {
+            events.publishEvent(new AccountCredentialsChanged(user.getUsername(), null));
+        }
         audit.record(users.getReferenceById(principal.id()), principal.username(), "USER_UPDATED", "USER",
                 user.getId().toString(), "SUCCESS", null, body.rotatePassword() ? "Password rotated" : "Enabled state changed");
         return UserResponse.from(user).withTemporaryPassword(password);

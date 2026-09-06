@@ -2,6 +2,7 @@ package com.vulnflow;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -106,6 +107,45 @@ class UiSecurityIT {
         mvc.perform(get("/api/ui/v1/scan-requests").cookie(adminSession))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.content.length()").value(2));
+    }
+    @Test void disablingAnAccountRevokesAllExistingSessions() throws Exception {
+        assertAdminChangeRevokesSessions(false, false);
+    }
+
+    @Test void rotatingCredentialsRevokesAllExistingSessions() throws Exception {
+        assertAdminChangeRevokesSessions(true, true);
+    }
+
+    private void assertAdminChangeRevokesSessions(boolean enabled, boolean rotate) throws Exception {
+        users.save(new UiUser("admin", encoder.encode(PASSWORD), UiRole.ADMIN, false));
+        Cookie first = login("operator");
+        Cookie second = login("operator");
+        Cookie admin = login("admin");
+        SessionMaterial material = csrf();
+        mvc.perform(patch("/api/ui/v1/admin/users").cookie(admin, material.cookie())
+                        .header("X-XSRF-TOKEN", material.token())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(mapper.writeValueAsBytes(java.util.Map.of(
+                                "id", users.findByUsernameIgnoreCase("operator").orElseThrow().getId(),
+                                "enabled", enabled, "rotatePassword", rotate))))
+                .andExpect(status().isOk());
+        mvc.perform(get("/api/ui/v1/auth/me").cookie(first)).andExpect(status().is4xxClientError());
+        mvc.perform(get("/api/ui/v1/auth/me").cookie(second)).andExpect(status().is4xxClientError());
+        mvc.perform(get("/api/ui/v1/admin/users").cookie(admin)).andExpect(status().isOk());
+    }
+
+    @Test void changingPasswordRevokesOtherSessionsButKeepsCurrentSession() throws Exception {
+        Cookie current = login("operator");
+        Cookie other = login("operator");
+        SessionMaterial material = csrf();
+        mvc.perform(post("/api/ui/v1/auth/change-password").cookie(current, material.cookie())
+                        .header("X-XSRF-TOKEN", material.token())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(mapper.writeValueAsBytes(java.util.Map.of(
+                                "currentPassword", PASSWORD, "newPassword", "PermanentPassword2B"))))
+                .andExpect(status().isOk());
+        mvc.perform(get("/api/ui/v1/auth/me").cookie(current)).andExpect(status().isOk());
+        mvc.perform(get("/api/ui/v1/auth/me").cookie(other)).andExpect(status().is4xxClientError());
     }
     private SessionMaterial csrf() throws Exception {MvcResult result=mvc.perform(get("/api/ui/v1/auth/csrf")).andExpect(status().isOk()).andReturn();return new SessionMaterial(mapper.readTree(result.getResponse().getContentAsByteArray()).path("token").asText(),result.getResponse().getCookie("XSRF-TOKEN"));}
     private Cookie login(String username) throws Exception {SessionMaterial material=csrf();return mvc.perform(post("/api/ui/v1/auth/login").cookie(material.cookie()).header("X-XSRF-TOKEN",material.token()).contentType(MediaType.APPLICATION_JSON).content(mapper.writeValueAsBytes(java.util.Map.of("username",username,"password",PASSWORD)))).andExpect(status().isOk()).andReturn().getResponse().getCookie("VULNFLOW_SESSION");}
