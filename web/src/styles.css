@@ -23,6 +23,8 @@ code{font-size:.8125rem;line-height:1.6}.severity-rows b{font-size:.9375rem}
 .decision-grid{margin-top:2.5rem}.decision-grid h3{margin-top:1.25rem;font-size:1.125rem}
 footer{font-size:.8125rem;line-height:1.6;color:#a3b6b0}footer .mark{display:inline-flex;align-items:flex-end;gap:3px;color:inherit}
 .login-panel label{font-size:.9375rem}.login-panel input{font-size:1rem}.login-panel>small{color:#a3b6b0}
+.login-panel>*{min-width:0}.login-panel form label,.login-panel form input,.login-panel form .form-error,.login-panel form .button{width:100%;max-width:100%}
+.flow-zone ol{position:relative}.flow-zone ol:before{content:"";position:absolute;left:3px;top:1.72rem;bottom:2.55rem;border-left:1px solid #345249}.flow-zone li:not(:last-child):after{display:none}
 @media(max-width:950px){.flow{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:1rem;overflow:visible}.flow-unit{display:block}.connector{display:none}}
 @media(max-width:650px){
  .public-nav{height:auto;min-height:108px;flex-wrap:wrap;gap:.25rem;padding-block:.6rem}
