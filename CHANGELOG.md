@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.4.23 - 2026-09-06
+
+- Serialize console admission checks and insertion with a PostgreSQL transaction advisory lock, retaining existing quotas and cooldown rules.
+- Add concurrent PostgreSQL tests for per-user admission and global capacity.
+
 ## 0.4.22 - 2026-09-06
 
 - Keep retained Agent dead letters from blocking new command claims.

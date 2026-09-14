@@ -33,11 +33,13 @@ public class UiScanRequestService {
     private static final EnumSet<UiScanRequestStatus> LEASED = EnumSet.of(UiScanRequestStatus.CLAIMED,UiScanRequestStatus.RUNNING,UiScanRequestStatus.UPLOADING);
     private final UiScanRequestRepository requests; private final UiTargetRepository targets; private final UiUserRepository users;
     private final UiAgentRepository agents; private final ScanRepository scans; private final UiProperties properties; private final UiAuditService audit; private final ObjectProvider<ProcessingResultReader> resultReaders;
-    public UiScanRequestService(UiScanRequestRepository requests,UiTargetRepository targets,UiUserRepository users,UiAgentRepository agents,ScanRepository scans,UiProperties properties,UiAuditService audit,ObjectProvider<ProcessingResultReader> resultReaders){this.requests=requests;this.targets=targets;this.users=users;this.agents=agents;this.scans=scans;this.properties=properties;this.audit=audit;this.resultReaders=resultReaders;}
+    private final UiAdmissionLock admissionLock;
+    public UiScanRequestService(UiScanRequestRepository requests,UiTargetRepository targets,UiUserRepository users,UiAgentRepository agents,ScanRepository scans,UiProperties properties,UiAuditService audit,ObjectProvider<ProcessingResultReader> resultReaders,UiAdmissionLock admissionLock){this.requests=requests;this.targets=targets;this.users=users;this.agents=agents;this.scans=scans;this.properties=properties;this.audit=audit;this.resultReaders=resultReaders;this.admissionLock=admissionLock;}
 
     @Transactional
     public ScanRequestResponse create(UUID targetId,UiPrincipal principal){
         if(!properties.scansEnabled())reject("SCANS_DISABLED","On-demand scans are disabled");
+        admissionLock.acquire();
         UiTarget target=targets.findById(targetId).filter(UiTarget::isEnabled).orElseThrow(()->new ResourceNotFoundException("Target",targetId));
         UiUser user=users.getReferenceById(principal.id()); Instant now=Instant.now();
         if(requests.countByRequestedByIdAndStatusIn(principal.id(),ACTIVE)>0)reject("USER_SCAN_ACTIVE","The user already has an active scan");
