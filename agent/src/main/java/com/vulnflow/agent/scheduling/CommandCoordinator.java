@@ -29,16 +29,14 @@ public class CommandCoordinator {
     public CommandCoordinator(String agentId,boolean commandsEnabled,Path dataDirectory,VulnFlowClient client,VulnerabilityScanner scanner,AgentOutbox outbox,ExecutorService executor,TargetRegistry targetRegistry){this.agentId=agentId;this.commandsEnabled=commandsEnabled;this.dataDirectory=dataDirectory;this.client=client;this.scanner=scanner;this.outbox=outbox;this.executor=executor;this.targetRegistry=targetRegistry;}
     public void runCycle() {
         try {
+            reportDeadLetters();
             Optional<OutboxItem> active = outbox.list().stream()
-                    .filter(item -> item.scanRequestId() != null && item.status() != OutboxStatus.UPLOADED)
+                    .filter(item -> item.scanRequestId() != null && item.status() != OutboxStatus.UPLOADED
+                            && item.status() != OutboxStatus.DEAD_LETTER)
                     .findFirst();
             if (active.isPresent()) {
                 OutboxItem item = active.get();
-                if (item.status() == OutboxStatus.DEAD_LETTER) {
-                    client.failScan(agentId, item.scanRequestId(), item.claimToken(), item.lastError());
-                } else {
-                    client.heartbeat(agentId, heartbeat("BUSY", item));
-                }
+                client.heartbeat(agentId, heartbeat("BUSY", item));
                 return;
             }
             AgentHeartbeat idle = heartbeat("IDLE", null);
@@ -88,6 +86,19 @@ public class CommandCoordinator {
         } catch (RuntimeException exception) {
             LOGGER.warn("event=command_cycle_failed agentId={} result=isolated errorType={}",
                     agentId, exception.getClass().getSimpleName());
+        }
+    }
+    private void reportDeadLetters() {
+        for (OutboxItem item : outbox.list()) {
+            if (item.scanRequestId() == null || item.status() != OutboxStatus.DEAD_LETTER
+                    || outbox.isFailureReported(item.id())) continue;
+            try {
+                client.failScan(agentId, item.scanRequestId(), item.claimToken(), item.lastError());
+                outbox.markFailureReported(item.id());
+            } catch (RuntimeException exception) {
+                LOGGER.warn("No se pudo notificar un informe fallido; se reintentará: requestId={}, causa={}",
+                        item.scanRequestId(), exception.getClass().getSimpleName());
+            }
         }
     }
     private AgentHeartbeat heartbeat(String status,OutboxItem active){var stats=outbox.stats();long bytes=outbox.list().stream().filter(i->i.status()!=OutboxStatus.UPLOADED).mapToLong(OutboxItem::sizeBytes).sum();long free=0;try{FileStore store=Files.getFileStore(dataDirectory);free=store.getUsableSpace();}catch(java.io.IOException ignored){status="DEGRADED";}return new AgentHeartbeat(status,active==null?null:active.scanRequestId(),active==null?null:active.claimToken(),(int)(stats.pending()+stats.retrying()+stats.uploading()),(int)stats.deadLetters(),bytes,free,null);}

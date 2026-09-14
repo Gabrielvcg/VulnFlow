@@ -24,6 +24,7 @@ public class FileAgentOutbox implements AgentOutbox {
 
     private static final String REPORT_FILE = "report.json";
     private static final String METADATA_FILE = "metadata.json";
+    private static final String FAILURE_REPORTED_FILE = "failure-reported";
     private final Path itemsDirectory;
     private final long maxBytes;
     private final int maxItems;
@@ -144,6 +145,24 @@ public class FileAgentOutbox implements AgentOutbox {
     @Override
     public synchronized void markUploaded(UUID itemId, UploadReceipt receipt, Instant now) {
         mutate(itemId, item -> item.uploaded(receipt, now), true);
+    }
+
+    @Override
+    public synchronized boolean isFailureReported(UUID itemId) {
+        return Files.isRegularFile(itemDirectory(itemId).resolve(FAILURE_REPORTED_FILE));
+    }
+
+    @Override
+    public synchronized void markFailureReported(UUID itemId) {
+        OutboxItem item = read(itemId);
+        if (item.status() != OutboxStatus.DEAD_LETTER) {
+            throw new IllegalStateException("Only dead-letter notifications can be acknowledged");
+        }
+        try {
+            AtomicFiles.write(itemDirectory(itemId).resolve(FAILURE_REPORTED_FILE), new byte[] {1});
+        } catch (IOException exception) {
+            throw new IllegalStateException("Failure notification acknowledgement could not be stored", exception);
+        }
     }
 
     @Override

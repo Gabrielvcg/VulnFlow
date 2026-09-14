@@ -1,5 +1,23 @@
 # Changelog
 
+## 0.4.23 - 2026-09-06
+
+- Serialize console admission checks and insertion with a PostgreSQL transaction advisory lock, retaining existing quotas and cooldown rules.
+- Add concurrent PostgreSQL tests for per-user admission and global capacity.
+
+## 0.4.22 - 2026-09-06
+
+- Keep retained Agent dead letters from blocking new command claims.
+- Persist successful failure notifications separately from report metadata and retry unavailable notifications.
+- Accept repeated failure notifications for the same failed request and agent, preserving terminal results.
+- Test recovery across Agent restarts while retaining failed report data.
+
+## 0.4.21 - 2026-09-06
+
+- Reconcile processing console requests automatically in bounded batches, independent of browser polling.
+- Isolate transient result-store failures per request and serialize detail updates with reconciliation.
+- Cover local completion, AWS completion recovery, terminal failures, and batch traversal with regression tests.
+
 ## 0.4.20 - 2026-09-06
 
 - Revoke existing console sessions after an administrator disables an account or rotates its password.
