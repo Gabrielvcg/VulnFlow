@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.4.24 - 2026-09-14
+
+- Replace the oversimplified public pipeline with three execution zones that show the API, Agent, Trivy, PostgreSQL outbox, and AWS processing path accurately.
+- Rename ambiguous replay stages to describe the actual Agent upload, SQS/Lambda processing, and DynamoDB result persistence.
+- Widen and rebalance the evidence layout on desktop and very large viewports while retaining the stacked mobile presentation.
+
 ## 0.4.23 - 2026-09-06
 
 - Serialize console admission checks and insertion with a PostgreSQL transaction advisory lock, retaining existing quotas and cooldown rules.
