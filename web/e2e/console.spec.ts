@@ -10,14 +10,30 @@ test('public case study keeps navigation and the complete flow usable on mobile'
   await expect(page.getByRole('link',{name:'Architecture',exact:true})).toBeVisible();
   await expect(page.getByRole('link',{name:'Evidence',exact:true})).toBeVisible();
   expect(await page.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth)).toBe(true);
-  const flow=page.getByRole('list',{name:'Processing flow'});
+  const flow=page.getByRole('list',{name:'VulnFlow execution zones'});
   await expect(flow).toBeVisible();
-  await expect(flow.getByRole('listitem')).toHaveCount(6);
+  await expect(flow.locator(':scope > [role="listitem"]')).toHaveCount(3);
   expect(await flow.evaluate(element=>element.scrollWidth<=element.clientWidth)).toBe(true);
-  const stageNumber=flow.locator('.flow-node span').first();
+  const stageNumber=flow.locator('.flow-zone > header > span').first();
   const decisionNumber=page.locator('.decision-grid article > span').first();
   expect(parseFloat(await stageNumber.evaluate(element=>getComputedStyle(element).fontSize))).toBeGreaterThanOrEqual(14);
   expect(parseFloat(await decisionNumber.evaluate(element=>getComputedStyle(element).fontSize))).toBeGreaterThanOrEqual(14);
+});
+
+test('public architecture and evidence use the desktop viewport without stretching or clipping',async({page})=>{
+  await page.setViewportSize({width:1920,height:1080});
+  await page.goto('/');
+  const flow=page.getByRole('list',{name:'VulnFlow execution zones'});
+  const zones=flow.locator(':scope > [role="listitem"]');
+  await expect(zones).toHaveCount(3);
+  const widths=await zones.evaluateAll(elements=>elements.map(element=>element.getBoundingClientRect().width));
+  expect(Math.min(...widths)).toBeGreaterThan(300);
+  expect(Math.max(...widths)-Math.min(...widths)).toBeLessThan(2);
+  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth)).toBe(true);
+  const scan=page.locator('#scan');
+  const columns=await scan.evaluate(element=>getComputedStyle(element).gridTemplateColumns.split(' ').map(parseFloat));
+  expect(columns).toHaveLength(2);
+  expect(Math.min(...columns)).toBeGreaterThan(350);
 });
 
 test('operator can sign in and follow an approved scan',async({page})=>{
