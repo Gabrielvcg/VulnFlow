@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.4.26 - 2026-09-14
+
+- Show severity totals and labeled bars without requiring hover.
+- Display failed scan termination honestly and explain missing results.
+- Add a completed-scan selector and AWS cursor navigation to Findings.
+- Explain historical publication failures and disabled test targets.
+
 ## 0.4.25 - 2026-09-14
 
 - Keep login form controls inside the panel at wide and zoomed-out desktop dimensions.
