@@ -1,6 +1,8 @@
 package com.vulnflow.ui.scan;
 import jakarta.persistence.LockModeType; import java.time.Instant; import java.util.*; import org.springframework.data.domain.*; import org.springframework.data.jpa.repository.*; import org.springframework.data.repository.query.Param;
 public interface UiScanRequestRepository extends JpaRepository<UiScanRequest,UUID>{
+ @Query("select r.id from UiScanRequest r where r.status = com.vulnflow.ui.scan.UiScanRequestStatus.PROCESSING order by r.requestedAt, r.id")
+ Page<UUID> findProcessingIds(Pageable pageable);
  @Lock(LockModeType.PESSIMISTIC_WRITE) @Query("select r from UiScanRequest r where r.id=:id") Optional<UiScanRequest> findByIdForUpdate(@Param("id")UUID id);
  @Query(value="SELECT id FROM ui_scan_requests WHERE status='REQUESTED' ORDER BY requested_at,id FOR UPDATE SKIP LOCKED LIMIT 1",nativeQuery=true) Optional<UUID> findNextClaimableId();
  long countByStatusIn(Collection<UiScanRequestStatus>s); long countByRequestedByIdAndStatusIn(UUID user,Collection<UiScanRequestStatus>s);

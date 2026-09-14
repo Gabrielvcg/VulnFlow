@@ -33,11 +33,13 @@ public class UiScanRequestService {
     private static final EnumSet<UiScanRequestStatus> LEASED = EnumSet.of(UiScanRequestStatus.CLAIMED,UiScanRequestStatus.RUNNING,UiScanRequestStatus.UPLOADING);
     private final UiScanRequestRepository requests; private final UiTargetRepository targets; private final UiUserRepository users;
     private final UiAgentRepository agents; private final ScanRepository scans; private final UiProperties properties; private final UiAuditService audit; private final ObjectProvider<ProcessingResultReader> resultReaders;
-    public UiScanRequestService(UiScanRequestRepository requests,UiTargetRepository targets,UiUserRepository users,UiAgentRepository agents,ScanRepository scans,UiProperties properties,UiAuditService audit,ObjectProvider<ProcessingResultReader> resultReaders){this.requests=requests;this.targets=targets;this.users=users;this.agents=agents;this.scans=scans;this.properties=properties;this.audit=audit;this.resultReaders=resultReaders;}
+    private final UiAdmissionLock admissionLock;
+    public UiScanRequestService(UiScanRequestRepository requests,UiTargetRepository targets,UiUserRepository users,UiAgentRepository agents,ScanRepository scans,UiProperties properties,UiAuditService audit,ObjectProvider<ProcessingResultReader> resultReaders,UiAdmissionLock admissionLock){this.requests=requests;this.targets=targets;this.users=users;this.agents=agents;this.scans=scans;this.properties=properties;this.audit=audit;this.resultReaders=resultReaders;this.admissionLock=admissionLock;}
 
     @Transactional
     public ScanRequestResponse create(UUID targetId,UiPrincipal principal){
         if(!properties.scansEnabled())reject("SCANS_DISABLED","On-demand scans are disabled");
+        admissionLock.acquire();
         UiTarget target=targets.findById(targetId).filter(UiTarget::isEnabled).orElseThrow(()->new ResourceNotFoundException("Target",targetId));
         UiUser user=users.getReferenceById(principal.id()); Instant now=Instant.now();
         if(requests.countByRequestedByIdAndStatusIn(principal.id(),ACTIVE)>0)reject("USER_SCAN_ACTIVE","The user already has an active scan");
@@ -69,13 +71,18 @@ public class UiScanRequestService {
     @Transactional
     public void heartbeat(String agentId,Heartbeat body){UiAgent agent=agents.findById(agentId).orElseGet(()->new UiAgent(agentId));agent.heartbeat(body.status(),body.currentRequestId(),body.outboxPending(),body.outboxDeadLetters(),body.outboxBytes(),body.diskFreeBytes(),body.safeError());agents.save(agent);if(body.currentRequestId()!=null&&body.claimToken()!=null){requests.findByIdForUpdate(body.currentRequestId()).ifPresent(r->r.heartbeat(body.claimToken(),properties.claimLease()));}}
     @Transactional public void start(String agentId,UUID id,UUID token){UiScanRequest r=claimed(agentId,id);r.start(token,properties.claimLease());}
-    @Transactional public void fail(String agentId,UUID id,UUID token,String error){UiScanRequest r=claimed(agentId,id);r.fail(token,error);}
+    @Transactional public void fail(String agentId,UUID id,UUID token,String error){UiScanRequest r=claimed(agentId,id);if(r.getStatus()!=UiScanRequestStatus.FAILED)r.fail(token,error);}
     @Transactional public void verifyUpload(UUID id,UUID token){UiScanRequest r=requests.findByIdForUpdate(id).orElseThrow(()->new ResourceNotFoundException("Scan request",id));r.uploading(token,properties.claimLease());}
     @Transactional public void associateUpload(UUID id,UUID token,UUID scanId,UUID eventId){UiScanRequest r=requests.findByIdForUpdate(id).orElseThrow();Scan scan=scans.findById(scanId).orElseThrow();r.processing(token,scan,eventId);}
     @Transactional public void completeFromLocalScan(UiScanRequest r){if(r.getStatus()==UiScanRequestStatus.PROCESSING&&r.getScan()!=null){if(r.getScan().getStatus()==ScanStatus.COMPLETED){r.complete();return;}if(r.getScan().getStatus()==ScanStatus.FAILED){r.fail(null,r.getScan().getFailureReason());return;}ProcessingResultReader reader=resultReaders.getIfAvailable();if(reader!=null)reader.findScan(r.getScan().getId()).ifPresent(result->{if(result.status()==ProcessingResultStatus.COMPLETED)r.complete();else if(result.status()==ProcessingResultStatus.FAILED)r.fail(null,result.safeError());});}}
 
     @Transactional(readOnly=true) public Page<ScanRequestResponse> list(Pageable pageable,UiPrincipal principal,UiScanRequestStatus status,UUID targetId,UUID assetId){UUID userId=principal.role()==UiRole.ADMIN?null:principal.id();return requests.findFiltered(userId,status,targetId,assetId,pageable).map(this::responseProjected);}
-    @Transactional public ScanRequestResponse get(UUID id,UiPrincipal principal){UiScanRequest r=principal.role()==UiRole.ADMIN?requests.findById(id).orElseThrow(()->new ResourceNotFoundException("Scan request",id)):requests.findByIdAndRequestedById(id,principal.id()).orElseThrow(()->new ResourceNotFoundException("Scan request",id));completeFromLocalScan(r);return response(r);}
+    @Transactional public ScanRequestResponse get(UUID id,UiPrincipal principal){UiScanRequest r=requests.findByIdForUpdate(id).orElseThrow(()->new ResourceNotFoundException("Scan request",id));if(principal.role()!=UiRole.ADMIN&&!r.getRequestedBy().getId().equals(principal.id()))throw new ResourceNotFoundException("Scan request",id);completeFromLocalScan(r);return response(r);}
+
+    @Transactional
+    public void reconcile(UUID id) {
+        requests.findByIdForUpdate(id).ifPresent(this::completeFromLocalScan);
+    }
     @Transactional(readOnly=true)
     public UUID authorizeResultAccess(UUID requestId,UiPrincipal principal){
         UiScanRequest request=principal.role()==UiRole.ADMIN
