@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.4.25 - 2026-09-14
+
+- Keep login form controls inside the panel at wide and zoomed-out desktop dimensions.
+- Draw one continuous execution line through every step in each architecture zone.
+- Add browser regression coverage for login containment and architecture-line rendering.
+
 ## 0.4.24 - 2026-09-14
 
 - Replace the oversimplified public pipeline with three execution zones that show the API, Agent, Trivy, PostgreSQL outbox, and AWS processing path accurately.

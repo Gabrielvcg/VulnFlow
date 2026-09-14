@@ -34,6 +34,21 @@ test('public architecture and evidence use the desktop viewport without stretchi
   const columns=await scan.evaluate(element=>getComputedStyle(element).gridTemplateColumns.split(' ').map(parseFloat));
   expect(columns).toHaveLength(2);
   expect(Math.min(...columns)).toBeGreaterThan(350);
+  const firstZone=zones.first();
+  expect(await firstZone.locator('ol').evaluate(element=>getComputedStyle(element,'::before').content)).not.toBe('none');
+  expect(await firstZone.locator('li').first().evaluate(element=>getComputedStyle(element,'::after').display)).toBe('none');
+});
+
+test('login fields remain inside the panel at wide and zoomed-out desktop dimensions',async({page})=>{
+  await page.setViewportSize({width:2504,height:1172});
+  await page.goto('/login');
+  const panel=page.locator('.login-panel');
+  const form=panel.locator('form');
+  const input=page.getByLabel('Username');
+  const boxes=await page.evaluate(()=>{const panel=document.querySelector('.login-panel')!.getBoundingClientRect();const form=document.querySelector('.login-panel form')!.getBoundingClientRect();const input=document.querySelector<HTMLInputElement>('input[name="username"]')!.getBoundingClientRect();return{panel:{left:panel.left,right:panel.right},form:{left:form.left,right:form.right},input:{left:input.left,right:input.right}}});
+  expect(boxes.form.right).toBeLessThanOrEqual(boxes.panel.right+1);
+  expect(boxes.input.right).toBeLessThanOrEqual(boxes.form.right+1);
+  expect(boxes.input.left).toBeGreaterThanOrEqual(boxes.form.left-1);
 });
 
 test('operator can sign in and follow an approved scan',async({page})=>{
