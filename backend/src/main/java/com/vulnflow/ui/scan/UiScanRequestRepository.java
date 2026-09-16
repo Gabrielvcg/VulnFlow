@@ -4,7 +4,7 @@ public interface UiScanRequestRepository extends JpaRepository<UiScanRequest,UUI
  @Query("select r.id from UiScanRequest r where r.status = com.vulnflow.ui.scan.UiScanRequestStatus.PROCESSING order by r.requestedAt, r.id")
  Page<UUID> findProcessingIds(Pageable pageable);
  @Lock(LockModeType.PESSIMISTIC_WRITE) @Query("select r from UiScanRequest r where r.id=:id") Optional<UiScanRequest> findByIdForUpdate(@Param("id")UUID id);
- @Query(value="SELECT id FROM ui_scan_requests WHERE status='REQUESTED' ORDER BY requested_at,id FOR UPDATE SKIP LOCKED LIMIT 1",nativeQuery=true) Optional<UUID> findNextClaimableId();
+ @Query(value="SELECT id FROM ui_scan_requests WHERE status='REQUESTED' AND (requested_agent_id IS NULL OR requested_agent_id=:agentId) ORDER BY requested_at,id FOR UPDATE SKIP LOCKED LIMIT 1",nativeQuery=true) Optional<UUID> findNextClaimableId(@Param("agentId") String agentId);
  long countByStatusIn(Collection<UiScanRequestStatus>s); long countByRequestedByIdAndStatusIn(UUID user,Collection<UiScanRequestStatus>s);
  long countByRequestedByIdAndRequestedAtAfter(UUID user,Instant after); long countByTargetIdAndRequestedAtAfter(UUID target,Instant after);
  List<UiScanRequest> findByStatusInAndClaimExpiresAtBefore(Collection<UiScanRequestStatus>s,Instant cutoff);

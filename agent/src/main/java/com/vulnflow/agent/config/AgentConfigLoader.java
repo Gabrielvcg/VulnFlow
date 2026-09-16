@@ -88,9 +88,6 @@ public class AgentConfigLoader {
     }
 
     private void validateTargets(List<ScanTarget> targets) {
-        if (targets.isEmpty()) {
-            throw new AgentConfigurationException("At least one target must be configured");
-        }
         Set<String> identities = new HashSet<>();
         for (ScanTarget target : targets) {
             if (target == null || target.type() == null) {

@@ -10,7 +10,6 @@ import com.vulnflow.agent.scanner.ScanArtifact;
 import com.vulnflow.agent.scanner.VulnerabilityScanner;
 import com.vulnflow.agent.shared.SafeErrors;
 import com.vulnflow.agent.target.ScanTarget;
-import com.vulnflow.agent.target.TargetRegistry;
 import com.vulnflow.agent.target.TargetType;
 import java.nio.file.FileStore;
 import java.nio.file.Files;
@@ -25,8 +24,8 @@ import org.slf4j.LoggerFactory;
 public class CommandCoordinator {
     private static final Logger LOGGER=LoggerFactory.getLogger(CommandCoordinator.class);
     private final String agentId; private final boolean commandsEnabled; private final Path dataDirectory;
-    private final VulnFlowClient client; private final VulnerabilityScanner scanner; private final AgentOutbox outbox; private final ExecutorService executor; private final TargetRegistry targetRegistry;
-    public CommandCoordinator(String agentId,boolean commandsEnabled,Path dataDirectory,VulnFlowClient client,VulnerabilityScanner scanner,AgentOutbox outbox,ExecutorService executor,TargetRegistry targetRegistry){this.agentId=agentId;this.commandsEnabled=commandsEnabled;this.dataDirectory=dataDirectory;this.client=client;this.scanner=scanner;this.outbox=outbox;this.executor=executor;this.targetRegistry=targetRegistry;}
+    private final VulnFlowClient client; private final VulnerabilityScanner scanner; private final AgentOutbox outbox; private final ExecutorService executor;
+    public CommandCoordinator(String agentId,boolean commandsEnabled,Path dataDirectory,VulnFlowClient client,VulnerabilityScanner scanner,AgentOutbox outbox,ExecutorService executor){this.agentId=agentId;this.commandsEnabled=commandsEnabled;this.dataDirectory=dataDirectory;this.client=client;this.scanner=scanner;this.outbox=outbox;this.executor=executor;}
     public void runCycle() {
         try {
             reportDeadLetters();
@@ -41,7 +40,7 @@ public class CommandCoordinator {
             }
             AgentHeartbeat idle = heartbeat("IDLE", null);
             if (!commandsEnabled) {
-                client.heartbeat(agentId, idle);
+                client.heartbeat(agentId, heartbeat("DEGRADED", null));
                 return;
             }
             AgentClaim claim = client.claimScan(agentId, idle);
@@ -52,14 +51,13 @@ public class CommandCoordinator {
             try {
                 ScanTarget target = new ScanTarget(
                         claim.targetName(), TargetType.valueOf(claim.targetType()), claim.targetReference());
-                if (!targetRegistry.contains(target)) {
-                    client.failScan(agentId, claim.requestId(), claim.claimToken(),
-                            "Scan target is not configured on this Agent");
-                    LOGGER.error("event=command_scan_rejected agentId={} requestId={} result=target_not_allowlisted",
-                            agentId, claim.requestId());
-                    return;
+                // Enabling commands trusts this server's catalog; local targets only schedule scans.
+                if (target.reference() == null || target.reference().isBlank()
+                        || target.reference().length() > 500
+                        || !target.reference().matches("[a-zA-Z0-9][a-zA-Z0-9._/:@-]*")) {
+                    throw new IllegalArgumentException("Invalid container image reference");
                 }
-                try (ScanArtifact artifact = executor.submit(() -> scanner.scan(target)).get()) {
+                try (ScanArtifact artifact = executeWithHeartbeat(target, claim)) {
                     outbox.enqueue(agentId, target, artifact.scannedAt(), artifact.path(),
                             claim.requestId(), claim.claimToken());
                     LOGGER.info("event=command_scan_completed agentId={} requestId={} target={} result=stored",
@@ -86,6 +84,24 @@ public class CommandCoordinator {
         } catch (RuntimeException exception) {
             LOGGER.warn("event=command_cycle_failed agentId={} result=isolated errorType={}",
                     agentId, exception.getClass().getSimpleName());
+        }
+    }
+    private ScanArtifact executeWithHeartbeat(ScanTarget target, AgentClaim claim)
+            throws InterruptedException, ExecutionException {
+        var pending = executor.submit(() -> scanner.scan(target));
+        try {
+            while (true) {
+                try {
+                    return pending.get(15, java.util.concurrent.TimeUnit.SECONDS);
+                } catch (java.util.concurrent.TimeoutException waiting) {
+                    AgentHeartbeat health = heartbeat("BUSY", null);
+                    client.heartbeat(agentId, new AgentHeartbeat("BUSY", claim.requestId(), claim.claimToken(),
+                            health.outboxPending(), health.outboxDeadLetters(), health.outboxBytes(),
+                            health.diskFreeBytes(), null));
+                }
+            }
+        } finally {
+            if (!pending.isDone()) pending.cancel(true);
         }
     }
     private void reportDeadLetters() {

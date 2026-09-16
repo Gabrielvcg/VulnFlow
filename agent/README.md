@@ -22,6 +22,11 @@ shell. Every image reference must appear in the targets YAML file.
 
 ## Build and configure
 
+With `VULNFLOW_AGENT_COMMANDS_ENABLED=true`, the Agent accepts image scan commands
+authorized by its configured server. No matching local target entry is required.
+`targets.yml` controls recurring scans only; `targets: []` enables an empty schedule.
+Register images in the console and select the Agent that has registry access.
+
 ```bash
 ./mvnw verify
 cp targets.example.yml targets.yml

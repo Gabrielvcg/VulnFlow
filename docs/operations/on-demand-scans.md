@@ -6,11 +6,25 @@ Keep `VULNFLOW_UI_SCANS_ENABLED=false` and `VULNFLOW_AGENT_COMMANDS_ENABLED=fals
 
 The Agent remains outbound-only. It polls for one command, receives a leased claim and fencing token, runs the existing 15-minute Trivy path, persists the report to its durable outbox, and uploads with the optional request identity. Scheduled `targets.yml` cycles remain available.
 
-The Agent validates the claimed target identity against its local `targets.yml`
-before invoking Trivy. A target that is enabled in PostgreSQL but absent from
-that file is failed safely and is never executed. Keep the control-plane target
-catalog and the Agent allowlist synchronized; historical or test assets must
-remain disabled in the UI catalog.
+The API catalog authorizes remote scan targets. Enabling Agent commands explicitly
+trusts the configured server to request container image scans; the image does not
+need an entry in local `targets.yml`. That file is exclusively the recurring scan
+schedule and may contain `targets: []` for command-only operation. Registering a
+console target never schedules it automatically. Existing schedules are preserved.
+
+Register an exact image reference under Targets, then choose its name and an Agent
+under Scans and press Launch scan. Selecting an image alone does not launch work.
+Private images require registry credentials accessible to Trivy on the selected
+machine. No registry credentials are sent through the console.
+
+`POST /api/ui/v1/scan-requests` accepts `targetId` and optional `agentId`.
+`GET /api/ui/v1/scan-requests/agents` lists agent IDs, status, and online state.
+Omitting `agentId` chooses an available agent at admission. The assignment persists
+through lease recovery; another machine cannot claim that request. Legacy queued
+requests without an assignment remain claimable. Agent groups and namespace
+wildcards are not implemented: register each exact image only in the API catalog.
+An Agent renews its lease every 15 seconds while Trivy is running. Claiming also
+checks idle state, free disk, and outbox capacity.
 
 ## Guardrails
 

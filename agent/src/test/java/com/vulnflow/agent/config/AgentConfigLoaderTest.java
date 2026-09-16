@@ -42,10 +42,8 @@ class AgentConfigLoaderTest {
     }
 
     @Test
-    void rejectsEmptyAndDuplicateTargets() throws Exception {
-        assertThatThrownBy(() -> new AgentConfigLoader().load(validEnvironment("targets: []\n")))
-                .isInstanceOf(AgentConfigurationException.class)
-                .hasMessageContaining("At least one target");
+    void acceptsEmptyScheduleAndRejectsDuplicateTargets() throws Exception {
+        assertThat(new AgentConfigLoader().load(validEnvironment("targets: []\n")).targets()).isEmpty();
 
         String duplicate = """
                 targets:

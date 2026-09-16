@@ -139,6 +139,11 @@ See [SECURITY.md](SECURITY.md) for responsible disclosure and
 
 ## Continuous scanning agent
 
+Remote commands use the API target catalog; they do not require local target
+entries. The YAML below schedules recurring scans only. Use `targets: []` for
+command-only Agents. See [on-demand scans](docs/operations/on-demand-scans.md) for
+registration, Agent selection, and the explicit server trust boundary.
+
 Targets are declared explicitly in YAML:
 
 ```yaml

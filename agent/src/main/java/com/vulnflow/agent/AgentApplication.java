@@ -107,7 +107,7 @@ public final class AgentApplication {
                     stateStore,
                     config.uploadRetryInterval());
             CommandCoordinator commandCoordinator = new CommandCoordinator(config.agentId(), config.commandsEnabled(),
-                    config.dataDirectory(), client, scanner, outbox, scanExecutor, targetRegistry);
+                    config.dataDirectory(), client, scanner, outbox, scanExecutor);
             AgentScheduler scheduler = new AgentScheduler(
                     config.agentId(),
                     scanCoordinator,
