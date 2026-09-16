@@ -17,6 +17,12 @@ under Scans and press Launch scan. Selecting an image alone does not launch work
 Private images require registry credentials accessible to Trivy on the selected
 machine. No registry credentials are sent through the console.
 
+All successfully ingested reports appear under Results, including scheduled Agent
+scans and direct uploads that have no console request. Assets link to their complete
+result history. Findings can be searched within any result by image, CVE, package,
+title, and severity. Dashboard posture uses only the latest result per image so
+historical scans do not inflate the current finding totals.
+
 `POST /api/ui/v1/scan-requests` accepts `targetId` and optional `agentId`.
 `GET /api/ui/v1/scan-requests/agents` lists agent IDs, status, and online state.
 Omitting `agentId` chooses an available agent at admission. The assignment persists

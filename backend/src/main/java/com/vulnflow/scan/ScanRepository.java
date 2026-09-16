@@ -18,6 +18,8 @@ public interface ScanRepository extends JpaRepository<Scan, UUID> {
 
     Page<Scan> findByAssetIdOrderByReceivedAtDesc(UUID assetId, Pageable pageable);
 
+    Page<Scan> findAllByOrderByReceivedAtDesc(Pageable pageable);
+
     Page<Scan> findByReceivedAtAfterOrderByReceivedAtDesc(Instant after, Pageable pageable);
 
     @Query("""

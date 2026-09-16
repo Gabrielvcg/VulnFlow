@@ -33,6 +33,8 @@ class FlywayUpgradeIT {
         UUID processingWithoutJob = UUID.randomUUID();
         UUID processingWithJob = UUID.randomUUID();
         UUID duplicateAssetId = UUID.randomUUID();
+        UUID syntheticAssetId = UUID.randomUUID();
+        UUID syntheticScanId = UUID.randomUUID();
         try (Connection connection = connection()) {
             insertAsset(connection, assetId);
             insertAsset(connection, duplicateAssetId);
@@ -41,6 +43,8 @@ class FlywayUpgradeIT {
             insertScan(connection, received, assetId, "RECEIVED", "c".repeat(64));
             insertScan(connection, processingWithoutJob, assetId, "PROCESSING", "d".repeat(64));
             insertScan(connection, processingWithJob, assetId, "PROCESSING", "e".repeat(64));
+            insertAsset(connection, syntheticAssetId, "synthetic", "portfolio-e2e:1");
+            insertScan(connection, syntheticScanId, syntheticAssetId, "COMPLETED", "f".repeat(64));
         }
 
         flywayAt("3").migrate();
@@ -67,7 +71,7 @@ class FlywayUpgradeIT {
         Flyway latest = flywayAt(null);
         latest.migrate();
 
-        assertThat(latest.info().current().getVersion().getVersion()).isEqualTo("8");
+        assertThat(latest.info().current().getVersion().getVersion()).isEqualTo("9");
         assertThat(scanStatus(completed)).isEqualTo("COMPLETED");
         assertThat(scanStatus(failed)).isEqualTo("FAILED");
         assertThat(scanStatus(received)).isEqualTo("FAILED");
@@ -90,6 +94,8 @@ class FlywayUpgradeIT {
         assertThat(countActiveScansWithoutJobs()).isZero();
         assertThat(assetExternalReference(assetId)).isEqualTo("legacy:1");
         assertThat(assetExternalReference(duplicateAssetId)).isNull();
+        assertThat(recordExists("assets", syntheticAssetId)).isFalse();
+        assertThat(recordExists("scans", syntheticScanId)).isFalse();
     }
 
     private Flyway flywayAt(String target) {
@@ -110,14 +116,20 @@ class FlywayUpgradeIT {
     }
 
     private void insertAsset(Connection connection, UUID assetId) throws Exception {
+        insertAsset(connection, assetId, "legacy", "legacy:1");
+    }
+
+    private void insertAsset(Connection connection, UUID assetId, String name, String reference) throws Exception {
         try (PreparedStatement statement = connection.prepareStatement("""
                 INSERT INTO assets (id, name, type, external_reference, created_at, updated_at)
-                VALUES (?, 'legacy', 'CONTAINER_IMAGE', 'legacy:1', ?, ?)
+                VALUES (?, ?, 'CONTAINER_IMAGE', ?, ?, ?)
                 """)) {
             Instant now = Instant.now();
             statement.setObject(1, assetId);
-            statement.setObject(2, now.atOffset(ZoneOffset.UTC));
-            statement.setObject(3, now.atOffset(ZoneOffset.UTC));
+            statement.setString(2, name);
+            statement.setString(3, reference);
+            statement.setObject(4, now.atOffset(ZoneOffset.UTC));
+            statement.setObject(5, now.atOffset(ZoneOffset.UTC));
             statement.executeUpdate();
         }
     }
@@ -189,6 +201,15 @@ class FlywayUpgradeIT {
                 assertThat(result.next()).isTrue();
                 return result.getString(1);
             }
+        }
+    }
+
+    private boolean recordExists(String table, UUID id) throws Exception {
+        if (!java.util.Set.of("assets", "scans").contains(table)) throw new IllegalArgumentException("Unsupported table");
+        try (Connection connection = connection();
+                PreparedStatement statement = connection.prepareStatement("SELECT 1 FROM " + table + " WHERE id = ?")) {
+            statement.setObject(1, id);
+            try (ResultSet result = statement.executeQuery()) { return result.next(); }
         }
     }
 }

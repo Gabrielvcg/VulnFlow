@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.4.28 - 2026-09-16
+
+- List every ingested result independently of console scan requests and link images to their complete history.
+- Search findings within any result by image, CVE, package, title, and severity.
+- Calculate current posture from the latest result per image instead of double-counting historical scans.
+- Resolve AWS-backed result status in the asset inventory and remove known synthetic portfolio smoke-test records.
+
 ## 0.4.27 - 2026-09-16
 
 - Authorize remote scans from the API catalog without a duplicate Agent allowlist; permit empty local recurring schedules.
