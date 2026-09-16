@@ -119,6 +119,7 @@ public class TrivyImageScanner implements VulnerabilityScanner {
                 "--scanners", "vuln",
                 "--format", "json",
                 "--output", output.toString(),
+                "--",
                 target.reference());
     }
 

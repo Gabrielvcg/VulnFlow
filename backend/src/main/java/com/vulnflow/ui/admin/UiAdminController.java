@@ -103,8 +103,10 @@ public class UiAdminController {
 
     public record CreateUser(@NotBlank @Size(max=100) String username, @NotNull UiRole role) {}
     public record UpdateUser(@NotNull UUID id, boolean enabled, boolean rotatePassword) {}
-    public record TargetBody(@NotBlank @Size(max=255) String name, @NotBlank @Size(max=500) String reference) {}
-    public record TargetUpdate(@NotNull UUID id, @NotBlank @Size(max=255) String name, @NotBlank @Size(max=500) String reference, boolean enabled) {}
+    public record TargetBody(@NotBlank @Size(max=255) String name,
+            @NotBlank @Size(max=500) @jakarta.validation.constraints.Pattern(regexp="[a-zA-Z0-9][a-zA-Z0-9._/:@-]*", message="Use an exact container image reference without spaces or wildcards") String reference) {}
+    public record TargetUpdate(@NotNull UUID id, @NotBlank @Size(max=255) String name,
+            @NotBlank @Size(max=500) @jakarta.validation.constraints.Pattern(regexp="[a-zA-Z0-9][a-zA-Z0-9._/:@-]*", message="Use an exact container image reference without spaces or wildcards") String reference, boolean enabled) {}
     public record UserResponse(UUID id,String username,UiRole role,boolean enabled,boolean passwordChangeRequired,Instant lockedUntil,Instant lastLoginAt,String temporaryPassword) {
         static UserResponse from(UiUser u){return new UserResponse(u.getId(),u.getUsername(),u.getRole(),u.isEnabled(),u.isPasswordChangeRequired(),u.getLockedUntil(),u.getLastLoginAt(),null);} UserResponse withTemporaryPassword(String p){return new UserResponse(id,username,role,enabled,passwordChangeRequired,lockedUntil,lastLoginAt,p);}}
     public record CreatedUser(UserResponse user,String temporaryPassword) {}

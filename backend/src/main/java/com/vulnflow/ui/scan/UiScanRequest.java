@@ -14,6 +14,7 @@ public class UiScanRequest {
     @ManyToOne(fetch=FetchType.LAZY,optional=false) @JoinColumn(name="target_id") private UiTarget target;
     @ManyToOne(fetch=FetchType.LAZY,optional=false) @JoinColumn(name="requested_by") private UiUser requestedBy;
     @ManyToOne(fetch=FetchType.LAZY) @JoinColumn(name="agent_id") private UiAgent agent;
+    @Column(name="requested_agent_id",length=100) private String requestedAgentId;
     @Enumerated(EnumType.STRING) @Column(nullable=false,length=20) private UiScanRequestStatus status;
     @Column(name="claim_token") private UUID claimToken; @Column(name="claim_expires_at") private Instant claimExpiresAt;
     @Column(name="heartbeat_at") private Instant heartbeatAt; @Column(name="recovery_attempts",nullable=false) private int recoveryAttempts;
@@ -23,6 +24,8 @@ public class UiScanRequest {
     @Column(name="started_at") private Instant startedAt; @Column(name="uploaded_at") private Instant uploadedAt;
     @Column(name="completed_at") private Instant completedAt; @Column(name="updated_at",nullable=false) private Instant updatedAt;
     protected UiScanRequest() {}
+    public void routeTo(String agentId) { requestedAgentId = agentId; }
+    public String getRequestedAgentId() { return requestedAgentId; }
     public UiScanRequest(UiTarget target,UiUser user){id=UUID.randomUUID();this.target=target;requestedBy=user;status=UiScanRequestStatus.REQUESTED;requestedAt=Instant.now();updatedAt=requestedAt;}
     public UUID claim(UiAgent agent,Duration lease){require(UiScanRequestStatus.REQUESTED);Instant now=Instant.now();this.agent=agent;status=UiScanRequestStatus.CLAIMED;claimToken=UUID.randomUUID();claimedAt=now;heartbeatAt=now;claimExpiresAt=now.plus(lease);updatedAt=now;return claimToken;}
     public void heartbeat(UUID token,Duration lease){fence(token);heartbeatAt=Instant.now();claimExpiresAt=heartbeatAt.plus(lease);updatedAt=heartbeatAt;}

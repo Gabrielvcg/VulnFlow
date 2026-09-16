@@ -37,6 +37,27 @@ class UiScanAdmissionIT {
     @Autowired UiAdmissionLock admissionLock;
 
     @Test
+    void onlySelectedAgentCanClaimAndRecoveryKeepsRouting() {
+        UiUser user = user();
+        var request = service.create(target(user).getId(), principal(user), "admission-test");
+        var health = new UiScanRequestService.Heartbeat("IDLE", null, null, 0, 0, 0, 2_000_000_000L, null);
+        assertThat(service.claim("other-agent", health)).isNull();
+        assertThat(service.claim("admission-test", health).requestId()).isEqualTo(request.id());
+        jdbc.update("UPDATE ui_scan_requests SET claim_expires_at=now()-interval '1 minute' WHERE id=?", request.id());
+        assertThat(service.claim("other-agent", health)).isNull();
+        assertThat(service.claim("admission-test", health).requestId()).isEqualTo(request.id());
+    }
+
+    @Test
+    void lowDiskAgentCannotClaimExistingRequest() {
+        UiUser user = user();
+        var request = service.create(target(user).getId(), principal(user), "admission-test");
+        var lowDisk = new UiScanRequestService.Heartbeat("IDLE", null, null, 0, 0, 0, 1, null);
+        assertThat(service.claim("admission-test", lowDisk)).isNull();
+        assertThat(requests.findById(request.id()).orElseThrow().getStatus()).isEqualTo(UiScanRequestStatus.REQUESTED);
+    }
+
+    @Test
     void admissionWaitsForAnotherTransactionsLock() throws Exception {
         UiUser user = user();
         UUID targetId = target(user).getId();
@@ -70,6 +91,7 @@ class UiScanAdmissionIT {
     void clearRequestsAndRefreshAgent() {
         jdbc.update("DELETE FROM ui_audit_events");
         requests.deleteAll();
+        agents.deleteAll();
         UiAgent agent = new UiAgent("admission-test");
         agent.heartbeat("IDLE", null, 0, 0, 0, 2_000_000_000L, null);
         agents.save(agent);

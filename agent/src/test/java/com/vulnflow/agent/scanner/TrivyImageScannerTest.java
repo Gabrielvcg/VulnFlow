@@ -34,6 +34,7 @@ class TrivyImageScannerTest {
                     "--scanners", "vuln",
                     "--format", "json",
                     "--output", artifact.path().toString(),
+                    "--",
                     "image:latest; touch /tmp/should-not-run");
             assertThat(Files.exists(artifact.path())).isTrue();
         }

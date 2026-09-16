@@ -21,6 +21,33 @@ class CommandCoordinatorTest {
     @TempDir Path directory;
 
     @Test
+    void executesApiTargetWithoutAnyLocalSchedule() throws Exception {
+        StubClient client = new StubClient();
+        client.claim = new AgentClaim(UUID.randomUUID(), UUID.randomUUID(), Instant.now().plusSeconds(120),
+                "new-image", "CONTAINER_IMAGE", "ghcr.io/example/new-image:1");
+        FileAgentOutbox outbox = outbox();
+        var executor = Executors.newSingleThreadExecutor();
+        try {
+            new CommandCoordinator("agent-a", true, directory, client, new VulnerabilityScanner() {
+                public String verifyAvailable() { return "test"; }
+                public ScanArtifact scan(ScanTarget target) {
+                    assertThat(target.reference()).isEqualTo(client.claim.targetReference());
+                    try {
+                        Path report = Files.createTempFile(directory, "new-scan", ".json");
+                        Files.writeString(report, "{}");
+                        return new ScanArtifact(report, Instant.now(), 2);
+                    } catch (java.io.IOException e) { throw new java.io.UncheckedIOException(e); }
+                }
+            }, outbox, executor).runCycle();
+            assertThat(client.failures).isZero();
+            assertThat(outbox.list()).singleElement().satisfies(item -> {
+                assertThat(item.scanRequestId()).isEqualTo(client.claim.requestId());
+                assertThat(item.target().reference()).isEqualTo(client.claim.targetReference());
+            });
+        } finally { executor.shutdownNow(); }
+    }
+
+    @Test
     void notifiedDeadLetterDoesNotBlockClaimsIncludingAfterRestart() throws Exception {
         FileAgentOutbox outbox = outbox();
         OutboxItem item = deadLetter(outbox);
@@ -58,7 +85,7 @@ class CommandCoordinatorTest {
                             throw new AssertionError("No scan should be started without a claim");
                         }
                     },
-                    outbox, executor, List::of).runCycle();
+                    outbox, executor).runCycle();
         } finally {
             executor.shutdownNow();
         }
@@ -81,9 +108,10 @@ class CommandCoordinatorTest {
         int claims;
         int failures;
         boolean unavailable;
+        AgentClaim claim;
         public AssetResolution resolveAsset(ScanTarget target) { throw new AssertionError("Unexpected resolution"); }
         public UploadReceipt uploadTrivyReport(UUID assetId, Path report) { throw new AssertionError("Unexpected upload"); }
-        public AgentClaim claimScan(String agentId, AgentHeartbeat heartbeat) { claims++; return null; }
+        public AgentClaim claimScan(String agentId, AgentHeartbeat heartbeat) { claims++; return claim; }
         public void failScan(String agentId, UUID requestId, UUID token, String error) {
             failures++;
             if (unavailable) throw new VulnFlowClientException(ClientFailureKind.RETRYABLE, "Unavailable");

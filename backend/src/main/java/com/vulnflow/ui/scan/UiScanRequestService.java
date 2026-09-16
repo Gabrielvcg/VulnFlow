@@ -38,6 +38,11 @@ public class UiScanRequestService {
 
     @Transactional
     public ScanRequestResponse create(UUID targetId,UiPrincipal principal){
+        return create(targetId, principal, null);
+    }
+
+    @Transactional
+    public ScanRequestResponse create(UUID targetId,UiPrincipal principal,String requestedAgentId){
         if(!properties.scansEnabled())reject("SCANS_DISABLED","On-demand scans are disabled");
         admissionLock.acquire();
         UiTarget target=targets.findById(targetId).filter(UiTarget::isEnabled).orElseThrow(()->new ResourceNotFoundException("Target",targetId));
@@ -47,11 +52,18 @@ public class UiScanRequestService {
         if(requests.countByRequestedByIdAndRequestedAtAfter(principal.id(),now.minusSeconds(3600))>=properties.maxHourlyPerUser())reject("HOURLY_QUOTA","Hourly scan quota reached");
         if(requests.countByRequestedByIdAndRequestedAtAfter(principal.id(),now.minusSeconds(86400))>=properties.maxDailyPerUser())reject("DAILY_QUOTA","Daily scan quota reached");
         if(requests.countByTargetIdAndRequestedAtAfter(targetId,now.minus(properties.targetCooldown()))>0)reject("TARGET_COOLDOWN","Target cooldown is active");
-        UiAgent agent=agents.findAllByOrderByLastHeartbeatAtDesc().stream().findFirst().orElse(null);
+        UiAgent agent=agents.findAllByOrderByLastHeartbeatAtDesc().stream()
+                .filter(a -> requestedAgentId == null || requestedAgentId.equals(a.getId()))
+                .filter(a -> !a.getLastHeartbeatAt().isBefore(now.minus(properties.agentOfflineAfter())))
+                .filter(a -> "IDLE".equals(a.getStatus()) || "BUSY".equals(a.getStatus()))
+                .filter(a -> a.getDiskFreeBytes() >= properties.agentMinFreeBytes() && a.getOutboxBytes() < 1_073_741_824L)
+                .findFirst().orElse(null);
         if(agent==null||agent.getLastHeartbeatAt().isBefore(now.minus(properties.agentOfflineAfter())))reject("AGENT_OFFLINE","The scan agent is offline");
         if(agent.getDiskFreeBytes()<properties.agentMinFreeBytes())reject("AGENT_DISK_LOW","The scan agent has insufficient free disk");
         if(agent.getOutboxBytes()>=1_073_741_824L)reject("OUTBOX_FULL","The agent outbox is full");
-        UiScanRequest created=requests.save(new UiScanRequest(target,user));
+        UiScanRequest created=new UiScanRequest(target,user);
+        created.routeTo(agent.getId());
+        requests.save(created);
         audit.record(user,principal.username(),"SCAN_REQUESTED","SCAN_REQUEST",created.getId().toString(),"SUCCESS",null,"Approved catalog target requested");
         LOGGER.info("Se registró una solicitud de escaneo permitida: requestId={}",created.getId());
         return response(created);
@@ -62,7 +74,9 @@ public class UiScanRequestService {
         heartbeat(agentId,body);
         if(!properties.scansEnabled())return null;
         recoverExpired();
-        UUID id=requests.findNextClaimableId().orElse(null); if(id==null)return null;
+        if (!"IDLE".equals(body.status()) || body.diskFreeBytes() < properties.agentMinFreeBytes()
+                || body.outboxBytes() >= 1_073_741_824L) return null;
+        UUID id=requests.findNextClaimableId(agentId).orElse(null); if(id==null)return null;
         UiScanRequest request=requests.findByIdForUpdate(id).orElseThrow(); UiAgent agent=agents.getReferenceById(agentId);
         UUID token=request.claim(agent,properties.claimLease());
         return new AgentClaim(request.getId(),token,request.getClaimExpiresAt(),request.getTarget().getName(),request.getTarget().getType().name(),request.getTarget().getExternalReference());
@@ -70,6 +84,14 @@ public class UiScanRequestService {
 
     @Transactional
     public void heartbeat(String agentId,Heartbeat body){UiAgent agent=agents.findById(agentId).orElseGet(()->new UiAgent(agentId));agent.heartbeat(body.status(),body.currentRequestId(),body.outboxPending(),body.outboxDeadLetters(),body.outboxBytes(),body.diskFreeBytes(),body.safeError());agents.save(agent);if(body.currentRequestId()!=null&&body.claimToken()!=null){requests.findByIdForUpdate(body.currentRequestId()).ifPresent(r->r.heartbeat(body.claimToken(),properties.claimLease()));}}
+    @Transactional(readOnly=true)
+    public List<AgentOption> availableAgents() {
+        Instant cutoff = Instant.now().minus(properties.agentOfflineAfter());
+        return agents.findAllByOrderByLastHeartbeatAtDesc().stream()
+                .map(a -> new AgentOption(a.getId(), a.getStatus(), !a.getLastHeartbeatAt().isBefore(cutoff)))
+                .toList();
+    }
+    public record AgentOption(String id, String status, boolean online) {}
     @Transactional public void start(String agentId,UUID id,UUID token){UiScanRequest r=claimed(agentId,id);r.start(token,properties.claimLease());}
     @Transactional public void fail(String agentId,UUID id,UUID token,String error){UiScanRequest r=claimed(agentId,id);if(r.getStatus()!=UiScanRequestStatus.FAILED)r.fail(token,error);}
     @Transactional public void verifyUpload(UUID id,UUID token){UiScanRequest r=requests.findByIdForUpdate(id).orElseThrow(()->new ResourceNotFoundException("Scan request",id));r.uploading(token,properties.claimLease());}

@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.4.27 - 2026-09-16
+
+- Authorize remote scans from the API catalog without a duplicate Agent allowlist; permit empty local recurring schedules.
+- Add explicit Agent selection and a Launch scan button, keeping registration separate from recurring scans.
+- Persist request routing across claim recovery and enforce capacity at claim time.
+- Renew command leases during long Trivy scans and terminate CLI options before image references.
+- Document the server trust boundary, private registry access, and additive V8 rollout.
+
 ## 0.4.26 - 2026-09-14
 
 - Show severity totals and labeled bars without requiring hover.
