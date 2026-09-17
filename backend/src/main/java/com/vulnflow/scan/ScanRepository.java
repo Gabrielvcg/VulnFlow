@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -16,8 +17,10 @@ import org.springframework.data.domain.Pageable;
 
 public interface ScanRepository extends JpaRepository<Scan, UUID> {
 
+    @EntityGraph(attributePaths = "asset")
     Page<Scan> findByAssetIdOrderByReceivedAtDesc(UUID assetId, Pageable pageable);
 
+    @EntityGraph(attributePaths = "asset")
     Page<Scan> findAllByOrderByReceivedAtDesc(Pageable pageable);
 
     Page<Scan> findByReceivedAtAfterOrderByReceivedAtDesc(Instant after, Pageable pageable);

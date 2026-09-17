@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+- Load each result's image metadata with the paginated scan query so the production Results screen does not fail after the persistence session closes.
+- Cover authenticated result listing with PostgreSQL integration testing.
+
 ## 0.4.28 - 2026-09-16
 
 - List every ingested result independently of console scan requests and link images to their complete history.

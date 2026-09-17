@@ -8,6 +8,12 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.vulnflow.asset.Asset;
+import com.vulnflow.asset.AssetRepository;
+import com.vulnflow.asset.AssetType;
+import com.vulnflow.scan.Scan;
+import com.vulnflow.scan.ScanRepository;
+import com.vulnflow.scan.ScannerType;
 import com.vulnflow.ui.auth.UiRole;
 import com.vulnflow.ui.auth.UiUser;
 import com.vulnflow.ui.auth.UiUserRepository;
@@ -37,7 +43,8 @@ class UiSecurityIT {
     private static final String PASSWORD="TemporaryPassword1A";
     @Container @ServiceConnection static final PostgreSQLContainer<?> POSTGRES=new PostgreSQLContainer<>("postgres:16.4-alpine");
     @Autowired MockMvc mvc; @Autowired ObjectMapper mapper; @Autowired UiUserRepository users; @Autowired UiAuditRepository audit; @Autowired UiScanRequestRepository requests; @Autowired UiTargetRepository targets; @Autowired PasswordEncoder encoder;
-    @BeforeEach void prepare(){requests.deleteAll();targets.deleteAll();audit.deleteAll();users.deleteAll();users.save(new UiUser("operator",encoder.encode(PASSWORD),UiRole.OPERATOR,false));}
+    @Autowired AssetRepository assets; @Autowired ScanRepository scans;
+    @BeforeEach void prepare(){requests.deleteAll();targets.deleteAll();scans.deleteAll();assets.deleteAll();audit.deleteAll();users.deleteAll();users.save(new UiUser("operator",encoder.encode(PASSWORD),UiRole.OPERATOR,false));}
 
     @Test void requiresCsrfForLogin() throws Exception {mvc.perform(post("/api/ui/v1/auth/login").contentType(MediaType.APPLICATION_JSON).content("{\"username\":\"operator\",\"password\":\""+PASSWORD+"\"}")).andExpect(status().isForbidden());}
     @Test void persistsAccountLockAfterFiveFailedLogins() throws Exception {SessionMaterial material=csrf();for(int attempt=0;attempt<5;attempt++){mvc.perform(post("/api/ui/v1/auth/login").cookie(material.cookie()).header("X-XSRF-TOKEN",material.token()).contentType(MediaType.APPLICATION_JSON).content("{\"username\":\"operator\",\"password\":\"wrong-password\"}")).andExpect(status().isUnauthorized());}assertThat(users.findByUsernameIgnoreCase("operator").orElseThrow().isLocked(java.time.Instant.now())).isTrue();}
@@ -59,6 +66,18 @@ class UiSecurityIT {
                 .andExpect(jsonPath("$.username").value("operator"));
         mvc.perform(get("/api/ui/v1/admin/users").cookie(sessionCookie))
                 .andExpect(status().isForbidden());
+    }
+    @Test void listsResultsWithTheirLazyAssetAfterTheRepositoryCallCompletes() throws Exception {
+        Asset asset = assets.save(new Asset("public-nginx", AssetType.CONTAINER_IMAGE, "nginx:stable"));
+        Scan scan = new Scan(asset, ScannerType.TRIVY, "nginx.json", "a".repeat(64));
+        scan.markCompleted("test");
+        scans.save(scan);
+
+        mvc.perform(get("/api/ui/v1/results").cookie(login("operator")))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content[0].id").value(scan.getId().toString()))
+                .andExpect(jsonPath("$.content[0].assetName").value("public-nginx"))
+                .andExpect(jsonPath("$.content[0].reference").value("nginx:stable"));
     }
     @Test void passwordChangeRefreshesTheExistingSessionPrincipal() throws Exception {
         users.deleteAll();
