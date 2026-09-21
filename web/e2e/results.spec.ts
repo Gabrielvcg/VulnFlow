@@ -14,7 +14,7 @@ test('results include agent uploads and findings search by image',async({page})=
     if(url.pathname.endsWith('/auth/me'))return route.fulfill({json:{id:'u',username:'admin',role:'ADMIN',passwordChangeRequired:false}});
     if(url.pathname.endsWith('/assets'))return route.fulfill({json:{content:[{id:'asset',name:'public-nginx',reference:'nginx:stable',lastScanStatus:'COMPLETED'}],number:0,totalPages:1,totalElements:1}});
     if(url.pathname.endsWith('/results'))return route.fulfill({json:{content:[{id:'result',assetId:'asset',assetName:'public-nginx',reference:'nginx:stable',status:'COMPLETED',findingCount:310,receivedAt:'2026-09-16T16:43:04Z'}],number:0,totalPages:1,totalElements:1}});
-    return route.fulfill({json:{content:[{vulnerabilityId:'CVE-REAL',packageName:'openssl',severity:'HIGH',riskScore:80,fixedVersion:'3.0.1'}],number:0,totalPages:1,totalElements:1,truncated:false}});
+    return route.fulfill({json:{content:[{vulnerabilityId:'CVE-REAL',packageName:'openssl',severity:'HIGH',riskScore:80,fixedVersion:'3.0.1'}],number:0,totalPages:1,totalElements:1,truncated:false,totalExact:true}});
   });
   await page.goto('/app/results');
   await expect(page.getByText('public-nginx',{exact:true})).toBeVisible();

@@ -3,6 +3,9 @@ package com.vulnflow;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import com.vulnflow.asset.Asset;
+import com.vulnflow.asset.AssetRepository;
+import com.vulnflow.asset.AssetType;
 import com.vulnflow.ui.auth.*;
 import com.vulnflow.ui.scan.*;
 import com.vulnflow.ui.target.*;
@@ -29,6 +32,7 @@ class UiScanAdmissionIT {
     static final PostgreSQLContainer<?> POSTGRES = new PostgreSQLContainer<>("postgres:16.4-alpine");
     @Autowired UiUserRepository users;
     @Autowired UiTargetRepository targets;
+    @Autowired AssetRepository assets;
     @Autowired UiAgentRepository agents;
     @Autowired UiScanRequestService service;
     @Autowired UiScanRequestRepository requests;
@@ -146,7 +150,9 @@ class UiScanAdmissionIT {
     }
 
     private UiTarget target(UiUser user) {
-        return targets.save(new UiTarget("test", "test:" + UUID.randomUUID(), null, user));
+        String reference = "test:" + UUID.randomUUID();
+        Asset asset = assets.save(new Asset("test", AssetType.CONTAINER_IMAGE, reference));
+        return targets.save(new UiTarget("test", reference, asset, user));
     }
 
     private UiPrincipal principal(UiUser user) {

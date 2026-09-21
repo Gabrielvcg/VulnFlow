@@ -11,6 +11,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.vulnflow.asset.Asset;
 import com.vulnflow.asset.AssetRepository;
 import com.vulnflow.asset.AssetType;
+import com.vulnflow.finding.Finding;
+import com.vulnflow.finding.FindingRepository;
+import com.vulnflow.finding.FindingSeverity;
 import com.vulnflow.scan.Scan;
 import com.vulnflow.scan.ScanRepository;
 import com.vulnflow.scan.ScannerType;
@@ -43,8 +46,8 @@ class UiSecurityIT {
     private static final String PASSWORD="TemporaryPassword1A";
     @Container @ServiceConnection static final PostgreSQLContainer<?> POSTGRES=new PostgreSQLContainer<>("postgres:16.4-alpine");
     @Autowired MockMvc mvc; @Autowired ObjectMapper mapper; @Autowired UiUserRepository users; @Autowired UiAuditRepository audit; @Autowired UiScanRequestRepository requests; @Autowired UiTargetRepository targets; @Autowired PasswordEncoder encoder;
-    @Autowired AssetRepository assets; @Autowired ScanRepository scans;
-    @BeforeEach void prepare(){requests.deleteAll();targets.deleteAll();scans.deleteAll();assets.deleteAll();audit.deleteAll();users.deleteAll();users.save(new UiUser("operator",encoder.encode(PASSWORD),UiRole.OPERATOR,false));}
+    @Autowired AssetRepository assets; @Autowired ScanRepository scans; @Autowired FindingRepository findings;
+    @BeforeEach void prepare(){requests.deleteAll();targets.deleteAll();findings.deleteAll();scans.deleteAll();assets.deleteAll();audit.deleteAll();users.deleteAll();users.save(new UiUser("operator",encoder.encode(PASSWORD),UiRole.OPERATOR,false));}
 
     @Test void requiresCsrfForLogin() throws Exception {mvc.perform(post("/api/ui/v1/auth/login").contentType(MediaType.APPLICATION_JSON).content("{\"username\":\"operator\",\"password\":\""+PASSWORD+"\"}")).andExpect(status().isForbidden());}
     @Test void persistsAccountLockAfterFiveFailedLogins() throws Exception {SessionMaterial material=csrf();for(int attempt=0;attempt<5;attempt++){mvc.perform(post("/api/ui/v1/auth/login").cookie(material.cookie()).header("X-XSRF-TOKEN",material.token()).contentType(MediaType.APPLICATION_JSON).content("{\"username\":\"operator\",\"password\":\"wrong-password\"}")).andExpect(status().isUnauthorized());}assertThat(users.findByUsernameIgnoreCase("operator").orElseThrow().isLocked(java.time.Instant.now())).isTrue();}
@@ -79,6 +82,51 @@ class UiSecurityIT {
                 .andExpect(jsonPath("$.content[0].assetName").value("public-nginx"))
                 .andExpect(jsonPath("$.content[0].reference").value("nginx:stable"));
     }
+    @Test void registeringAndChangingAnImageKeepsTheTargetLinkedToTheMatchingAsset() throws Exception {
+        users.save(new UiUser("admin", encoder.encode(PASSWORD), UiRole.ADMIN, false));
+        Cookie admin = login("admin");
+        SessionMaterial material = csrf();
+        MvcResult created = mvc.perform(post("/api/ui/v1/admin/targets")
+                        .cookie(admin, material.cookie()).header("X-XSRF-TOKEN", material.token())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"name\":\"Alpine\",\"reference\":\"alpine:3.20\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.assetId").isNotEmpty())
+                .andReturn();
+        var targetId = mapper.readTree(created.getResponse().getContentAsByteArray()).path("id").asText();
+        var firstAssetId = mapper.readTree(created.getResponse().getContentAsByteArray()).path("assetId").asText();
+
+        MvcResult changed = mvc.perform(patch("/api/ui/v1/admin/targets")
+                        .cookie(admin, material.cookie()).header("X-XSRF-TOKEN", material.token())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"id\":\""+targetId+"\",\"name\":\"Alpine current\",\"reference\":\"alpine:3.21\",\"enabled\":true}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.assetId").isNotEmpty())
+                .andExpect(jsonPath("$.assetId").value(org.hamcrest.Matchers.not(firstAssetId)))
+                .andReturn();
+
+        UiTarget updated = targets.findById(java.util.UUID.fromString(targetId)).orElseThrow();
+        assertThat(updated.getAsset()).isNotNull();
+        var changedAssetId = mapper.readTree(changed.getResponse().getContentAsByteArray()).path("assetId").asText();
+        assertThat(assets.findById(java.util.UUID.fromString(changedAssetId)).orElseThrow().getExternalReference())
+                .isEqualTo("alpine:3.21");
+    }
+
+    @Test void searchesLocalFindingsInTheDatabaseInsteadOfLoadingTheWholeResult() throws Exception {
+        Asset asset = assets.save(new Asset("alpine", AssetType.CONTAINER_IMAGE, "alpine:3.20"));
+        Scan scan = scans.save(new Scan(asset, ScannerType.TRIVY, "alpine.json", "b".repeat(64)));
+        findings.save(new Finding(scan, asset, "CVE-2026-1234", "openssl", "1", "2", FindingSeverity.HIGH,
+                "Matching title", "description", false, 80));
+        findings.save(new Finding(scan, asset, "CVE-2026-9999", "zlib", "1", null, FindingSeverity.LOW,
+                "Other title", "description", false, 20));
+
+        mvc.perform(get("/api/ui/v1/results/{id}/findings", scan.getId())
+                        .queryParam("query", "openssl").queryParam("severity", "HIGH").cookie(login("operator")))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.totalExact").value(true))
+                .andExpect(jsonPath("$.totalElements").value(1))
+                .andExpect(jsonPath("$.content[0].vulnerabilityId").value("CVE-2026-1234"));
+    }
     @Test void passwordChangeRefreshesTheExistingSessionPrincipal() throws Exception {
         users.deleteAll();
         users.save(new UiUser("first-access", encoder.encode(PASSWORD), UiRole.OPERATOR, true));
@@ -112,7 +160,8 @@ class UiSecurityIT {
         UiUser operator = users.findByUsernameIgnoreCase("operator").orElseThrow();
         UiUser other = users.save(new UiUser("other",encoder.encode(PASSWORD),UiRole.OPERATOR,false));
         UiUser admin = users.save(new UiUser("admin",encoder.encode(PASSWORD),UiRole.ADMIN,false));
-        UiTarget target = targets.save(new UiTarget("Alpine", "alpine:3.20", null, admin));
+        Asset targetAsset = assets.save(new Asset("Alpine", AssetType.CONTAINER_IMAGE, "alpine:3.20"));
+        UiTarget target = targets.save(new UiTarget("Alpine", "alpine:3.20", targetAsset, admin));
         requests.save(new UiScanRequest(target, operator));
         requests.save(new UiScanRequest(target, other));
 

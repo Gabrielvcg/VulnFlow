@@ -12,7 +12,6 @@ import com.vulnflow.ui.auth.UiPrincipal;
 import com.vulnflow.ui.scan.*;
 import java.time.Instant;
 import java.util.*;
-import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Value;
@@ -26,7 +25,7 @@ import software.amazon.awssdk.services.sqs.model.QueueAttributeName;
 @RestController
 @RequestMapping("/api/ui/v1")
 public class UiQueryController {
-    private static final int MAX_FINDINGS_SEARCHED = 10_000;
+    private static final int MAX_AWS_SEARCH_PAGES = 20;
     private final AssetRepository assets; private final ScanRepository scans; private final FindingRepository findings;
     private final UiAgentRepository agents; private final UiScanRequestService scanRequests;
     private final AwsPublicationOutboxRepository outbox; private final UiProperties properties;
@@ -95,18 +94,18 @@ public class UiQueryController {
     @GetMapping("/results/{id}/findings")
     public FindingsPage resultFindings(@PathVariable UUID id,@RequestParam(defaultValue="0")int page,
             @RequestParam(defaultValue="25")int size,@RequestParam(required=false)String query,
-            @RequestParam(required=false)FindingSeverity severity){
-        requireScan(id); List<FindingView> all=searchableFindings(id);
+            @RequestParam(required=false)FindingSeverity severity,@RequestParam(required=false)String cursor){
+        requireScan(id);
         String needle=query==null?"":query.trim().toLowerCase(Locale.ROOT);
         if(needle.length()>100)throw new IllegalArgumentException("query is too long");
-        Predicate<FindingView> matches=finding->(severity==null||severity.name().equals(finding.severity()))
-                &&(needle.isEmpty()||contains(finding.vulnerabilityId(),needle)||contains(finding.packageName(),needle)
-                ||contains(finding.title(),needle));
-        List<FindingView> filtered=all.stream().filter(matches).toList(); int limit=bounded(size);
-        int number=Math.max(page,0),start=Math.min(number*limit,filtered.size()),end=Math.min(start+limit,filtered.size());
-        int pages=filtered.isEmpty()?0:(filtered.size()+limit-1)/limit;
-        return new FindingsPage(filtered.subList(start,end),null,number,pages,filtered.size(),
-                all.size()>=MAX_FINDINGS_SEARCHED);
+        int limit=bounded(size);
+        ProcessingResultReader reader=resultReaders.getIfAvailable();
+        if(reader==null||findings.countByScanId(id)>0){
+            Page<Finding> local=findings.searchByScanId(id,needle,severity,PageRequest.of(Math.max(page,0),limit));
+            return new FindingsPage(local.map(FindingView::from).getContent(),null,local.getNumber(),
+                    local.getTotalPages(),local.getTotalElements(),false,true);
+        }
+        return searchAwsFindings(reader,id,cursor,limit,needle,severity);
     }
 
     @GetMapping("/scan-requests/{id}/findings")
@@ -116,10 +115,10 @@ public class UiQueryController {
         UUID scanId=scanRequests.authorizeResultAccess(id,principal);int limit=bounded(size);
         Page<Finding> local=findings.findByScanId(scanId,PageRequest.of(Math.max(page,0),limit));
         if(local.hasContent()||resultReaders.getIfAvailable()==null)return new FindingsPage(
-                local.map(FindingView::from).getContent(),null,local.getNumber(),local.getTotalPages(),local.getTotalElements(),false);
+                local.map(FindingView::from).getContent(),null,local.getNumber(),local.getTotalPages(),local.getTotalElements(),false,true);
         var awsPage=resultReaders.getIfAvailable().findFindings(scanId,cursor,limit);
         return new FindingsPage(awsPage.findings().stream().map(FindingView::from).toList(),awsPage.nextCursor(),0,
-                awsPage.nextCursor()==null?1:2,awsPage.findings().size(),false);
+                awsPage.nextCursor()==null?1:2,awsPage.findings().size(),false,false);
     }
 
     @GetMapping("/scan-requests/{id}/summary")
@@ -143,11 +142,26 @@ public class UiQueryController {
             severity.put(value.name(),(int)findings.countByScanIdAndSeverity(scan.getId(),value));
         return new ResultSummary(scan.getId(),null,scan.getStatus().name(),scan.getScanner().name(),scan.getScannerVersion(),
                 scan.getContentHash(),scan.getReceivedAt(),scan.getCompletedAt(),(int)findings.countByScanId(scan.getId()),severity,scan.getFailureReason());}
-    private List<FindingView> searchableFindings(UUID scanId){ProcessingResultReader reader=resultReaders.getIfAvailable();
-        if(reader==null)return findings.findByScanId(scanId,PageRequest.of(0,MAX_FINDINGS_SEARCHED)).stream().map(FindingView::from).toList();
-        List<FindingView> result=new ArrayList<>();String cursor=null;do{var batch=reader.findFindings(scanId,cursor,
-                Math.min(100,MAX_FINDINGS_SEARCHED-result.size()));result.addAll(batch.findings().stream().map(FindingView::from).toList());
-            cursor=batch.nextCursor();}while(cursor!=null&&result.size()<MAX_FINDINGS_SEARCHED);return result;}
+    private FindingsPage searchAwsFindings(ProcessingResultReader reader,UUID scanId,String cursor,int limit,
+            String needle,FindingSeverity severity){
+        List<FindingView> matches=new ArrayList<>();
+        String next=cursor;
+        int pages=0;
+        do{
+            var batch=reader.findFindings(scanId,next,limit-matches.size());
+            next=batch.nextCursor();pages++;
+            batch.findings().stream().map(FindingView::from)
+                    .filter(finding->matches(finding,needle,severity))
+                    .limit((long) limit-matches.size()).forEach(matches::add);
+        }while(next!=null&&matches.size()<limit&&pages<MAX_AWS_SEARCH_PAGES);
+        boolean budgetExhausted=next!=null&&matches.size()<limit&&pages>=MAX_AWS_SEARCH_PAGES;
+        return new FindingsPage(matches,next,0,next==null?1:2,matches.size(),budgetExhausted,false);
+    }
+    private static boolean matches(FindingView finding,String needle,FindingSeverity severity){
+        return (severity==null||severity.name().equals(finding.severity()))
+                &&(needle.isEmpty()||contains(finding.vulnerabilityId(),needle)||contains(finding.packageName(),needle)
+                ||contains(finding.title(),needle));
+    }
     private Asset requireAsset(UUID id){return assets.findById(id).orElseThrow(()->new ResourceNotFoundException("Asset",id));}
     private Scan requireScan(UUID id){return scans.findById(id).orElseThrow(()->new ResourceNotFoundException("Scan",id));}
     private int bounded(int size){return Math.max(1,Math.min(size,100));}
@@ -183,7 +197,8 @@ public class UiQueryController {
     public record ResultSummary(UUID scanId,UUID correlationId,String status,String scanner,String scannerVersion,String contentHash,Instant receivedAt,Instant completedAt,
                                 int findingCount,Map<String,Integer> severitySummary,String safeError){static ResultSummary from(ProcessingResultSummary result){return new ResultSummary(result.scanId(),result.correlationId(),
         result.status().name(),result.scanner(),result.scannerVersion(),result.contentHash(),result.receivedAt(),result.completedAt(),result.findingCount(),result.severitySummary(),result.safeError());}}
-    public record FindingsPage(List<FindingView> content,String nextCursor,int number,int totalPages,long totalElements,boolean truncated){}
+    public record FindingsPage(List<FindingView> content,String nextCursor,int number,int totalPages,long totalElements,
+                               boolean truncated,boolean totalExact){}
     public record AgentView(String id,String status,boolean online,Instant lastHeartbeatAt,int outboxPending,int deadLetters,long outboxBytes,long diskFreeBytes,String safeError){
         static AgentView from(UiAgent agent,java.time.Duration offline){return new AgentView(agent.getId(),agent.getStatus(),agent.getLastHeartbeatAt().isAfter(Instant.now().minus(offline)),
                 agent.getLastHeartbeatAt(),agent.getOutboxPending(),agent.getOutboxDeadLetters(),agent.getOutboxBytes(),agent.getDiskFreeBytes(),agent.getLastError());}}

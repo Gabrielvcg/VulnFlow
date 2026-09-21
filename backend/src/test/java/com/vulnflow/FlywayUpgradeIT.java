@@ -71,7 +71,7 @@ class FlywayUpgradeIT {
         Flyway latest = flywayAt(null);
         latest.migrate();
 
-        assertThat(latest.info().current().getVersion().getVersion()).isEqualTo("9");
+        assertThat(latest.info().current().getVersion().getVersion()).isEqualTo("10");
         assertThat(scanStatus(completed)).isEqualTo("COMPLETED");
         assertThat(scanStatus(failed)).isEqualTo("FAILED");
         assertThat(scanStatus(received)).isEqualTo("FAILED");

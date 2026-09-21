@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.when;
 import static org.mockito.Mockito.lenient;
 
@@ -140,6 +141,25 @@ class DynamoDbProcessingResultStoreTest {
                 .extracting(result -> result.vulnerabilityId())
                 .isEqualTo("CVE-2026-0001");
         assertThat(page.nextCursor()).isNotBlank();
+    }
+
+    @Test
+    void validatesTheSummaryOnlyOnTheFirstFindingsPage() {
+        when(client.getItem(any(GetItemRequest.class)))
+                .thenReturn(GetItemResponse.builder().item(scanItem(event, "COMPLETED", 2)).build());
+        when(client.query(any(QueryRequest.class))).thenReturn(QueryResponse.builder()
+                .items(findingItem(event, "FINDING#00000000"))
+                .lastEvaluatedKey(Map.of(
+                        "pk", value("SCAN#" + event.scanId()),
+                        "sk", value("FINDING#00000000")))
+                .build());
+        String cursor = store.findFindings(event.scanId(), null, 1).nextCursor();
+        org.mockito.Mockito.clearInvocations(client);
+
+        store.findFindings(event.scanId(), cursor, 1);
+
+        verify(client, never()).getItem(any(GetItemRequest.class));
+        verify(client).query(any(QueryRequest.class));
     }
 
     @Test

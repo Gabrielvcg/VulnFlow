@@ -36,7 +36,12 @@ public class UiTarget {
     }
     @PrePersist void create() { Instant now = Instant.now(); createdAt = now; updatedAt = now; }
     @PreUpdate void update() { updatedAt = Instant.now(); }
-    public void update(String name, String reference, boolean enabled) { this.name = name; externalReference = reference; this.enabled = enabled; }
+    public void update(String name, String reference, Asset asset, boolean enabled) {
+        this.name = name;
+        externalReference = reference;
+        this.asset = asset;
+        this.enabled = enabled;
+    }
     public UUID getId() { return id; } public String getName() { return name; }
     public AssetType getType() { return type; } public String getExternalReference() { return externalReference; }
     public Asset getAsset() { return asset; } public boolean isEnabled() { return enabled; }
