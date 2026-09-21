@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Give the production Agent a dedicated read-only Docker configuration for scanning private GHCR images without sharing the host Docker login or socket.
 - Present executable targets and result assets as one image catalog in the console while preserving their separate persistence responsibilities.
 - Resolve and relink the matching asset atomically whenever an administrator registers or changes an image reference.
 - Replace the 10,000-item in-memory findings search with database pagination and bounded DynamoDB cursor batches, avoiding repeated summary reads after the first batch.

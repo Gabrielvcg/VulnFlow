@@ -16,6 +16,7 @@ lock_file="${deploy_root}/.deploy.lock"
 health_check="${script_dir}/health-check.sh"
 compose_file="${script_dir}/docker-compose.prod.yml"
 aws_compose_file="${script_dir}/docker-compose.aws.yml"
+agent_registry_auth_dir=$(sed -n 's/^VULNFLOW_AGENT_REGISTRY_AUTH_DIR=//p' "${runtime_env}" 2>/dev/null || true)
 
 for command in docker flock realpath; do
   command -v "${command}" >/dev/null 2>&1 || { echo "Required command is unavailable: ${command}" >&2; exit 69; }
@@ -28,6 +29,11 @@ if [[ ! -f "${runtime_env}" ]]; then
 fi
 if [[ ! -f "${candidate_release}" ]]; then
   echo "Candidate release file is missing." >&2
+  exit 65
+fi
+if [[ -z "${agent_registry_auth_dir}" || "${agent_registry_auth_dir}" != /* \
+    || ! -f "${agent_registry_auth_dir}/config.json" ]]; then
+  echo "Agent registry credential is missing or invalid." >&2
   exit 65
 fi
 

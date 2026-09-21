@@ -12,10 +12,13 @@ need an entry in local `targets.yml`. That file is exclusively the recurring sca
 schedule and may contain `targets: []` for command-only operation. Registering a
 console target never schedules it automatically. Existing schedules are preserved.
 
-Register an exact image reference under Targets, then choose its name and an Agent
+Register an exact image reference under Images, then choose its name and an Agent
 under Scans and press Launch scan. Selecting an image alone does not launch work.
-Private images require registry credentials accessible to Trivy on the selected
-machine. No registry credentials are sent through the console.
+Private GHCR images use the selected Agent's dedicated `read:packages` credential,
+mounted read-only as its Docker configuration. No registry credential is sent
+through the console, stored in the image catalog, inherited from the host Docker
+login, or exposed through the Docker socket. Other private registries require an
+equivalent Agent-side credential design before their references are enabled.
 
 All successfully ingested reports appear under Results, including scheduled Agent
 scans and direct uploads that have no console request. Assets link to their complete
