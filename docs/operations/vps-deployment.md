@@ -105,6 +105,7 @@ the result of an unverified `ssh-keyscan` call.
 The deployment job uses its short-lived `GITHUB_TOKEN` to pull runtime images.
 Separately, it creates `runtime/agent-registry/config.json` from
 `GHCR_AGENT_READ_TOKEN`, assigns it to the Agent's numeric UID with mode `600`,
+keeps the containing directory traversable but non-listable by the deploy user,
 and mounts only that directory read-only at `/run/vulnflow-registry`. The Agent
 uses it through `DOCKER_CONFIG`; it never receives the host Docker configuration
 or Docker socket. Rotate the dedicated token independently of deployment access.
