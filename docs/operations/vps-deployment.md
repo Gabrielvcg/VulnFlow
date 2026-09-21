@@ -86,6 +86,7 @@ values as `production` environment variables:
 | `VPS_USER` | Dedicated non-root deploy user |
 | `VPS_DEPLOY_PATH` | Absolute VulnFlow directory, for example `/srv/vulnflow` |
 | `GHCR_USERNAME` | Optional GHCR user for private packages |
+| `GHCR_AGENT_USERNAME` | GitHub account used by the Agent's dedicated read-only package credential |
 
 Configure these environment secrets:
 
@@ -93,7 +94,7 @@ Configure these environment secrets:
 | --- | --- |
 | `VPS_SSH_PRIVATE_KEY` | Private key dedicated to the deploy user |
 | `VPS_SSH_KNOWN_HOSTS` | Pinned host-key line for the configured host and port |
-| `GHCR_TOKEN` | Optional read-only package token for private GHCR images |
+| `GHCR_AGENT_READ_TOKEN` | Dedicated classic PAT with `read:packages` only, used by Trivy for private image scans |
 
 Obtain the SSH public host key through a trusted channel and verify its
 fingerprint with the VPS provider or an existing trusted session. Store the
@@ -101,10 +102,16 @@ complete known-hosts line. For a non-default port its host field must use
 `[host]:port`. The workflow uses `StrictHostKeyChecking=yes`; it never trusts
 the result of an unverified `ssh-keyscan` call.
 
+The deployment job uses its short-lived `GITHUB_TOKEN` to pull runtime images.
+Separately, it creates `runtime/agent-registry/config.json` from
+`GHCR_AGENT_READ_TOKEN`, assigns it to the Agent's numeric UID with mode `600`,
+and mounts only that directory read-only at `/run/vulnflow-registry`. The Agent
+uses it through `DOCKER_CONFIG`; it never receives the host Docker configuration
+or Docker socket. Rotate the dedicated token independently of deployment access.
+
 The API key and PostgreSQL password stay only in `runtime/.env.prod`. They are
 not GitHub secrets, release-manifest values, command-line arguments, or workflow
-outputs. If GHCR packages are public or the deploy user is already authenticated
-securely, omit both optional GHCR settings.
+outputs.
 
 ## Release flow
 

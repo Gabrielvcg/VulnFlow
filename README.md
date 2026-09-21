@@ -330,6 +330,10 @@ key, synchronizes only versioned deployment files, and never overwrites the
 VPS-only runtime environment or target file. Named PostgreSQL, report, and
 agent-outbox volumes are preserved.
 
+Private GHCR scans use a separate `read:packages` credential mounted read-only as
+the Agent's Docker configuration. The Agent never receives the host Docker login,
+deployment token, or Docker socket.
+
 See [the VPS deployment runbook](docs/operations/vps-deployment.md) for one-time preparation,
 GitHub variables and secrets, Nginx/TLS, exact-SHA deployment, health checks,
 automatic rollback, emergency recovery, and the deployment pause switch. No

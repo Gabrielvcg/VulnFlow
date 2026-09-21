@@ -72,13 +72,17 @@ parsing; vulnerability and artifact content are preserved.
   Nginx, and production OpenAPI/Swagger default to disabled.
 - The backend and agent drop Linux capabilities and use read-only root
   filesystems. The non-root agent has no Docker socket.
+- The Agent receives only a dedicated GHCR `read:packages` credential through a
+  mode-`600` Docker configuration owned by its runtime UID and mounted read-only;
+  it does not inherit the host Docker login.
 - GitHub and host-side locks prevent overlapping production updates. Deployment
   never uses `down -v`, volume deletion, or broad image pruning.
 
 The deploy user's access to a conventional Docker daemon remains highly
 privileged even when the user is not `root`. Prefer rootless Docker or a tightly
-restricted command wrapper when operationally feasible. GHCR tokens, when
-needed for private packages, should be read-only and dedicated to deployment.
+restricted command wrapper when operationally feasible. The Agent registry token
+is independent from deployment authentication and can be rotated through the
+protected production environment.
 Protect the `production` environment with reviewers and restrict who can change
 its variables, secrets, and branch policy.
 

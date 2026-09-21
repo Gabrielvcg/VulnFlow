@@ -118,6 +118,7 @@ jobs:
           VULNFLOW_REPORTS_VOLUME: vulnflow-ci-reports
           VULNFLOW_AGENT_VOLUME: vulnflow-ci-agent
           VULNFLOW_AGENT_TARGETS_FILE: /tmp/vulnflow-targets.yml
+          VULNFLOW_AGENT_REGISTRY_AUTH_DIR: /tmp/vulnflow-agent-registry
           VULNFLOW_AGENT_ID: ci-agent
           VULNFLOW_BACKEND_IMAGE: example.invalid/vulnflow-backend:ci
           VULNFLOW_AGENT_IMAGE: example.invalid/vulnflow-agent:ci
@@ -146,6 +147,10 @@ jobs:
           assert agent["environment"]["TMPDIR"] == "/var/lib/vulnflow-agent/tmp"
           assert agent["read_only"] is True
           assert all("docker.sock" not in str(volume) for volume in agent["volumes"])
+          assert agent["environment"]["DOCKER_CONFIG"] == "/run/vulnflow-registry"
+          assert any(volume.get("source") == "/tmp/vulnflow-agent-registry"
+                     and volume.get("target") == "/run/vulnflow-registry"
+                     and volume.get("read_only") is True for volume in agent["volumes"])
           assert backend["environment"]["SPRING_PROFILES_ACTIVE"] == "prod"
           assert "AWS_PROFILE" not in backend["environment"]
           assert web["read_only"] is True
@@ -307,6 +312,8 @@ jobs:
       VPS_DEPLOY_PATH: ${{ vars.VPS_DEPLOY_PATH }}
       GHCR_USERNAME: ${{ vars.GHCR_USERNAME }}
       GHCR_TOKEN: ${{ github.token }}
+      GHCR_AGENT_USERNAME: ${{ vars.GHCR_AGENT_USERNAME }}
+      GHCR_AGENT_READ_TOKEN: ${{ secrets.GHCR_AGENT_READ_TOKEN }}
       VPS_SSH_PRIVATE_KEY: ${{ secrets.VPS_SSH_PRIVATE_KEY }}
       VPS_SSH_KNOWN_HOSTS: ${{ secrets.VPS_SSH_KNOWN_HOSTS }}
 
@@ -343,6 +350,8 @@ jobs:
             echo "GHCR_USERNAME is invalid"
             exit 1
           fi
+          [[ "$GHCR_AGENT_USERNAME" =~ ^[A-Za-z0-9_.-]+$ ]] || { echo "GHCR_AGENT_USERNAME is missing or invalid"; exit 1; }
+          [[ -n "$GHCR_AGENT_READ_TOKEN" ]] || { echo "GHCR_AGENT_READ_TOKEN is missing"; exit 1; }
 
       - name: Prepare pinned SSH identity
         shell: bash
@@ -403,6 +412,55 @@ jobs:
             "$VPS_USER@$VPS_HOST" \
             docker login ghcr.io --username "$GHCR_USERNAME" --password-stdin
 
+      - name: Install dedicated Agent registry credential
+        shell: bash
+        env:
+          AGENT_IMAGE: ${{ needs.publish_images.outputs.agent_image }}
+        run: |
+          python - <<'PY'
+          import base64
+          import json
+          import os
+          from pathlib import Path
+
+          username = os.environ["GHCR_AGENT_USERNAME"]
+          token = os.environ["GHCR_AGENT_READ_TOKEN"]
+          encoded = base64.b64encode(f"{username}:{token}".encode()).decode()
+          target = Path(os.environ["RUNNER_TEMP"]) / "vulnflow-agent-registry.json"
+          target.write_text(json.dumps({"auths": {"ghcr.io": {"auth": encoded}}}), encoding="utf-8")
+          target.chmod(0o600)
+          PY
+
+          scp -i "$RUNNER_TEMP/vulnflow-ssh/id" \
+            -o IdentitiesOnly=yes \
+            -o StrictHostKeyChecking=yes \
+            -o UserKnownHostsFile="$RUNNER_TEMP/vulnflow-ssh/known_hosts" \
+            -P "$VPS_PORT" \
+            "$RUNNER_TEMP/vulnflow-agent-registry.json" \
+            "$VPS_USER@$VPS_HOST:$VPS_DEPLOY_PATH/.agent-registry.next.json"
+
+          ssh -i "$RUNNER_TEMP/vulnflow-ssh/id" \
+            -o IdentitiesOnly=yes \
+            -o StrictHostKeyChecking=yes \
+            -o UserKnownHostsFile="$RUNNER_TEMP/vulnflow-ssh/known_hosts" \
+            -p "$VPS_PORT" \
+            "$VPS_USER@$VPS_HOST" \
+            bash -s -- "$VPS_DEPLOY_PATH" "$AGENT_IMAGE" <<'REMOTE'
+          set -euo pipefail
+          deploy_root=$1
+          agent_image=$2
+          trap 'rm -f "$deploy_root/.agent-registry.next.json"' EXIT
+          docker pull "$agent_image" >/dev/null
+          docker run --rm --user 0:0 \
+            -v "$deploy_root/runtime:/runtime" \
+            -v "$deploy_root/.agent-registry.next.json:/input/config.json:ro" \
+            --entrypoint /bin/sh "$agent_image" -c '
+              set -eu
+              install -d -m 700 -o 10001 -g 10001 /runtime/agent-registry
+              install -m 600 -o 10001 -g 10001 /input/config.json /runtime/agent-registry/config.json
+            '
+          REMOTE
+
       - name: Deploy and verify release
         shell: bash
         run: |
@@ -417,4 +475,4 @@ jobs:
       - name: Remove temporary credentials
         if: always()
         shell: bash
-        run: rm -rf "$RUNNER_TEMP/vulnflow-ssh" "$RUNNER_TEMP/vulnflow-release.env"
+        run: rm -rf "$RUNNER_TEMP/vulnflow-ssh" "$RUNNER_TEMP/vulnflow-release.env" "$RUNNER_TEMP/vulnflow-agent-registry.json"
