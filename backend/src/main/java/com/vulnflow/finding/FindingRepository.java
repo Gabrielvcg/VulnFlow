@@ -42,6 +42,21 @@ public interface FindingRepository extends JpaRepository<Finding, UUID> {
 
     Page<Finding> findByScanId(UUID scanId, Pageable pageable);
 
+    @Query("""
+            SELECT finding
+            FROM Finding finding
+            WHERE finding.scan.id = :scanId
+              AND (:severity IS NULL OR finding.severity = :severity)
+              AND (:query = '' OR lower(finding.vulnerabilityId) LIKE concat('%', :query, '%')
+                   OR lower(finding.packageName) LIKE concat('%', :query, '%')
+                   OR lower(coalesce(finding.title, '')) LIKE concat('%', :query, '%'))
+            """)
+    Page<Finding> searchByScanId(
+            @Param("scanId") UUID scanId,
+            @Param("query") String query,
+            @Param("severity") FindingSeverity severity,
+            Pageable pageable);
+
     @Modifying
     @Query("DELETE FROM Finding finding WHERE finding.scan.id = :scanId")
     int deleteByScanId(@Param("scanId") UUID scanId);

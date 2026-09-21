@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Present executable targets and result assets as one image catalog in the console while preserving their separate persistence responsibilities.
+- Resolve and relink the matching asset atomically whenever an administrator registers or changes an image reference.
+- Replace the 10,000-item in-memory findings search with database pagination and bounded DynamoDB cursor batches, avoiding repeated summary reads after the first batch.
+- Use the public personal email identity for all new repository commits.
 - Load each result's image metadata with the paginated scan query so the production Results screen does not fail after the persistence session closes.
 - Cover authenticated result listing with PostgreSQL integration testing.
 
