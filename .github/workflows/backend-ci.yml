@@ -456,7 +456,7 @@ jobs:
             -v "$deploy_root/.agent-registry.next.json:/input/config.json:ro" \
             --entrypoint /bin/sh "$agent_image" -c '
               set -eu
-              install -d -m 700 -o 10001 -g 10001 /runtime/agent-registry
+              install -d -m 711 -o 10001 -g 10001 /runtime/agent-registry
               install -m 600 -o 10001 -g 10001 /input/config.json /runtime/agent-registry/config.json
             '
           REMOTE
