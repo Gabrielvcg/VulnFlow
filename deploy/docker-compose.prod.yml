@@ -100,6 +100,7 @@ services:
       VULNFLOW_AGENT_COMMANDS_ENABLED: ${VULNFLOW_AGENT_COMMANDS_ENABLED:-false}
       VULNFLOW_AGENT_COMMAND_POLL_INTERVAL: ${VULNFLOW_AGENT_COMMAND_POLL_INTERVAL:-5s}
       VULNFLOW_TARGETS_FILE: /etc/vulnflow-agent/targets.yml
+      DOCKER_CONFIG: /run/vulnflow-registry
       TRIVY_CACHE_DIR: /var/lib/vulnflow-agent/trivy-cache
       TMPDIR: /var/lib/vulnflow-agent/tmp
     volumes:
@@ -107,6 +108,10 @@ services:
       - type: bind
         source: ${VULNFLOW_AGENT_TARGETS_FILE:?VULNFLOW_AGENT_TARGETS_FILE is required}
         target: /etc/vulnflow-agent/targets.yml
+        read_only: true
+      - type: bind
+        source: ${VULNFLOW_AGENT_REGISTRY_AUTH_DIR:?VULNFLOW_AGENT_REGISTRY_AUTH_DIR is required}
+        target: /run/vulnflow-registry
         read_only: true
     networks:
       - internal
