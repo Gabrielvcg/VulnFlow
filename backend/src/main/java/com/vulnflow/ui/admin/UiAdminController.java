@@ -2,6 +2,8 @@ package com.vulnflow.ui.admin;
 
 import com.vulnflow.asset.Asset;
 import com.vulnflow.asset.AssetRepository;
+import com.vulnflow.asset.AssetDtos;
+import com.vulnflow.asset.AssetService;
 import com.vulnflow.asset.AssetType;
 import com.vulnflow.ui.audit.UiAuditEvent;
 import com.vulnflow.ui.audit.UiAuditRepository;
@@ -43,13 +45,15 @@ import org.slf4j.LoggerFactory;
 public class UiAdminController {
     private static final Logger LOGGER=LoggerFactory.getLogger(UiAdminController.class);
     private final UiUserRepository users; private final UiTargetRepository targets; private final AssetRepository assets;
+    private final AssetService assetService;
     private final UiAuditRepository audits; private final UiAuditService audit; private final PasswordEncoder encoder;
     private final UiAuthenticationService authentication; private final SecureRandom random = new SecureRandom();
     private final ApplicationEventPublisher events;
-    public UiAdminController(UiUserRepository users, UiTargetRepository targets, AssetRepository assets,
+    @SuppressWarnings("java:S107")
+    public UiAdminController(UiUserRepository users, UiTargetRepository targets, AssetRepository assets, AssetService assetService,
                              UiAuditRepository audits, UiAuditService audit, PasswordEncoder encoder,
                              UiAuthenticationService authentication, ApplicationEventPublisher events) {
-        this.users=users; this.targets=targets; this.assets=assets; this.audits=audits; this.audit=audit;
+        this.users=users; this.targets=targets; this.assets=assets; this.assetService=assetService; this.audits=audits; this.audit=audit;
         this.encoder=encoder; this.authentication=authentication;
         this.events = events;
     }
@@ -83,7 +87,7 @@ public class UiAdminController {
     @PostMapping("/targets") @Transactional
     public TargetAdminResponse createTarget(@AuthenticationPrincipal UiPrincipal principal, @Valid @RequestBody TargetBody body) {
         if (targets.findByTypeAndExternalReference(AssetType.CONTAINER_IMAGE, body.reference()).isPresent()) throw new IllegalArgumentException("Target already exists");
-        Asset asset = assets.findByTypeAndExternalReference(AssetType.CONTAINER_IMAGE, body.reference()).orElse(null);
+        Asset asset = resolveAsset(body.name(), body.reference());
         UiTarget target = targets.save(new UiTarget(body.name(), body.reference(), asset, users.getReferenceById(principal.id())));
         audit.record(users.getReferenceById(principal.id()), principal.username(), "TARGET_CREATED", "TARGET", target.getId().toString(), "SUCCESS", null, "Container image target created");
         LOGGER.info("Se creó un target permitido: targetId={}",target.getId());
@@ -91,7 +95,12 @@ public class UiAdminController {
     }
     @PatchMapping("/targets") @Transactional
     public TargetAdminResponse updateTarget(@AuthenticationPrincipal UiPrincipal principal, @Valid @RequestBody TargetUpdate body) {
-        UiTarget target = targets.findById(body.id()).orElseThrow(); target.update(body.name(), body.reference(), body.enabled());
+        UiTarget target = targets.findById(body.id()).orElseThrow();
+        targets.findByTypeAndExternalReference(AssetType.CONTAINER_IMAGE, body.reference())
+                .filter(existing -> !existing.getId().equals(body.id()))
+                .ifPresent(existing -> { throw new IllegalArgumentException("Target already exists"); });
+        Asset asset = resolveAsset(body.name(), body.reference());
+        target.update(body.name(), body.reference(), asset, body.enabled());
         audit.record(users.getReferenceById(principal.id()), principal.username(), "TARGET_UPDATED", "TARGET", target.getId().toString(), "SUCCESS", null, "Target catalog entry changed");
         LOGGER.info("Se actualizó un target permitido: targetId={}, activo={}",target.getId(),target.isEnabled());
         return TargetAdminResponse.from(target);
@@ -100,6 +109,10 @@ public class UiAdminController {
         return audits.findAllByOrderByCreatedAtDesc(PageRequest.of(page, Math.min(size,100))).map(AuditResponse::from);
     }
     private String temporaryPassword() { byte[] bytes = new byte[18]; random.nextBytes(bytes); return "Vf1A" + Base64.getUrlEncoder().withoutPadding().encodeToString(bytes); }
+    private Asset resolveAsset(String name, String reference) {
+        var resolution = assetService.resolve(new AssetDtos.ResolveRequest(name, AssetType.CONTAINER_IMAGE, reference));
+        return assets.getReferenceById(resolution.asset().id());
+    }
 
     public record CreateUser(@NotBlank @Size(max=100) String username, @NotNull UiRole role) {}
     public record UpdateUser(@NotNull UUID id, boolean enabled, boolean rotatePassword) {}

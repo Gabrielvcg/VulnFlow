@@ -199,9 +199,11 @@ public final class DynamoDbProcessingResultStore
         if (size < 1 || size > 100) {
             throw new IllegalArgumentException("size must be between 1 and 100");
         }
-        Optional<ProcessingResultSummary> summary = findScan(scanId);
-        if (summary.isEmpty() || summary.get().status() != ProcessingResultStatus.COMPLETED) {
-            return new ProcessingFindingPage(List.of(), null);
+        if (cursor == null) {
+            Optional<ProcessingResultSummary> summary = findScan(scanId);
+            if (summary.isEmpty() || summary.get().status() != ProcessingResultStatus.COMPLETED) {
+                return new ProcessingFindingPage(List.of(), null);
+            }
         }
 
         QueryRequest.Builder request = QueryRequest.builder()
