@@ -25,7 +25,7 @@ import software.amazon.awssdk.services.sqs.model.QueueAttributeName;
 @RestController
 @RequestMapping("/api/ui/v1")
 public class UiQueryController {
-    private static final int MAX_AWS_FINDINGS = 10_000;
+    private static final int MAX_AWS_FINDINGS = 100_000;
     private static final Comparator<FindingView> RISK_ORDER = Comparator.comparingInt(FindingView::riskScore)
             .reversed().thenComparing(FindingView::vulnerabilityId).thenComparing(FindingView::id);
     private final AssetRepository assets; private final ScanRepository scans; private final FindingRepository findings;
@@ -128,7 +128,8 @@ public class UiQueryController {
     @GetMapping("/scan-requests/{id}/finding-context")
     public FindingContext findingContext(@PathVariable UUID id,@AuthenticationPrincipal UiPrincipal principal){
         Scan scan=requireScan(scanRequests.authorizeResultAccess(id,principal));
-        return new FindingContext(scan.getAsset().getId(),scan.getId());
+        return new FindingContext(scan.getAsset().getId(),scan.getId(),scan.getAsset().getName(),
+                scan.getAsset().getExternalReference(),scan.getReceivedAt());
     }
 
     @GetMapping("/scan-requests/{id}/summary")
@@ -212,7 +213,7 @@ public class UiQueryController {
         result.status().name(),result.scanner(),result.scannerVersion(),result.contentHash(),result.receivedAt(),result.completedAt(),result.findingCount(),result.severitySummary(),result.safeError());}}
     public record FindingsPage(List<FindingView> content,String nextCursor,int number,int totalPages,long totalElements,
                                boolean truncated,boolean totalExact){}
-    public record FindingContext(UUID assetId,UUID resultId){}
+    public record FindingContext(UUID assetId,UUID resultId,String assetName,String reference,Instant receivedAt){}
     public record AgentView(String id,String status,boolean online,Instant lastHeartbeatAt,int outboxPending,int deadLetters,long outboxBytes,long diskFreeBytes,String safeError){
         static AgentView from(UiAgent agent,java.time.Duration offline){return new AgentView(agent.getId(),agent.getStatus(),agent.getLastHeartbeatAt().isAfter(Instant.now().minus(offline)),
                 agent.getLastHeartbeatAt(),agent.getOutboxPending(),agent.getOutboxDeadLetters(),agent.getOutboxBytes(),agent.getDiskFreeBytes(),agent.getLastError());}}
