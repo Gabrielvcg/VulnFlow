@@ -1,101 +1,1652 @@
-import {useEffect,useState,type FormEvent,type ReactNode} from 'react';
-import './console-details.css';
-import {useMutation,useQuery,useQueryClient} from '@tanstack/react-query';
-import {Link,NavLink,Navigate,Route,Routes,useLocation,useNavigate,useParams,useSearchParams} from 'react-router-dom';
-import {recordedScan} from './demo/recordedScan';
+import { useEffect, useState, type FormEvent, type ReactNode } from "react";
+import "./console-details.css";
+import "./public-evidence.css";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { Link, NavLink, Navigate, Route, Routes, useLocation, useNavigate, useParams, useSearchParams } from "react-router-dom";
+import { recordedScan } from "./demo/recordedScan";
 
-type Role='ADMIN'|'OPERATOR'; type Principal={id:string;username:string;role:Role;passwordChangeRequired:boolean};
-type Page<T>={content:T[];number:number;totalPages:number;totalElements:number};
-type Scan={id:string;targetId:string;targetName:string;requestedBy:string;agentId?:string;status:string;recoveryAttempts:number;scanId?:string;eventId?:string;contentHash?:string;scanner?:string;safeError?:string;requestedAt:string;claimedAt?:string;startedAt?:string;uploadedAt?:string;completedAt?:string};
-type Agent={id:string;status:string;online:boolean;lastHeartbeatAt:string;outboxPending:number;deadLetters:number;outboxBytes:number;diskFreeBytes:number;safeError?:string};
-type Dashboard={since:string;scanLimit:number;scans:number;assets:number;findings:number;severity:Record<string,number>;agent?:Agent};
-type ResultSummary={scanId:string;correlationId?:string;status:string;scanner:string;scannerVersion?:string;contentHash?:string;receivedAt?:string;completedAt?:string;findingCount:number;severitySummary:Record<string,number>;safeError?:string};
-type AssetView={id:string;name:string;type:string;reference?:string;updatedAt:string;lastScanId?:string;lastScanStatus?:string;lastScanReceivedAt?:string;lastScanCompletedAt?:string};
-type ImageTarget={id:string;name:string;type:string;reference:string;enabled:boolean;assetId:string;updatedAt:string};
-type FindingsPage={content:any[];nextCursor?:string;number:number;totalPages:number;totalElements:number;truncated:boolean;totalExact:boolean};
-type ResultView={id:string;assetId:string;assetName:string;reference?:string;status:string;scanner:string;findingCount:number;severity:Record<string,number>;receivedAt:string;completedAt?:string};
-type QueueCounts={visible:number;inFlight:number};
-type QueueTelemetry={source?:QueueCounts;dlq?:QueueCounts;status:string};
-type OperationsData={activeProfiles:string[];agent?:Agent;publicationOutbox:{pending:number;failed:number};queues?:QueueTelemetry;sqsTelemetryEnabled:boolean;scansEnabled:boolean};
-let csrfToken='';
-async function csrf(){if(csrfToken)return csrfToken;const r=await fetch('/api/ui/v1/auth/csrf',{credentials:'include'});if(!r.ok)throw new Error('Could not initialize secure session');csrfToken=(await r.json()).token;return csrfToken}
-async function api<T>(path:string,init:RequestInit={}):Promise<T>{const method=init.method??'GET';const headers=new Headers(init.headers);if(!['GET','HEAD','OPTIONS'].includes(method)){headers.set('X-XSRF-TOKEN',await csrf());if(init.body)headers.set('Content-Type','application/json')}const r=await fetch('/api/ui/v1'+path,{...init,headers,credentials:'include'});if(r.status===401)throw new Error('AUTH_REQUIRED');if(!r.ok){const b=await r.json().catch(()=>null);throw new Error(b?.message??`Request failed (${r.status})`)}if(r.status===204)return undefined as T;return r.json()}
-const fmt=(value?:string)=>value?new Intl.DateTimeFormat('en-GB',{dateStyle:'medium',timeStyle:'short'}).format(new Date(value)):'—';
-const bytes=(n=0)=>n>1e9?`${(n/1e9).toFixed(1)} GB`:n>1e6?`${(n/1e6).toFixed(1)} MB`:`${Math.round(n/1e3)} KB`;
+type Role = "ADMIN" | "OPERATOR";
+type Principal = {
+  id: string;
+  username: string;
+  role: Role;
+  passwordChangeRequired: boolean;
+};
+type Page<T> = {
+  content: T[];
+  number: number;
+  totalPages: number;
+  totalElements: number;
+};
+type Scan = {
+  id: string;
+  targetId: string;
+  targetName: string;
+  requestedBy: string;
+  agentId?: string;
+  status: string;
+  recoveryAttempts: number;
+  scanId?: string;
+  eventId?: string;
+  contentHash?: string;
+  scanner?: string;
+  safeError?: string;
+  requestedAt: string;
+  claimedAt?: string;
+  startedAt?: string;
+  uploadedAt?: string;
+  completedAt?: string;
+};
+type Agent = {
+  id: string;
+  status: string;
+  online: boolean;
+  lastHeartbeatAt: string;
+  outboxPending: number;
+  deadLetters: number;
+  outboxBytes: number;
+  diskFreeBytes: number;
+  safeError?: string;
+};
+type Dashboard = {
+  since: string;
+  scanLimit: number;
+  scans: number;
+  assets: number;
+  findings: number;
+  severity: Record<string, number>;
+  agent?: Agent;
+};
+type ResultSummary = {
+  scanId: string;
+  correlationId?: string;
+  status: string;
+  scanner: string;
+  scannerVersion?: string;
+  contentHash?: string;
+  receivedAt?: string;
+  completedAt?: string;
+  findingCount: number;
+  severitySummary: Record<string, number>;
+  safeError?: string;
+};
+type AssetView = {
+  id: string;
+  name: string;
+  type: string;
+  reference?: string;
+  updatedAt: string;
+  lastScanId?: string;
+  lastScanStatus?: string;
+  lastScanReceivedAt?: string;
+  lastScanCompletedAt?: string;
+};
+type ImageTarget = {
+  id: string;
+  name: string;
+  type: string;
+  reference: string;
+  enabled: boolean;
+  assetId: string;
+  updatedAt: string;
+};
+type FindingsPage = {
+  content: any[];
+  nextCursor?: string;
+  number: number;
+  totalPages: number;
+  totalElements: number;
+  truncated: boolean;
+  totalExact: boolean;
+};
+type ResultView = {
+  id: string;
+  assetId: string;
+  assetName: string;
+  reference?: string;
+  status: string;
+  scanner: string;
+  findingCount: number;
+  severity: Record<string, number>;
+  receivedAt: string;
+  completedAt?: string;
+};
+type QueueCounts = { visible: number; inFlight: number };
+type QueueTelemetry = {
+  source?: QueueCounts;
+  dlq?: QueueCounts;
+  status: string;
+};
+type OperationsData = {
+  activeProfiles: string[];
+  agent?: Agent;
+  publicationOutbox: { pending: number; failed: number };
+  queues?: QueueTelemetry;
+  sqsTelemetryEnabled: boolean;
+  scansEnabled: boolean;
+};
+let csrfToken = "";
+async function csrf() {
+  if (csrfToken) return csrfToken;
+  const r = await fetch("/api/ui/v1/auth/csrf", { credentials: "include" });
+  if (!r.ok) throw new Error("Could not initialize secure session");
+  csrfToken = (await r.json()).token;
+  return csrfToken;
+}
+async function api<T>(path: string, init: RequestInit = {}): Promise<T> {
+  const method = init.method ?? "GET";
+  const headers = new Headers(init.headers);
+  if (!["GET", "HEAD", "OPTIONS"].includes(method)) {
+    headers.set("X-XSRF-TOKEN", await csrf());
+    if (init.body) headers.set("Content-Type", "application/json");
+  }
+  const r = await fetch("/api/ui/v1" + path, {
+    ...init,
+    headers,
+    credentials: "include",
+  });
+  if (r.status === 401) throw new Error("AUTH_REQUIRED");
+  if (!r.ok) {
+    const b = await r.json().catch(() => null);
+    throw new Error(b?.message ?? `Request failed (${r.status})`);
+  }
+  if (r.status === 204) return undefined as T;
+  return r.json();
+}
+const fmt = (value?: string) =>
+  value
+    ? new Intl.DateTimeFormat("en-GB", {
+        dateStyle: "medium",
+        timeStyle: "short",
+      }).format(new Date(value))
+    : "—";
+const bytes = (n = 0) => (n > 1e9 ? `${(n / 1e9).toFixed(1)} GB` : n > 1e6 ? `${(n / 1e6).toFixed(1)} MB` : `${Math.round(n / 1e3)} KB`);
 
-function App(){return <Routes><Route path="/" element={<LandingEvidence/>}/><Route path="/login" element={<Login/>}/><Route path="/app/*" element={<Protected/>}/><Route path="*" element={<Navigate to="/" replace/>}/></Routes>}
-
-function LandingEvidence(){const [replayStep,setReplayStep]=useState(-1);const stage=replayStep>=0?recordedScan.stages[replayStep]:undefined;const completed=replayStep===recordedScan.stages.length-1;useEffect(()=>{if(replayStep<0||completed)return;const timer=window.setTimeout(()=>setReplayStep(step=>step+1),650);return()=>window.clearTimeout(timer)},[replayStep,completed]);const playReplay=()=>{setReplayStep(0);document.getElementById('scan')?.scrollIntoView?.({behavior:'smooth'})};return <main id="main" className="landing"><header className="public-nav"><Link to="/" className="brand"><Mark/>VulnFlow</Link><div><a href="#architecture">Architecture</a><a href="#evidence">Evidence</a><Link className="button ghost" to="/login">Private console</Link></div></header><section className="hero"><div className="eyebrow"><span className="live-dot"/>SANITIZED ENGINEERING CASE STUDY</div><h1>Vulnerability data,<br/><em>trusted end to end.</em></h1><p className="lede">A secure platform for ingesting and processing Trivy reports across a local-first control plane and an event-driven AWS data plane.</p><div className="hero-actions"><button type="button" className="button primary replay-button" onClick={playReplay} aria-controls="scan">Inspect public scan replay <span aria-hidden="true">↓</span></button><a href="https://github.com/Gabrielvcg" className="text-link">View engineering profile ↗</a></div><div className="proof-strip"><Proof value="190" label="findings in fixture"/><Proof value="3" label="execution zones"/><Proof value="0" label="duplicate writes"/><Proof value="100%" label="immutable releases"/></div></section><section id="architecture" className="section architecture-section"><SectionHead kicker="HYBRID ARCHITECTURE" title="One scan. Three execution zones." text="The API coordinates the scan, the Agent runs Trivy, and the AWS data plane processes the uploaded report asynchronously."/><Flow/></section><section id="scan" className="section scan-story"><div><SectionHead kicker="PUBLIC EVIDENCE EXPLORER" title="Follow one sanitized report through the system." text="This deterministic browser replay uses a versioned fixture. The input, event IDs and timings stay stable so the data flow can be inspected without exposing production telemetry."/><ReplayTimeline activeIndex={replayStep}/><div className="replay-controls" aria-live="polite"><div><span className="eyebrow">{stage?`EVENT ${stage.eventId}`:'FIXTURE READY'}</span><p>{replayStep<0?'Start with the report manifest, then inspect each durable hand-off.':completed?'Terminal result reached. The evidence panel now exposes the stored summary.':`${stage!.state} · ${stage!.detail}`}</p></div><button type="button" className="button primary" onClick={playReplay}>{replayStep>=0&&!completed?'Restart replay':'Inspect again'}</button></div>{stage&&<div className="event-inspector"><div><span className="eyebrow">CURRENT EVENT</span><strong>{stage.state}</strong><small>{stage.label}</small><span className="fixture-note">Synthetic fixture IDs · not production telemetry</span></div><dl><Tech k="requestId" v={recordedScan.requestId}/><Tech k="scanId" v={recordedScan.scanId}/><Tech k="eventId" v={stage.eventId}/><Tech k="correlationId" v={recordedScan.correlationId}/><Tech k="timestamp" v={`2026-08-30 ${stage.timestamp} UTC`}/><Tech k="stage latency" v={stage.latency}/></dl></div>}</div><div className="evidence-card"><div className="card-top"><span>fixture / {recordedScan.fixtureId}</span><Badge value={replayStep<0?'READY':completed?'COMPLETED':'RUNNING'}/></div>{replayStep<0?<FixtureManifest/>:completed?<><div className="donut"><strong>{Object.values(recordedScan.summary).reduce((sum,value)=>sum+value,0)}</strong><span>findings</span></div><SeverityRows data={{...recordedScan.summary}}/><div className="sample-findings"><span className="eyebrow">SAMPLE FINDINGS · SANITIZED</span>{recordedScan.sampleFindings.map(f=><div key={f.id}><code>{f.id}</code><span>{f.packageName}</span><Badge value={f.severity}/></div>)}</div></>:<div className="processing-orb public-orb"><i/><span>{stage?.state}</span><small>{stage?.latency} since previous event</small></div>}<div className="technical"><span>Hash prefix sanitized</span><span>{recordedScan.scanner}</span><span>{recordedScan.duration}</span></div></div></section><section id="evidence" className="section"><SectionHead kicker="FAILURE ENGINEERING" title="Designed for the unhappy path." text="The showcase is backed by recovery drills, not optimistic boxes."/><div className="decision-grid"><Decision n="01" title="Transactional outbox" text="Database commit and publication intent remain atomic across process crashes."/><Decision n="02" title="Idempotent processor" text="Content hashes and event identities turn retries into safe no-ops."/><Decision n="03" title="DLQ + reviewed redrive" text="Poison events are isolated; destructive recovery stays outside the UI."/><Decision n="04" title="Temporary AWS access" text="IAM Roles Anywhere removes long-lived cloud keys from the VPS."/><Decision n="05" title="Terraform boundaries" text="Roles grant one purpose per runtime and are tested as code."/><Decision n="06" title="Local rollback" text="The PostgreSQL worker remains a complete, image-level rollback path."/></div></section><section className="section final-cta"><p className="eyebrow">PRIVATE OPERATIONS SURFACE</p><h2>The public story ends here.<br/>Real telemetry does not.</h2><p>The authenticated console is isolated from this static case study. No production API call is made on this page.</p><Link className="button primary" to="/login">Open secure login →</Link></section><footer><span><Mark/> VulnFlow</span><span>Historical sanitized data · Not public telemetry</span></footer></main>}
-function ReplayTimeline({activeIndex}:{activeIndex:number}){return <ol className="timeline" aria-label="Sanitized scan event timeline">{recordedScan.stages.map((stage,index)=><li className={index<=activeIndex?'done':''} key={stage.state}><span/><div><b>{stage.state}</b><small>{stage.label}</small></div><time>{stage.timestamp}</time></li>)}</ol>}
-function FixtureManifest(){return <div className="fixture-manifest"><div><span>INPUT ARTIFACT</span><code>{recordedScan.reportFile}</code></div><div><span>TARGET</span><code>{recordedScan.target}</code></div><div><span>REPORT SIZE</span><code>{recordedScan.reportSize}</code></div><div><span>HASH PREFIX</span><code>{recordedScan.reportHash}</code></div><div className="fixture-identifiers"><span className="eyebrow">TRACE IDENTIFIERS</span><dl><Tech k="requestId" v={recordedScan.requestId}/><Tech k="scanId" v={recordedScan.scanId}/><Tech k="correlationId" v={recordedScan.correlationId}/><Tech k="event chain" v={`${recordedScan.stages[0].eventId} → ${recordedScan.stages[recordedScan.stages.length-1].eventId}`}/></dl></div><p>Sanitized fixture manifest · stable across replays · eventId actual appears as each stage advances</p></div>}
-function Mark(){return <span className="mark" aria-hidden="true"><i/><i/><i/></span>}
-function Proof({value,label}:{value:string;label:string}){return <div><strong>{value}</strong><span>{label}</span></div>}
-function SectionHead({kicker,title,text}:{kicker:string;title:string;text:string}){return <div className="section-head"><span className="eyebrow">{kicker}</span><h2>{title}</h2><p>{text}</p></div>}
-const flowZones=[{number:'01',title:'Scan control',note:'VPS control plane',steps:[['API','Records an approved scan request'],['Agent','Claims the target over an outbound connection'],['Trivy','Generates the vulnerability report']]},{number:'02',title:'Durable ingestion',note:'VPS → AWS hand-off',steps:[['Upload API','Receives the Agent report'],['S3','Stores the versioned JSON report'],['PostgreSQL outbox','Records the event before publication']]},{number:'03',title:'AWS processing',note:'Asynchronous data plane',steps:[['Outbox publisher','Publishes the stored event'],['SQS','Delivers with retry and DLQ'],['Lambda','Parses idempotently'],['DynamoDB','Stores summary and findings']]}];
-function Flow(){return <div className="flow" role="list" aria-label="VulnFlow execution zones">{flowZones.map(zone=><article className="flow-zone" key={zone.title} role="listitem" tabIndex={0}><header><span>{zone.number}</span><div><b>{zone.title}</b><small>{zone.note}</small></div></header><ol>{zone.steps.map(([name,detail])=><li key={name}><i/><div><strong>{name}</strong><small>{detail}</small></div></li>)}</ol></article>)}</div>}
-function Timeline({scan,staticMode=false,activeIndex}:{scan?:Scan;staticMode?:boolean;activeIndex?:number}){const failed=scan?.status==='FAILED';const events=[['REQUESTED','Scan request accepted',scan?.requestedAt],['CLAIMED','Agent claimed the target',scan?.claimedAt],['RUNNING','Trivy scanning the target',scan?.startedAt],['UPLOADING','Agent uploading report to API',scan?.uploadedAt],['PROCESSING','S3 stored; AWS event processing',scan?.uploadedAt],[failed?'FAILED':'COMPLETED',failed?'Execution ended with an error':'Processing completed',scan?.completedAt]];const active=scan?.status??(staticMode?'COMPLETED':events[activeIndex??0]?.[0]??'REQUESTED');const idx=activeIndex??events.findIndex(e=>e[0]===active);return <ol className="timeline">{events.map((e,i)=><li className={failed?(i===events.length-1?'failed':e[2]?'done':''):(staticMode||i<=idx||active==='COMPLETED')?'done':''} key={e[0]}><span/><div><b>{e[0]}</b><small>{e[1]}</small></div><time>{staticMode?['10:14:02','10:14:04','10:14:05','10:14:33','10:14:36','10:14:44'][i]:fmt(e[2])}</time></li>)}</ol>}
-function Decision({n,title,text}:{n:string;title:string;text:string}){return <article><span>{n}</span><h3>{title}</h3><p>{text}</p></article>}
-function Badge({value}:{value:string}){return <span className={'badge '+value.toLowerCase()}><i/>{value.replace('_',' ')}</span>}
-
-function Login(){const nav=useNavigate();const [error,setError]=useState('');const mutation=useMutation({mutationFn:(body:{username:string,password:string})=>api<Principal>('/auth/login',{method:'POST',body:JSON.stringify(body)}),onSuccess:p=>nav(p.passwordChangeRequired?'/app/change-password':'/app')});function submit(e:FormEvent<HTMLFormElement>){e.preventDefault();setError('');const d=new FormData(e.currentTarget);mutation.mutate({username:String(d.get('username')),password:String(d.get('password'))},{onError:e=>setError(e.message)})}return <main id="main" className="login-page"><Link className="brand" to="/"><Mark/>VulnFlow</Link><div className="login-panel"><div><span className="eyebrow">RESTRICTED SURFACE</span><h1>Operations console</h1><p>Sign in with a locally managed account. Access and administrative actions are audited.</p></div><form onSubmit={submit}><label>Username<input name="username" autoComplete="username" required autoFocus/></label><label>Password<input name="password" type="password" autoComplete="current-password" required/></label>{error&&<div className="form-error" role="alert">{error==='AUTH_REQUIRED'?'Invalid username or password':error}</div>}<button className="button primary" disabled={mutation.isPending}>{mutation.isPending?'Verifying…':'Sign in securely'}</button></form><small>Session expires after 8 hours of inactivity · CSRF protected</small></div></main>}
-
-function Protected(){const me=useQuery({queryKey:['me'],queryFn:()=>api<Principal>('/auth/me'),retry:false});if(me.isLoading)return <FullState label="Establishing secure session…"/>;if(me.isError)return <Navigate to="/login" replace/>;if(me.data!.passwordChangeRequired&&location.pathname!='/app/change-password')return <Navigate to="/app/change-password" replace/>;return <Shell me={me.data!}/>}
-const nav=[['/app','Overview'],['/app/assets','Images'],['/app/results','Results'],['/app/findings','Findings'],['/app/scans','Requests'],['/app/operations','Operations']];
-function Shell({me}:{me:Principal}){const qc=useQueryClient();const navigate=useNavigate();const logout=useMutation({mutationFn:()=>api('/auth/logout',{method:'POST'}),onSettled:()=>{qc.clear();navigate('/login')}});return <div className="app-shell"><aside><Link className="brand" to="/app"><Mark/>VulnFlow</Link><nav>{nav.map(([to,label])=><NavLink key={to} to={to} end={to==='/app'}>{label}</NavLink>)}{me.role==='ADMIN'&&<><span className="nav-label">ADMINISTRATION</span><NavLink to="/app/admin/users">Users</NavLink><NavLink to="/app/admin/audit">Audit log</NavLink></>}</nav><div className="user-box"><span>{me.username.slice(0,2).toUpperCase()}</span><div><b>{me.username}</b><small>{me.role}</small></div><button aria-label="Sign out" onClick={()=>logout.mutate()}>↗</button></div></aside><div className="app-body"><header><div><span className="environment"><i/>PRODUCTION</span></div><span className="historical">Private telemetry · current posture</span></header><main id="main"><Routes><Route index element={<Overview/>}/><Route path="assets" element={<Assets isAdmin={me.role==='ADMIN'}/>}/><Route path="results" element={<Results/>}/><Route path="scans" element={<Scans/>}/><Route path="scans/:id" element={<ScanDetail/>}/><Route path="findings" element={<Findings/>}/><Route path="operations" element={<Operations/>}/><Route path="change-password" element={<ChangePassword/>}/><Route path="admin/users" element={<AdminUsers/>}/><Route path="admin/targets" element={<Navigate to="/app/assets" replace/>}/><Route path="admin/audit" element={<Audit/>}/></Routes></main></div></div>}
-
-function ScanLauncher({targets,disabled}:{targets:{id:string;name:string}[];disabled:boolean}) {
-  const [targetId,setTargetId]=useState('');
-  const [agentId,setAgentId]=useState('');
-  const agents=useQuery({queryKey:['scan-agents'],queryFn:()=>api<{id:string;status:string;online:boolean}[]>('/scan-requests/agents'),refetchInterval:15000});
-  const create=useMutation({mutationFn:()=>api<Scan>('/scan-requests',{method:'POST',body:JSON.stringify({targetId,...(agentId?{agentId}:{})})}),onSuccess:s=>location.assign('/app/scans/'+s.id)});
-  return <form onSubmit={e=>{e.preventDefault();create.mutate()}} className="scan-launcher">
-    <label>Image<select aria-label="Scan image" value={targetId} onChange={e=>setTargetId(e.target.value)} disabled={disabled||create.isPending} required><option value="">Select an image</option>{targets.map(t=><option key={t.id} value={t.id}>{t.name}</option>)}</select></label>
-    <label>Agent<select aria-label="Scan agent" value={agentId} onChange={e=>setAgentId(e.target.value)} disabled={create.isPending}><option value="">Automatic assignment</option>{agents.data?.map(a=><option key={a.id} value={a.id} disabled={!a.online||!['IDLE','BUSY'].includes(a.status)}>{a.id}{!a.online?' (offline)':''}</option>)}</select></label>
-    <button className="button primary" disabled={disabled||!targetId||create.isPending}>{create.isPending?'Requesting…':'Launch scan'}</button>
-    {agents.isError&&<span role="status">Agent list unavailable; automatic assignment is available.</span>}
-    {create.error&&<div className="form-error" role="alert">{create.error.message}</div>}
-  </form>
+function App() {
+  return (
+    <Routes>
+      <Route path="/" element={<LandingEvidence />} />
+      <Route path="/login" element={<Login />} />
+      <Route path="/app/*" element={<Protected />} />
+      <Route path="*" element={<Navigate to="/" replace />} />
+    </Routes>
+  );
 }
 
-function PageHead({kicker,title,action}:{kicker:string;title:string;action?:ReactNode}){return <div className="page-head"><div><span className="eyebrow">{kicker}</span><h1>{title}</h1></div>{action}</div>}
-function Overview(){const q=useQuery({queryKey:['dashboard'],queryFn:()=>api<Dashboard>('/dashboard'),refetchInterval:10000});if(q.isLoading)return <PanelState/>;if(q.isError)return <ErrorState error={q.error}/>;const d=q.data!;return <><PageHead kicker="CURRENT POSTURE" title="Security posture" action={<AgentPill agent={d.agent}/>}/><div className="metric-grid"><Metric label="Scans observed" value={d.scans} note={`Last 30 days · capped at ${d.scanLimit}`}/><Metric label="Protected images" value={d.assets}/><Metric label="Current findings" value={d.findings}/><Metric label="Agent status" value={d.agent?.online?'ONLINE':'OFFLINE'} tone={d.agent?.online?'good':'bad'}/></div><div className="dashboard-grid"><section className="panel chart-panel"><PanelTitle title="Findings by severity" note="Latest result per image"/><SeverityChart data={d.severity}/></section><section className="panel"><PanelTitle title="Pipeline health" note="Live control plane"/><HealthRows agent={d.agent}/></section></div><section className="panel"><PanelTitle title="How to read this dashboard" note="No historical double counting"/><p className="muted">Posture uses the latest result for each image. Scan activity covers results received since {fmt(d.since)}. Open Results for full history or Findings to search one image result.</p></section></>}
-function Metric({label,value,note,tone}:{label:string;value:string|number;note?:string;tone?:string}){return <article className={'metric '+(tone??'')}><span>{label}</span><strong>{typeof value==='number'?value.toLocaleString():value}</strong><small>{note??'Operational data'}</small></article>}
-function PanelTitle({title,note}:{title:string;note:string}){return <div className="panel-title"><h2>{title}</h2><span>{note}</span></div>}
-function AgentPill({agent}:{agent?:Agent}){return <span className={'agent-pill '+(agent?.online?'online':'offline')}><i/>{agent?.online?'Agent online':'Agent offline'}</span>}
-function HealthRows({agent}:{agent?:Agent}){return <div className="health-rows"><Health label="Agent heartbeat" value={agent?fmt(agent.lastHeartbeatAt):'No signal'} ok={!!agent?.online}/><Health label="Durable outbox" value={`${agent?.outboxPending??0} pending`} ok={(agent?.deadLetters??0)===0}/><Health label="Dead letters" value={String(agent?.deadLetters??0)} ok={(agent?.deadLetters??0)===0}/><Health label="Available disk" value={bytes(agent?.diskFreeBytes)} ok={(agent?.diskFreeBytes??0)>536870912}/></div>}
-function Health({label,value,ok}:{label:string;value:string;ok:boolean}){return <div><span><i className={ok?'ok':'warn'}/>{label}</span><b>{value}</b></div>}
-function SeverityChart({data}:{data:Record<string,number>}){const order=['CRITICAL','HIGH','MEDIUM','LOW','UNKNOWN'];return <div className="severity-overview"><div className="severity-total"><strong>{Object.values(data).reduce((a,b)=>a+b,0).toLocaleString()}</strong><span>findings in this view</span></div><SeverityRows data={Object.fromEntries(order.map(key=>[key,data[key]??0]))}/></div>}
+function LandingEvidence() {
+  const [replayStep, setReplayStep] = useState(-1);
+  const stage = replayStep >= 0 ? recordedScan.stages[replayStep] : undefined;
+  const completed = replayStep === recordedScan.stages.length - 1;
+  useEffect(() => {
+    if (replayStep < 0 || completed) return;
+    const timer = window.setTimeout(() => setReplayStep((step) => step + 1), 650);
+    return () => window.clearTimeout(timer);
+  }, [replayStep, completed]);
+  const playReplay = () => {
+    setReplayStep(0);
+    document.getElementById("scan")?.scrollIntoView?.({ behavior: "smooth" });
+  };
+  return (
+    <main id="main" className="landing">
+      <header className="public-nav">
+        <Link to="/" className="brand">
+          <Mark />
+          VulnFlow
+        </Link>
+        <div>
+          <a href="#architecture">Architecture</a>
+          <a href="#findings">Findings</a>
+          <Link className="button ghost" to="/login">
+            Private console
+          </Link>
+        </div>
+      </header>
+      <section className="hero">
+        <div className="eyebrow">
+          <span className="live-dot" />
+          RECORDED PRODUCTION EVIDENCE
+        </div>
+        <h1>
+          Vulnerability data,
+          <br />
+          <em>trusted end to end.</em>
+        </h1>
+        <p className="lede">A secure platform for ingesting and processing Trivy reports across a local-first control plane and an event-driven AWS data plane.</p>
+        <div className="hero-actions">
+          <button type="button" className="button primary replay-button" onClick={playReplay} aria-controls="scan">
+            Inspect public scan replay <span aria-hidden="true">↓</span>
+          </button>
+          <a href="https://github.com/Gabrielvcg" className="text-link">
+            View engineering profile ↗
+          </a>
+        </div>
+        <div className="proof-strip">
+          <Proof value="190" label="findings persisted" />
+          <Proof value="3" label="execution zones" />
+          <Proof value="0" label="duplicate writes" />
+          <Proof value="100%" label="immutable releases" />
+        </div>
+      </section>
+      <section id="architecture" className="section architecture-section">
+        <SectionHead kicker="HYBRID ARCHITECTURE" title="One scan. Three execution zones." text="The API coordinates the scan, the Agent runs Trivy, and the AWS data plane processes the uploaded report asynchronously." />
+        <Flow />
+      </section>
+      <section id="scan" className="section scan-story">
+        <div>
+          <SectionHead kicker="PUBLIC EVIDENCE EXPLORER" title="Follow one real Debian report through the system." text="This read-only replay was captured from a completed production execution of debian:11-slim. Its evidence is versioned with the site and makes no request to private telemetry." />
+          <ReplayTimeline activeIndex={replayStep} />
+          <div className="replay-controls" aria-live="polite">
+            <div>
+              <span className="eyebrow">{stage ? `EVENT ${stage.eventId}` : "EVIDENCE READY"}</span>
+              <p>{replayStep < 0 ? "Start with the recorded manifest, then inspect each durable hand-off." : completed ? "Terminal result reached. The evidence panel now exposes the stored summary." : `${stage!.state} · ${stage!.detail}`}</p>
+            </div>
+            <button type="button" className="button primary" onClick={playReplay}>
+              {replayStep >= 0 && !completed ? "Restart replay" : "Inspect again"}
+            </button>
+          </div>
+          {stage && (
+            <div className="event-inspector">
+              <div>
+                <span className="eyebrow">CURRENT EVENT</span>
+                <strong>{stage.state}</strong>
+                <small>{stage.label}</small>
+                <span className="fixture-note">Historical production event · read-only snapshot</span>
+              </div>
+              <dl>
+                <Tech k="scanId" v={recordedScan.scanId} />
+                <Tech k="eventId" v={stage.eventId} />
+                <Tech k="correlationId" v={recordedScan.correlationId} />
+                <Tech k="timestamp" v={`2026-08-02 ${stage.timestamp} UTC`} />
+                <Tech k="stage latency" v={stage.latency} />
+              </dl>
+            </div>
+          )}
+        </div>
+        <div className="evidence-card">
+          <div className="card-top">
+            <span>evidence / {recordedScan.evidenceId}</span>
+            <Badge value={replayStep < 0 ? "READY" : completed ? "COMPLETED" : "RUNNING"} />
+          </div>
+          {replayStep < 0 ? (
+            <FixtureManifest />
+          ) : completed ? (
+            <>
+              <div className="donut">
+                <strong>{Object.values(recordedScan.summary).reduce((sum, value) => sum + value, 0)}</strong>
+                <span>findings</span>
+              </div>
+              <SeverityRows data={{ ...recordedScan.summary }} />
+              <a className="button ghost evidence-findings-link" href="#findings">
+                Inspect recorded findings ↓
+              </a>
+            </>
+          ) : (
+            <div className="processing-orb public-orb">
+              <i />
+              <span>{stage?.state}</span>
+              <small>{stage?.latency} since previous event</small>
+            </div>
+          )}
+          <div className="technical">
+            <span>Verified content hash</span>
+            <span>{recordedScan.scanner}</span>
+            <span>{recordedScan.duration}</span>
+          </div>
+        </div>
+      </section>
+      <PublicFindings />
+      <section id="evidence" className="section">
+        <SectionHead kicker="FAILURE ENGINEERING" title="Designed for the unhappy path." text="The showcase is backed by recovery drills, not optimistic boxes." />
+        <div className="decision-grid">
+          <Decision n="01" title="Transactional outbox" text="Database commit and publication intent remain atomic across process crashes." />
+          <Decision n="02" title="Idempotent processor" text="Content hashes and event identities turn retries into safe no-ops." />
+          <Decision n="03" title="DLQ + reviewed redrive" text="Poison events are isolated; destructive recovery stays outside the UI." />
+          <Decision n="04" title="Temporary AWS access" text="IAM Roles Anywhere removes long-lived cloud keys from the VPS." />
+          <Decision n="05" title="Terraform boundaries" text="Roles grant one purpose per runtime and are tested as code." />
+          <Decision n="06" title="Local rollback" text="The PostgreSQL worker remains a complete, image-level rollback path." />
+        </div>
+      </section>
+      <section className="section final-cta">
+        <p className="eyebrow">PRIVATE OPERATIONS SURFACE</p>
+        <h2>
+          The public story ends here.
+          <br />
+          Real telemetry does not.
+        </h2>
+        <p>The authenticated console is isolated from this static case study. No production API call is made on this page.</p>
+        <Link className="button primary" to="/login">
+          Open secure login →
+        </Link>
+      </section>
+      <footer>
+        <span>
+          <Mark /> VulnFlow
+        </span>
+        <span>Historical production evidence · Read-only snapshot</span>
+      </footer>
+    </main>
+  );
+}
+function ReplayTimeline({ activeIndex }: { activeIndex: number }) {
+  return (
+    <ol className="timeline" aria-label="Sanitized scan event timeline">
+      {recordedScan.stages.map((stage, index) => (
+        <li className={index <= activeIndex ? "done" : ""} key={stage.state}>
+          <span />
+          <div>
+            <b>{stage.state}</b>
+            <small>{stage.label}</small>
+          </div>
+          <time>{stage.timestamp}</time>
+        </li>
+      ))}
+    </ol>
+  );
+}
+function FixtureManifest() {
+  return (
+    <div className="fixture-manifest">
+      <div>
+        <span>INPUT ARTIFACT</span>
+        <code>{recordedScan.reportFile}</code>
+      </div>
+      <div>
+        <span>TARGET</span>
+        <code>{recordedScan.target}</code>
+      </div>
+      <div>
+        <span>REPORT SIZE</span>
+        <code>{recordedScan.reportSize}</code>
+      </div>
+      <div>
+        <span>HASH PREFIX</span>
+        <code>{recordedScan.reportHash}</code>
+      </div>
+      <div className="fixture-identifiers">
+        <span className="eyebrow">TRACE IDENTIFIERS</span>
+        <dl>
+          <Tech k="scanId" v={recordedScan.scanId} />
+          <Tech k="eventId" v={recordedScan.eventId} />
+          <Tech k="correlationId" v={recordedScan.correlationId} />
+          <Tech k="captured" v={recordedScan.capturedAt} />
+        </dl>
+      </div>
+      <p>Historical production snapshot · no credentials, object keys or live API access</p>
+    </div>
+  );
+}
+function PublicFindings() {
+  const [query, setQuery] = useState("");
+  const [severity, setSeverity] = useState("ALL");
+  const needle = query.trim().toLowerCase();
+  const findings = recordedScan.findings.filter((finding) => (severity === "ALL" || finding.severity === severity) && (!needle || [finding.vulnerabilityId, finding.packageName, finding.title].some((value) => value.toLowerCase().includes(needle))));
+  return (
+    <section id="findings" className="section public-findings">
+      <SectionHead kicker="RECORDED FINDINGS" title="Inspect what Lambda persisted." text="These are 20 unmodified finding records from the 190-result DynamoDB dataset. Search locally by CVE, package or title; no production request is made." />
+      <div className="public-findings-toolbar">
+        <label>
+          Search recorded evidence
+          <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="CVE, package or title" />
+        </label>
+        <label>
+          Severity
+          <select value={severity} onChange={(event) => setSeverity(event.target.value)}>
+            <option value="ALL">All severities</option>
+            {Object.keys(recordedScan.summary).map((value) => (
+              <option value={value} key={value}>
+                {value}
+              </option>
+            ))}
+          </select>
+        </label>
+        <div className="public-findings-count">
+          <strong>{findings.length}</strong>
+          <span>visible of 20 recorded · 190 total</span>
+        </div>
+      </div>
+      <div className="public-findings-list" aria-live="polite">
+        {findings.map((finding, index) => (
+          <article key={`${finding.vulnerabilityId}-${finding.packageName}-${index}`}>
+            <div className="finding-heading">
+              <code>{finding.vulnerabilityId}</code>
+              <Badge value={finding.severity} />
+            </div>
+            <h3>{finding.title}</h3>
+            <dl>
+              <Tech k="package" v={finding.packageName} />
+              <Tech k="installed version" v={finding.installedVersion} />
+              <Tech k="risk score" v={String(finding.riskScore)} />
+              <Tech k="known exploited" v={finding.knownExploited ? "yes" : "no"} />
+            </dl>
+          </article>
+        ))}
+        {!findings.length && <div className="public-findings-empty">No recorded finding matches these filters.</div>}
+      </div>
+      <p className="public-evidence-note">
+        Source: completed AWS-mode scan <code>{recordedScan.scanId}</code>. The complete private result remains protected by the operations console.
+      </p>
+    </section>
+  );
+}
+function Mark() {
+  return (
+    <span className="mark" aria-hidden="true">
+      <i />
+      <i />
+      <i />
+    </span>
+  );
+}
+function Proof({ value, label }: { value: string; label: string }) {
+  return (
+    <div>
+      <strong>{value}</strong>
+      <span>{label}</span>
+    </div>
+  );
+}
+function SectionHead({ kicker, title, text }: { kicker: string; title: string; text: string }) {
+  return (
+    <div className="section-head">
+      <span className="eyebrow">{kicker}</span>
+      <h2>{title}</h2>
+      <p>{text}</p>
+    </div>
+  );
+}
+const flowZones = [
+  {
+    number: "01",
+    title: "Scan control",
+    note: "VPS control plane",
+    steps: [
+      ["API", "Records an approved scan request"],
+      ["Agent", "Claims the target over an outbound connection"],
+      ["Trivy", "Generates the vulnerability report"],
+    ],
+  },
+  {
+    number: "02",
+    title: "Durable ingestion",
+    note: "VPS → AWS hand-off",
+    steps: [
+      ["Upload API", "Receives the Agent report"],
+      ["S3", "Stores the versioned JSON report"],
+      ["PostgreSQL outbox", "Records the event before publication"],
+    ],
+  },
+  {
+    number: "03",
+    title: "AWS processing",
+    note: "Asynchronous data plane",
+    steps: [
+      ["Outbox publisher", "Publishes the stored event"],
+      ["SQS", "Delivers with retry and DLQ"],
+      ["Lambda", "Parses idempotently"],
+      ["DynamoDB", "Stores summary and findings"],
+    ],
+  },
+];
+function Flow() {
+  return (
+    <div className="flow" role="list" aria-label="VulnFlow execution zones">
+      {flowZones.map((zone) => (
+        <article className="flow-zone" key={zone.title} role="listitem" tabIndex={0}>
+          <header>
+            <span>{zone.number}</span>
+            <div>
+              <b>{zone.title}</b>
+              <small>{zone.note}</small>
+            </div>
+          </header>
+          <ol>
+            {zone.steps.map(([name, detail]) => (
+              <li key={name}>
+                <i />
+                <div>
+                  <strong>{name}</strong>
+                  <small>{detail}</small>
+                </div>
+              </li>
+            ))}
+          </ol>
+        </article>
+      ))}
+    </div>
+  );
+}
+function Timeline({ scan, staticMode = false, activeIndex }: { scan?: Scan; staticMode?: boolean; activeIndex?: number }) {
+  const failed = scan?.status === "FAILED";
+  const events = [
+    ["REQUESTED", "Scan request accepted", scan?.requestedAt],
+    ["CLAIMED", "Agent claimed the target", scan?.claimedAt],
+    ["RUNNING", "Trivy scanning the target", scan?.startedAt],
+    ["UPLOADING", "Agent uploading report to API", scan?.uploadedAt],
+    ["PROCESSING", "S3 stored; AWS event processing", scan?.uploadedAt],
+    [failed ? "FAILED" : "COMPLETED", failed ? "Execution ended with an error" : "Processing completed", scan?.completedAt],
+  ];
+  const active = scan?.status ?? (staticMode ? "COMPLETED" : (events[activeIndex ?? 0]?.[0] ?? "REQUESTED"));
+  const idx = activeIndex ?? events.findIndex((e) => e[0] === active);
+  return (
+    <ol className="timeline">
+      {events.map((e, i) => (
+        <li className={failed ? (i === events.length - 1 ? "failed" : e[2] ? "done" : "") : staticMode || i <= idx || active === "COMPLETED" ? "done" : ""} key={e[0]}>
+          <span />
+          <div>
+            <b>{e[0]}</b>
+            <small>{e[1]}</small>
+          </div>
+          <time>{staticMode ? ["10:14:02", "10:14:04", "10:14:05", "10:14:33", "10:14:36", "10:14:44"][i] : fmt(e[2])}</time>
+        </li>
+      ))}
+    </ol>
+  );
+}
+function Decision({ n, title, text }: { n: string; title: string; text: string }) {
+  return (
+    <article>
+      <span>{n}</span>
+      <h3>{title}</h3>
+      <p>{text}</p>
+    </article>
+  );
+}
+function Badge({ value }: { value: string }) {
+  return (
+    <span className={"badge " + value.toLowerCase()}>
+      <i />
+      {value.replace("_", " ")}
+    </span>
+  );
+}
 
-function Assets({isAdmin}:{isAdmin:boolean}){const [sp,setSp]=useSearchParams();const page=Number(sp.get('page')??0);const qc=useQueryClient();const q=useQuery({queryKey:['assets',page],queryFn:()=>api<Page<AssetView>>(`/assets?page=${page}&size=25`)});const targets=useQuery({queryKey:['admin-targets'],queryFn:()=>api<ImageTarget[]>('/admin/targets'),enabled:isAdmin});const create=useMutation({mutationFn:(body:any)=>api('/admin/targets',{method:'POST',body:JSON.stringify(body)}),onSuccess:()=>{qc.invalidateQueries({queryKey:['admin-targets']});qc.invalidateQueries({queryKey:['assets']})}});const update=useMutation({mutationFn:(body:any)=>api('/admin/targets',{method:'PATCH',body:JSON.stringify(body)}),onSuccess:()=>{qc.invalidateQueries({queryKey:['admin-targets']});qc.invalidateQueries({queryKey:['assets']})}});return <><PageHead kicker="IMAGE CATALOG" title="Images"/><p className="callout">Each image has one catalog entry. Enabling it allows new scans; disabling it keeps all existing results and findings.</p>{isAdmin&&<><form className="inline-form panel" onSubmit={e=>{e.preventDefault();const d=new FormData(e.currentTarget);create.mutate({name:d.get('name'),reference:d.get('reference')});e.currentTarget.reset()}}><input name="name" placeholder="Service image" required/><input name="reference" placeholder="registry.example/image:tag" required/><button className="button primary">Register image</button></form>{create.isError&&<div className="form-error">{create.error.message}</div>}{targets.isLoading?<PanelState/>:targets.isError?<ErrorState error={targets.error}/>:<DataTable headers={['Image','Reference','Scanning','History']} rows={(targets.data??[]).map(t=>[<b>{t.name}</b>,<code>{t.reference}</code>,<button className="table-action" onClick={()=>update.mutate({...t,enabled:!t.enabled})}>{t.enabled?'Enabled · disable':'Disabled · enable'}</button>,<Link to={`/app/results?assetId=${t.assetId}`}>View results →</Link>])} empty="No images are registered for scanning."/>}</>}{!isAdmin&&(q.isLoading?<PanelState/>:q.isError?<ErrorState error={q.error}/>:<DataTable headers={['Image','Reference','Latest result','Updated','Action']} rows={q.data!.content.map(a=>[<b>{a.name}</b>,<code>{a.reference??'—'}</code>,a.lastScanStatus?<span className="latest-result"><Badge value={a.lastScanStatus}/><small>{fmt(a.lastScanCompletedAt??a.lastScanReceivedAt)}</small></span>:<span className="muted">No results</span>,fmt(a.updatedAt),<Link to={`/app/results?assetId=${a.id}`}>View results →</Link>])} empty="No images have been resolved yet."/>)}{!isAdmin&&<Pager page={page} pages={q.data?.totalPages??0} set={p=>setSp({page:String(p)})}/>}</>}
-function Results(){const [sp,setSp]=useSearchParams();const page=Number(sp.get('page')??0);const assetId=sp.get('assetId')??'';const assets=useQuery({queryKey:['result-assets'],queryFn:()=>api<Page<AssetView>>('/assets?page=0&size=100')});const q=useQuery({queryKey:['results',page,assetId],queryFn:()=>api<Page<ResultView>>(`/results?page=${page}&size=25${assetId?'&assetId='+encodeURIComponent(assetId):''}`)});const selectAsset=(value:string)=>{const next=new URLSearchParams();if(value)next.set('assetId',value);setSp(next)};return <><PageHead kicker="PROCESSED REPORTS" title="Results" action={<label className="compact-filter">Image<select aria-label="Filter results by image" value={assetId} onChange={e=>selectAsset(e.target.value)}><option value="">All images</option>{assets.data?.content.map(a=><option key={a.id} value={a.id}>{a.name} · {a.reference}</option>)}</select></label>}/><p className="callout">Every ingested result appears here, including scheduled Agent scans, direct uploads, and console requests.</p>{q.isLoading?<PanelState/>:q.isError?<ErrorState error={q.error}/>:<DataTable headers={['Image','Status','Findings','Received','Action']} rows={q.data!.content.map(r=>[<span><b>{r.assetName}</b><small className="table-subtitle">{r.reference}</small></span>,<Badge value={r.status}/>,r.findingCount.toLocaleString(),fmt(r.completedAt??r.receivedAt),<Link to={`/app/findings?assetId=${r.assetId}&resultId=${r.id}`}>Explore findings →</Link>])} empty="No processed results match this image."/>}<Pager page={page} pages={q.data?.totalPages??0} set={p=>{const next=new URLSearchParams(sp);next.set('page',String(p));setSp(next)}}/></>}
-function Scans(){const [sp,setSp]=useSearchParams();const page=Number(sp.get('page')??0);const status=sp.get('status')??'';const targetId=sp.get('targetId')??'';const assetId=sp.get('assetId')??'';const query=new URLSearchParams({page:String(page),size:'25'});if(status)query.set('status',status);if(targetId)query.set('targetId',targetId);if(assetId)query.set('assetId',assetId);const q=useQuery({queryKey:['scans',page,status,targetId,assetId],queryFn:()=>api<Page<Scan>>(`/scan-requests?${query.toString()}`),refetchInterval:data=>data.state.data?.content.some(s=>!['COMPLETED','FAILED'].includes(s.status))?2000:false});const targets=useQuery({queryKey:['targets'],queryFn:()=>api<{id:string;name:string}[]>('/targets')});const setFilter=(key:string,value:string)=>{const next=new URLSearchParams(sp);if(value)next.set(key,value);else next.delete(key);next.delete('page');setSp(next)};return <><PageHead kicker="EXECUTION HISTORY" title="Scans" action={<div className="scan-actions"><select aria-label="Filter scans by status" value={status} onChange={e=>setFilter('status',e.target.value)}><option value="">All statuses</option>{['REQUESTED','CLAIMED','RUNNING','UPLOADING','PROCESSING','COMPLETED','FAILED'].map(value=><option key={value}>{value}</option>)}</select><select aria-label="Filter scans by image" value={targetId} onChange={e=>setFilter('targetId',e.target.value)}><option value="">All images</option>{targets.data?.map(t=><option key={t.id} value={t.id}>{t.name}</option>)}</select><ScanLauncher targets={targets.data??[]} disabled={targets.isError||targets.isLoading}/></div>}/>{assetId&&<p className="callout">Showing scans for the selected image.</p>}{targets.isError&&<div className="form-error">The image catalog is temporarily unavailable; launching is disabled.</div>}{q.isLoading?<PanelState/>:q.isError?<ErrorState error={q.error}/>:<DataTable headers={['Image','Status','Requested by','Requested','Agent']} rows={q.data!.content.map(s=>[<Link to={`/app/scans/${s.id}`}><b>{s.targetName}</b></Link>,<Badge value={s.status}/>,s.requestedBy,fmt(s.requestedAt),<code>{s.agentId??'queued'}</code>])} empty="No on-demand scans have been requested."/>}<Pager page={page} pages={q.data?.totalPages??0} set={p=>{const next=new URLSearchParams(sp);next.set('page',String(p));setSp(next)}}/></>}
-function ScanDetail(){const {id}=useParams();const q=useQuery({queryKey:['scan',id],queryFn:()=>api<Scan>(`/scan-requests/${id}`),refetchInterval:data=>data.state.data&&!['COMPLETED','FAILED'].includes(data.state.data.status)?2000:false});const summary=useQuery({queryKey:['scan-summary',id],queryFn:()=>api<ResultSummary>(`/scan-requests/${id}/summary`),enabled:!!id&&q.data?.status==='COMPLETED'});if(q.isLoading)return <PanelState/>;if(q.isError)return <ErrorState error={q.error}/>;const s=q.data!;return <><PageHead kicker={`SCAN ${s.id.slice(0,8)}`} title={s.targetName} action={<Badge value={s.status}/>}/><div className="scan-detail-grid"><section className="panel"><PanelTitle title="Execution timeline" note={s.status==='FAILED'||s.status==='COMPLETED'?'Execution finished':'Synchronized every 2 seconds'}/><Timeline scan={s}/></section><section className="panel severity-summary"><PanelTitle title="Result summary" note={s.status==='FAILED'?'Execution ended':s.scanId?'Persisted result':'Awaiting result'}/>{s.status==='COMPLETED'?<ResultSummaryPanel requestId={s.id} summary={summary.data} loading={summary.isLoading} error={summary.error}/>:s.status==='FAILED'?<div className="form-error"><h3>Scan failed</h3><p>{s.safeError??'The execution could not finish.'}</p><p>{s.scanId?'A report was received; processing did not complete.':'No report was ingested, so there are no findings or processing identifiers.'}</p><p>Ended {fmt(s.completedAt)}</p></div>:<div className="processing-orb"><i/><span>{s.status}</span></div>}</section></div><details className="panel technical-panel" open><summary>Technical evidence <span>Identifiers and integrity</span></summary><dl><Tech k="requestId" v={s.id}/><Tech k="scanId" v={s.scanId??(s.status==='FAILED'?'Not created':undefined)}/><Tech k="eventId" v={s.eventId??(s.status==='FAILED'?'Not created':undefined)}/><Tech k="correlationId" v={summary.data?.correlationId??(s.status==='FAILED'?'Unavailable':undefined)}/><Tech k="contentHash" v={s.contentHash??(s.status==='FAILED'?'Unavailable':undefined)}/><Tech k="scanner" v={s.scanner??(s.status==='FAILED'?'Unavailable':undefined)}/><Tech k="recovery attempts" v={String(s.recoveryAttempts)}/></dl></details>{s.safeError&&s.status!=='FAILED'&&<div className="form-error">{s.safeError}</div>}</>}
-function ResultSummaryPanel({requestId,summary,loading,error}:{requestId:string;summary?:ResultSummary;loading:boolean;error?:Error|null}){if(loading)return <PanelState/>;if(error)return <ErrorState error={error}/>;if(!summary)return <p className="muted">The result summary is not available yet.</p>;const duration=summary.receivedAt&&summary.completedAt?`${((new Date(summary.completedAt).getTime()-new Date(summary.receivedAt).getTime())/1000).toFixed(1)} s`:'—';return <><div className="summary-metrics"><Metric label="Findings" value={summary.findingCount}/><Metric label="Processing time" value={duration}/></div><SeverityRows data={summary.severitySummary}/><Link className="button ghost" to={`/app/findings?requestId=${requestId}`}>Explore findings →</Link></>}
-function Tech({k,v}:{k:string;v?:string}){return <div><dt>{k}</dt><dd><code>{v??'pending'}</code></dd></div>}
-function Findings(){
-  const [sp,setSp]=useSearchParams();
-  const assetId=sp.get('assetId')??'',resultId=sp.get('resultId')??'',search=sp.get('query')??'',severity=sp.get('severity')??'',cursor=sp.get('cursor')??'';
-  const page=Number(sp.get('page')??0);
-  const assets=useQuery({queryKey:['finding-assets'],queryFn:()=>api<Page<AssetView>>('/assets?page=0&size=100')});
-  const results=useQuery({queryKey:['finding-results',assetId],queryFn:()=>api<Page<ResultView>>(`/results?assetId=${encodeURIComponent(assetId)}&page=0&size=100`),enabled:!!assetId});
-  const queryString=new URLSearchParams({page:String(page),size:'25'});if(search)queryString.set('query',search);if(severity)queryString.set('severity',severity);if(cursor)queryString.set('cursor',cursor);
-  const q=useQuery({queryKey:['result-findings',resultId,page,search,severity,cursor],queryFn:()=>api<FindingsPage>(`/results/${resultId}/findings?${queryString}`),enabled:!!resultId});
-  const change=(key:string,value:string,keepResult=false)=>{const next=new URLSearchParams(sp);if(value)next.set(key,value);else next.delete(key);next.delete('page');next.delete('cursor');if(key==='assetId'&&!keepResult)next.delete('resultId');setSp(next)};
-  const nextAwsPage=()=>{if(!q.data?.nextCursor)return;const next=new URLSearchParams(sp);next.set('cursor',q.data.nextCursor);next.set('page',String(page+1));setSp(next)};
-  const firstAwsPage=()=>{const next=new URLSearchParams(sp);next.delete('cursor');next.delete('page');setSp(next)};
-  return <><PageHead kicker="SEARCHABLE VULNERABILITY INVENTORY" title="Findings"/><div className="finding-filters panel"><label>Image<select aria-label="Finding image" value={assetId} onChange={e=>change('assetId',e.target.value)}><option value="">Select an image</option>{assets.data?.content.map(a=><option key={a.id} value={a.id}>{a.name} · {a.reference}</option>)}</select></label><label>Result<select aria-label="Finding result" value={resultId} onChange={e=>change('resultId',e.target.value,true)} disabled={!assetId}><option value="">Select a result</option>{results.data?.content.map(r=><option key={r.id} value={r.id}>{fmt(r.completedAt??r.receivedAt)} · {r.findingCount} findings</option>)}</select></label><label>Search<input aria-label="Search findings" value={search} maxLength={100} placeholder="CVE, package, or title" onChange={e=>change('query',e.target.value,true)}/></label><label>Severity<select aria-label="Finding severity" value={severity} onChange={e=>change('severity',e.target.value,true)}><option value="">All severities</option>{['CRITICAL','HIGH','MEDIUM','LOW','UNKNOWN'].map(value=><option key={value}>{value}</option>)}</select></label></div>{!resultId?<Empty title="Select an image and result" text="Choose an image, then one of its processed results to search every stored finding."/>:q.isLoading?<PanelState/>:q.isError?<ErrorState error={q.error}/>:<><p className="result-count">{q.data!.totalExact?`${q.data!.totalElements.toLocaleString()} matching findings`:`${q.data!.content.length} matches on this page`}</p>{q.data?.truncated&&<p className="callout">The search work limit was reached. Continue to inspect the next bounded batch.</p>}<DataTable headers={['Vulnerability','Package','Severity','Risk','Fixed version']} rows={q.data!.content.map((f:any)=>[<code>{f.vulnerabilityId}</code>,f.packageName,<Badge value={f.severity}/>,f.riskScore,f.fixedVersion??'—'])} empty="No findings match these filters in this batch."/>{q.data!.totalExact?<Pager page={q.data?.number??page} pages={q.data?.totalPages??0} set={p=>{const next=new URLSearchParams(sp);next.set('page',String(p));setSp(next)}}/>:<div className="pager"><button disabled={!cursor} onClick={firstAwsPage}>← First page</button><span>Batch {page+1}</span><button disabled={!q.data?.nextCursor} onClick={nextAwsPage}>Next batch →</button></div>}</>}</>}
-function QueuePanel({queues,enabled}:{queues?:QueueTelemetry;enabled:boolean}){if(!enabled||!queues)return <section className="panel"><PanelTitle title="Queues" note="Telemetry unavailable"/><p className="muted">Queue counts are not exposed in this environment. SQS controls remain outside the console.</p></section>;if(queues.status!=='healthy')return <section className="panel"><PanelTitle title="Queues" note="Degraded telemetry"/><p className="muted">Queue telemetry status: {queues.status}. Counts may be stale or unavailable.</p></section>;return <section className="panel"><PanelTitle title="Queues" note="Approximate read-only counts"/><div className="health-rows"><Health label="Main queue visible" value={String(queues.source?.visible??0)} ok={(queues.source?.visible??0)===0}/><Health label="Main queue in flight" value={String(queues.source?.inFlight??0)} ok/><Health label="DLQ visible" value={String(queues.dlq?.visible??0)} ok={(queues.dlq?.visible??0)===0}/><Health label="DLQ in flight" value={String(queues.dlq?.inFlight??0)} ok={(queues.dlq?.inFlight??0)===0}/></div></section>}
-function Operations(){const q=useQuery({queryKey:['operations'],queryFn:()=>api<OperationsData>('/operations'),refetchInterval:15000});if(q.isLoading)return <PanelState/>;if(q.isError)return <ErrorState error={q.error}/>;const o=q.data!;return <><PageHead kicker="RUNTIME CONTROL PLANE" title="Operations" action={<AgentPill agent={o.agent}/>}/><div className="metric-grid"><Metric label="Publication pending" value={o.publicationOutbox.pending}/><Metric label="Publication failed" note="All-time events awaiting review" value={o.publicationOutbox.failed} tone={o.publicationOutbox.failed?'bad':'good'}/><Metric label="Agent outbox" value={o.agent?.outboxPending??0}/><Metric label="DLQ" value={o.agent?.deadLetters??0} tone={o.agent?.deadLetters?'bad':'good'}/></div><div className="dashboard-grid"><section className="panel"><PanelTitle title="Agent" note="Outbound-only command channel"/><HealthRows agent={o.agent}/></section><section className="panel"><PanelTitle title="Runtime" note="No credential values exposed"/><div className="health-rows"><Health label="Active profile" value={o.activeProfiles.join(', ')} ok/><Health label="On-demand scans" value={o.scansEnabled?'Enabled':'Disabled'} ok={o.scansEnabled}/><Health label="SQS telemetry" value={o.sqsTelemetryEnabled?'Read only':'Disabled'} ok={o.sqsTelemetryEnabled}/><Health label="Credentials" value="Temporary session" ok/></div></section></div><p className="callout">Publication failures count events that exhausted their publication attempts, including historical failures. They require review before retrying and do not mean all scans are failing.</p><QueuePanel queues={o.queues} enabled={o.sqsTelemetryEnabled}/><p className="callout">DLQ redrive remains a reviewed runbook operation. This console never exposes destructive queue controls.</p></>}
+function Login() {
+  const nav = useNavigate();
+  const [error, setError] = useState("");
+  const mutation = useMutation({
+    mutationFn: (body: { username: string; password: string }) =>
+      api<Principal>("/auth/login", {
+        method: "POST",
+        body: JSON.stringify(body),
+      }),
+    onSuccess: (p) => nav(p.passwordChangeRequired ? "/app/change-password" : "/app"),
+  });
+  function submit(e: FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    setError("");
+    const d = new FormData(e.currentTarget);
+    mutation.mutate(
+      {
+        username: String(d.get("username")),
+        password: String(d.get("password")),
+      },
+      { onError: (e) => setError(e.message) },
+    );
+  }
+  return (
+    <main id="main" className="login-page">
+      <Link className="brand" to="/">
+        <Mark />
+        VulnFlow
+      </Link>
+      <div className="login-panel">
+        <div>
+          <span className="eyebrow">RESTRICTED SURFACE</span>
+          <h1>Operations console</h1>
+          <p>Sign in with a locally managed account. Access and administrative actions are audited.</p>
+        </div>
+        <form onSubmit={submit}>
+          <label>
+            Username
+            <input name="username" autoComplete="username" required autoFocus />
+          </label>
+          <label>
+            Password
+            <input name="password" type="password" autoComplete="current-password" required />
+          </label>
+          {error && (
+            <div className="form-error" role="alert">
+              {error === "AUTH_REQUIRED" ? "Invalid username or password" : error}
+            </div>
+          )}
+          <button className="button primary" disabled={mutation.isPending}>
+            {mutation.isPending ? "Verifying…" : "Sign in securely"}
+          </button>
+        </form>
+        <small>Session expires after 8 hours of inactivity · CSRF protected</small>
+      </div>
+    </main>
+  );
+}
 
-function ChangePassword(){const nav=useNavigate();const qc=useQueryClient();const [error,setError]=useState('');const m=useMutation({mutationFn:(b:any)=>api<Principal>('/auth/change-password',{method:'POST',body:JSON.stringify(b)}),onSuccess:p=>{qc.setQueryData(['me'],p);nav('/app')}});return <><PageHead kicker="FIRST ACCESS" title="Set a permanent password"/><form className="panel form-panel" onSubmit={e=>{e.preventDefault();const d=new FormData(e.currentTarget);if(d.get('next')!==d.get('confirm'))return setError('Passwords do not match');m.mutate({currentPassword:d.get('current'),newPassword:d.get('next')},{onError:e=>setError(e.message)})}}><label>Temporary password<input name="current" type="password" required/></label><label>New password<input name="next" type="password" minLength={14} required/></label><label>Confirm password<input name="confirm" type="password" minLength={14} required/></label><p className="muted">Use at least 14 characters with upper-case, lower-case and numeric characters.</p>{error&&<div className="form-error">{error}</div>}<button className="button primary">Change password</button></form></>}
-function AdminUsers(){const qc=useQueryClient();const [temporary,setTemporary]=useState('');const q=useQuery({queryKey:['admin-users'],queryFn:()=>api<any[]>('/admin/users')});const create=useMutation({mutationFn:(body:any)=>api<any>('/admin/users',{method:'POST',body:JSON.stringify(body)}),onSuccess:r=>{setTemporary(r.temporaryPassword);qc.invalidateQueries({queryKey:['admin-users']})}});const update=useMutation({mutationFn:(body:any)=>api<any>('/admin/users',{method:'PATCH',body:JSON.stringify(body)}),onSuccess:r=>{if(r.temporaryPassword)setTemporary(r.temporaryPassword);qc.invalidateQueries({queryKey:['admin-users']})}});return <><PageHead kicker="IDENTITY" title="Users"/><form className="inline-form panel" onSubmit={e=>{e.preventDefault();const d=new FormData(e.currentTarget);create.mutate({username:d.get('username'),role:d.get('role')});e.currentTarget.reset()}}><input name="username" placeholder="new.operator" required maxLength={100}/><select name="role"><option>OPERATOR</option><option>ADMIN</option></select><button className="button primary">Create user</button></form>{temporary&&<div className="one-time" role="status"><b>Copy this temporary password now</b><code>{temporary}</code><button onClick={()=>setTemporary('')}>Dismiss</button><small>It will not be shown again.</small></div>}{q.isLoading?<PanelState/>:q.isError?<ErrorState error={q.error}/>:<DataTable headers={['Username','Role','State','Password','Actions']} rows={(q.data??[]).map(u=>[u.username,<Badge value={u.role}/>,u.enabled?'Enabled':'Locked',u.passwordChangeRequired?'Change required':'Current',<span className="row-actions"><button onClick={()=>update.mutate({id:u.id,enabled:!u.enabled,rotatePassword:false})}>{u.enabled?'Disable':'Enable'}</button><button onClick={()=>update.mutate({id:u.id,enabled:u.enabled,rotatePassword:true})}>Rotate</button></span>])} empty="No console users."/>}</>}
-function Audit(){const q=useQuery({queryKey:['audit'],queryFn:()=>api<Page<any>>('/admin/audit?page=0&size=50')});return <><PageHead kicker="ACCOUNTABILITY" title="Audit log"/>{q.isLoading?<PanelState/>:q.isError?<ErrorState error={q.error}/>:<DataTable headers={['Time','Actor','Action','Subject','Outcome']} rows={(q.data?.content??[]).map(e=>[fmt(e.createdAt),e.actor??'system',<code>{e.action}</code>,e.subjectType??'—',<Badge value={e.outcome}/>])} empty="No audited actions."/>}</>}
+function Protected() {
+  const me = useQuery({
+    queryKey: ["me"],
+    queryFn: () => api<Principal>("/auth/me"),
+    retry: false,
+  });
+  if (me.isLoading) return <FullState label="Establishing secure session…" />;
+  if (me.isError) return <Navigate to="/login" replace />;
+  if (me.data!.passwordChangeRequired && location.pathname != "/app/change-password") return <Navigate to="/app/change-password" replace />;
+  return <Shell me={me.data!} />;
+}
+const nav = [
+  ["/app", "Overview"],
+  ["/app/assets", "Images"],
+  ["/app/results", "Results"],
+  ["/app/findings", "Findings"],
+  ["/app/scans", "Requests"],
+  ["/app/operations", "Operations"],
+];
+function Shell({ me }: { me: Principal }) {
+  const qc = useQueryClient();
+  const navigate = useNavigate();
+  const logout = useMutation({
+    mutationFn: () => api("/auth/logout", { method: "POST" }),
+    onSettled: () => {
+      qc.clear();
+      navigate("/login");
+    },
+  });
+  return (
+    <div className="app-shell">
+      <aside>
+        <Link className="brand" to="/app">
+          <Mark />
+          VulnFlow
+        </Link>
+        <nav>
+          {nav.map(([to, label]) => (
+            <NavLink key={to} to={to} end={to === "/app"}>
+              {label}
+            </NavLink>
+          ))}
+          {me.role === "ADMIN" && (
+            <>
+              <span className="nav-label">ADMINISTRATION</span>
+              <NavLink to="/app/admin/users">Users</NavLink>
+              <NavLink to="/app/admin/audit">Audit log</NavLink>
+            </>
+          )}
+        </nav>
+        <div className="user-box">
+          <span>{me.username.slice(0, 2).toUpperCase()}</span>
+          <div>
+            <b>{me.username}</b>
+            <small>{me.role}</small>
+          </div>
+          <button aria-label="Sign out" onClick={() => logout.mutate()}>
+            ↗
+          </button>
+        </div>
+      </aside>
+      <div className="app-body">
+        <header>
+          <div>
+            <span className="environment">
+              <i />
+              PRODUCTION
+            </span>
+          </div>
+          <span className="historical">Private telemetry · current posture</span>
+        </header>
+        <main id="main">
+          <Routes>
+            <Route index element={<Overview />} />
+            <Route path="assets" element={<Assets isAdmin={me.role === "ADMIN"} />} />
+            <Route path="results" element={<Results />} />
+            <Route path="scans" element={<Scans />} />
+            <Route path="scans/:id" element={<ScanDetail />} />
+            <Route path="findings" element={<Findings />} />
+            <Route path="operations" element={<Operations />} />
+            <Route path="change-password" element={<ChangePassword />} />
+            <Route path="admin/users" element={<AdminUsers />} />
+            <Route path="admin/targets" element={<Navigate to="/app/assets" replace />} />
+            <Route path="admin/audit" element={<Audit />} />
+          </Routes>
+        </main>
+      </div>
+    </div>
+  );
+}
 
-function DataTable({headers,rows,empty}:{headers:string[];rows:ReactNode[][];empty:string}){if(!rows.length)return <Empty title="Nothing to show" text={empty}/>;return <div className="table-wrap"><table><thead><tr>{headers.map(h=><th key={h}>{h}</th>)}</tr></thead><tbody>{rows.map((r,i)=><tr key={i}>{r.map((c,j)=><td key={j}>{c}</td>)}</tr>)}</tbody></table></div>}
-function Pager({page,pages,set}:{page:number;pages:number;set:(p:number)=>void}){if(pages<2)return null;return <div className="pager"><button disabled={!page} onClick={()=>set(page-1)}>← Previous</button><span>Page {page+1} of {pages}</span><button disabled={page+1>=pages} onClick={()=>set(page+1)}>Next →</button></div>}
-function SeverityRows({data}:{data:Record<string,number>}){const total=Math.max(Object.values(data).reduce((sum,value)=>sum+value,0),1);return <div className="severity-rows">{Object.entries(data).map(([k,v])=><div key={k}><span className={k.toLowerCase()}>{k}</span><b>{v}</b><progress max={total} value={v} aria-label={`${k}: ${v}`}/></div>)}</div>}
-function FullState({label}:{label:string}){return <main className="full-state"><Mark/><span>{label}</span></main>}
-function PanelState(){return <div className="panel skeleton" aria-label="Loading"><i/><i/><i/></div>}
-function ErrorState({error}:{error:Error}){return <Empty title="Data temporarily unavailable" text={error.message}/>} function Empty({title,text}:{title:string;text:string}){return <div className="empty"><span>◇</span><h2>{title}</h2><p>{text}</p></div>}
+function ScanLauncher({ targets, disabled }: { targets: { id: string; name: string }[]; disabled: boolean }) {
+  const [targetId, setTargetId] = useState("");
+  const [agentId, setAgentId] = useState("");
+  const agents = useQuery({
+    queryKey: ["scan-agents"],
+    queryFn: () => api<{ id: string; status: string; online: boolean }[]>("/scan-requests/agents"),
+    refetchInterval: 15000,
+  });
+  const create = useMutation({
+    mutationFn: () =>
+      api<Scan>("/scan-requests", {
+        method: "POST",
+        body: JSON.stringify({ targetId, ...(agentId ? { agentId } : {}) }),
+      }),
+    onSuccess: (s) => location.assign("/app/scans/" + s.id),
+  });
+  return (
+    <form
+      onSubmit={(e) => {
+        e.preventDefault();
+        create.mutate();
+      }}
+      className="scan-launcher"
+    >
+      <label>
+        Image
+        <select aria-label="Scan image" value={targetId} onChange={(e) => setTargetId(e.target.value)} disabled={disabled || create.isPending} required>
+          <option value="">Select an image</option>
+          {targets.map((t) => (
+            <option key={t.id} value={t.id}>
+              {t.name}
+            </option>
+          ))}
+        </select>
+      </label>
+      <label>
+        Agent
+        <select aria-label="Scan agent" value={agentId} onChange={(e) => setAgentId(e.target.value)} disabled={create.isPending}>
+          <option value="">Automatic assignment</option>
+          {agents.data?.map((a) => (
+            <option key={a.id} value={a.id} disabled={!a.online || !["IDLE", "BUSY"].includes(a.status)}>
+              {a.id}
+              {!a.online ? " (offline)" : ""}
+            </option>
+          ))}
+        </select>
+      </label>
+      <button className="button primary" disabled={disabled || !targetId || create.isPending}>
+        {create.isPending ? "Requesting…" : "Launch scan"}
+      </button>
+      {agents.isError && <span role="status">Agent list unavailable; automatic assignment is available.</span>}
+      {create.error && (
+        <div className="form-error" role="alert">
+          {create.error.message}
+        </div>
+      )}
+    </form>
+  );
+}
+
+function PageHead({ kicker, title, action }: { kicker: string; title: string; action?: ReactNode }) {
+  return (
+    <div className="page-head">
+      <div>
+        <span className="eyebrow">{kicker}</span>
+        <h1>{title}</h1>
+      </div>
+      {action}
+    </div>
+  );
+}
+function Overview() {
+  const q = useQuery({
+    queryKey: ["dashboard"],
+    queryFn: () => api<Dashboard>("/dashboard"),
+    refetchInterval: 10000,
+  });
+  if (q.isLoading) return <PanelState />;
+  if (q.isError) return <ErrorState error={q.error} />;
+  const d = q.data!;
+  return (
+    <>
+      <PageHead kicker="CURRENT POSTURE" title="Security posture" action={<AgentPill agent={d.agent} />} />
+      <div className="metric-grid">
+        <Metric label="Scans observed" value={d.scans} note={`Last 30 days · capped at ${d.scanLimit}`} />
+        <Metric label="Protected images" value={d.assets} />
+        <Metric label="Current findings" value={d.findings} />
+        <Metric label="Agent status" value={d.agent?.online ? "ONLINE" : "OFFLINE"} tone={d.agent?.online ? "good" : "bad"} />
+      </div>
+      <div className="dashboard-grid">
+        <section className="panel chart-panel">
+          <PanelTitle title="Findings by severity" note="Latest result per image" />
+          <SeverityChart data={d.severity} />
+        </section>
+        <section className="panel">
+          <PanelTitle title="Pipeline health" note="Live control plane" />
+          <HealthRows agent={d.agent} />
+        </section>
+      </div>
+      <section className="panel">
+        <PanelTitle title="How to read this dashboard" note="No historical double counting" />
+        <p className="muted">Posture uses the latest result for each image. Scan activity covers results received since {fmt(d.since)}. Open Results for full history or Findings to search one image result.</p>
+      </section>
+    </>
+  );
+}
+function Metric({ label, value, note, tone }: { label: string; value: string | number; note?: string; tone?: string }) {
+  return (
+    <article className={"metric " + (tone ?? "")}>
+      <span>{label}</span>
+      <strong>{typeof value === "number" ? value.toLocaleString() : value}</strong>
+      <small>{note ?? "Operational data"}</small>
+    </article>
+  );
+}
+function PanelTitle({ title, note }: { title: string; note: string }) {
+  return (
+    <div className="panel-title">
+      <h2>{title}</h2>
+      <span>{note}</span>
+    </div>
+  );
+}
+function AgentPill({ agent }: { agent?: Agent }) {
+  return (
+    <span className={"agent-pill " + (agent?.online ? "online" : "offline")}>
+      <i />
+      {agent?.online ? "Agent online" : "Agent offline"}
+    </span>
+  );
+}
+function HealthRows({ agent }: { agent?: Agent }) {
+  return (
+    <div className="health-rows">
+      <Health label="Agent heartbeat" value={agent ? fmt(agent.lastHeartbeatAt) : "No signal"} ok={!!agent?.online} />
+      <Health label="Durable outbox" value={`${agent?.outboxPending ?? 0} pending`} ok={(agent?.deadLetters ?? 0) === 0} />
+      <Health label="Dead letters" value={String(agent?.deadLetters ?? 0)} ok={(agent?.deadLetters ?? 0) === 0} />
+      <Health label="Available disk" value={bytes(agent?.diskFreeBytes)} ok={(agent?.diskFreeBytes ?? 0) > 536870912} />
+    </div>
+  );
+}
+function Health({ label, value, ok }: { label: string; value: string; ok: boolean }) {
+  return (
+    <div>
+      <span>
+        <i className={ok ? "ok" : "warn"} />
+        {label}
+      </span>
+      <b>{value}</b>
+    </div>
+  );
+}
+function SeverityChart({ data }: { data: Record<string, number> }) {
+  const order = ["CRITICAL", "HIGH", "MEDIUM", "LOW", "UNKNOWN"];
+  return (
+    <div className="severity-overview">
+      <div className="severity-total">
+        <strong>
+          {Object.values(data)
+            .reduce((a, b) => a + b, 0)
+            .toLocaleString()}
+        </strong>
+        <span>findings in this view</span>
+      </div>
+      <SeverityRows data={Object.fromEntries(order.map((key) => [key, data[key] ?? 0]))} />
+    </div>
+  );
+}
+
+function Assets({ isAdmin }: { isAdmin: boolean }) {
+  const [sp, setSp] = useSearchParams();
+  const page = Number(sp.get("page") ?? 0);
+  const qc = useQueryClient();
+  const q = useQuery({
+    queryKey: ["assets", page],
+    queryFn: () => api<Page<AssetView>>(`/assets?page=${page}&size=25`),
+  });
+  const targets = useQuery({
+    queryKey: ["admin-targets"],
+    queryFn: () => api<ImageTarget[]>("/admin/targets"),
+    enabled: isAdmin,
+  });
+  const create = useMutation({
+    mutationFn: (body: any) => api("/admin/targets", { method: "POST", body: JSON.stringify(body) }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["admin-targets"] });
+      qc.invalidateQueries({ queryKey: ["assets"] });
+    },
+  });
+  const update = useMutation({
+    mutationFn: (body: any) => api("/admin/targets", { method: "PATCH", body: JSON.stringify(body) }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["admin-targets"] });
+      qc.invalidateQueries({ queryKey: ["assets"] });
+    },
+  });
+  return (
+    <>
+      <PageHead kicker="IMAGE CATALOG" title="Images" />
+      <p className="callout">Each image has one catalog entry. Enabling it allows new scans; disabling it keeps all existing results and findings.</p>
+      {isAdmin && (
+        <>
+          <form
+            className="inline-form panel"
+            onSubmit={(e) => {
+              e.preventDefault();
+              const d = new FormData(e.currentTarget);
+              create.mutate({
+                name: d.get("name"),
+                reference: d.get("reference"),
+              });
+              e.currentTarget.reset();
+            }}
+          >
+            <input name="name" placeholder="Service image" required />
+            <input name="reference" placeholder="registry.example/image:tag" required />
+            <button className="button primary">Register image</button>
+          </form>
+          {create.isError && <div className="form-error">{create.error.message}</div>}
+          {targets.isLoading ? (
+            <PanelState />
+          ) : targets.isError ? (
+            <ErrorState error={targets.error} />
+          ) : (
+            <DataTable
+              headers={["Image", "Reference", "Scanning", "History"]}
+              rows={(targets.data ?? []).map((t) => [
+                <b>{t.name}</b>,
+                <code>{t.reference}</code>,
+                <button className="table-action" onClick={() => update.mutate({ ...t, enabled: !t.enabled })}>
+                  {t.enabled ? "Enabled · disable" : "Disabled · enable"}
+                </button>,
+                <Link to={`/app/results?assetId=${t.assetId}`}>View results →</Link>,
+              ])}
+              empty="No images are registered for scanning."
+            />
+          )}
+        </>
+      )}
+      {!isAdmin &&
+        (q.isLoading ? (
+          <PanelState />
+        ) : q.isError ? (
+          <ErrorState error={q.error} />
+        ) : (
+          <DataTable
+            headers={["Image", "Reference", "Latest result", "Updated", "Action"]}
+            rows={q.data!.content.map((a) => [
+              <b>{a.name}</b>,
+              <code>{a.reference ?? "—"}</code>,
+              a.lastScanStatus ? (
+                <span className="latest-result">
+                  <Badge value={a.lastScanStatus} />
+                  <small>{fmt(a.lastScanCompletedAt ?? a.lastScanReceivedAt)}</small>
+                </span>
+              ) : (
+                <span className="muted">No results</span>
+              ),
+              fmt(a.updatedAt),
+              <Link to={`/app/results?assetId=${a.id}`}>View results →</Link>,
+            ])}
+            empty="No images have been resolved yet."
+          />
+        ))}
+      {!isAdmin && <Pager page={page} pages={q.data?.totalPages ?? 0} set={(p) => setSp({ page: String(p) })} />}
+    </>
+  );
+}
+function Results() {
+  const [sp, setSp] = useSearchParams();
+  const page = Number(sp.get("page") ?? 0);
+  const assetId = sp.get("assetId") ?? "";
+  const assets = useQuery({
+    queryKey: ["result-assets"],
+    queryFn: () => api<Page<AssetView>>("/assets?page=0&size=100"),
+  });
+  const q = useQuery({
+    queryKey: ["results", page, assetId],
+    queryFn: () => api<Page<ResultView>>(`/results?page=${page}&size=25${assetId ? "&assetId=" + encodeURIComponent(assetId) : ""}`),
+  });
+  const selectAsset = (value: string) => {
+    const next = new URLSearchParams();
+    if (value) next.set("assetId", value);
+    setSp(next);
+  };
+  return (
+    <>
+      <PageHead
+        kicker="PROCESSED REPORTS"
+        title="Results"
+        action={
+          <label className="compact-filter">
+            Image
+            <select aria-label="Filter results by image" value={assetId} onChange={(e) => selectAsset(e.target.value)}>
+              <option value="">All images</option>
+              {assets.data?.content.map((a) => (
+                <option key={a.id} value={a.id}>
+                  {a.name} · {a.reference}
+                </option>
+              ))}
+            </select>
+          </label>
+        }
+      />
+      <p className="callout">Every ingested result appears here, including scheduled Agent scans, direct uploads, and console requests.</p>
+      {q.isLoading ? (
+        <PanelState />
+      ) : q.isError ? (
+        <ErrorState error={q.error} />
+      ) : (
+        <DataTable
+          headers={["Image", "Status", "Findings", "Received", "Action"]}
+          rows={q.data!.content.map((r) => [
+            <span>
+              <b>{r.assetName}</b>
+              <small className="table-subtitle">{r.reference}</small>
+            </span>,
+            <Badge value={r.status} />,
+            r.findingCount.toLocaleString(),
+            fmt(r.completedAt ?? r.receivedAt),
+            <Link to={`/app/findings?assetId=${r.assetId}&resultId=${r.id}`}>Explore findings →</Link>,
+          ])}
+          empty="No processed results match this image."
+        />
+      )}
+      <Pager
+        page={page}
+        pages={q.data?.totalPages ?? 0}
+        set={(p) => {
+          const next = new URLSearchParams(sp);
+          next.set("page", String(p));
+          setSp(next);
+        }}
+      />
+    </>
+  );
+}
+function Scans() {
+  const [sp, setSp] = useSearchParams();
+  const page = Number(sp.get("page") ?? 0);
+  const status = sp.get("status") ?? "";
+  const targetId = sp.get("targetId") ?? "";
+  const assetId = sp.get("assetId") ?? "";
+  const query = new URLSearchParams({ page: String(page), size: "25" });
+  if (status) query.set("status", status);
+  if (targetId) query.set("targetId", targetId);
+  if (assetId) query.set("assetId", assetId);
+  const q = useQuery({
+    queryKey: ["scans", page, status, targetId, assetId],
+    queryFn: () => api<Page<Scan>>(`/scan-requests?${query.toString()}`),
+    refetchInterval: (data) => (data.state.data?.content.some((s) => !["COMPLETED", "FAILED"].includes(s.status)) ? 2000 : false),
+  });
+  const targets = useQuery({
+    queryKey: ["targets"],
+    queryFn: () => api<{ id: string; name: string }[]>("/targets"),
+  });
+  const setFilter = (key: string, value: string) => {
+    const next = new URLSearchParams(sp);
+    if (value) next.set(key, value);
+    else next.delete(key);
+    next.delete("page");
+    setSp(next);
+  };
+  return (
+    <>
+      <PageHead
+        kicker="EXECUTION HISTORY"
+        title="Scans"
+        action={
+          <div className="scan-actions">
+            <select aria-label="Filter scans by status" value={status} onChange={(e) => setFilter("status", e.target.value)}>
+              <option value="">All statuses</option>
+              {["REQUESTED", "CLAIMED", "RUNNING", "UPLOADING", "PROCESSING", "COMPLETED", "FAILED"].map((value) => (
+                <option key={value}>{value}</option>
+              ))}
+            </select>
+            <select aria-label="Filter scans by image" value={targetId} onChange={(e) => setFilter("targetId", e.target.value)}>
+              <option value="">All images</option>
+              {targets.data?.map((t) => (
+                <option key={t.id} value={t.id}>
+                  {t.name}
+                </option>
+              ))}
+            </select>
+            <ScanLauncher targets={targets.data ?? []} disabled={targets.isError || targets.isLoading} />
+          </div>
+        }
+      />
+      {assetId && <p className="callout">Showing scans for the selected image.</p>}
+      {targets.isError && <div className="form-error">The image catalog is temporarily unavailable; launching is disabled.</div>}
+      {q.isLoading ? (
+        <PanelState />
+      ) : q.isError ? (
+        <ErrorState error={q.error} />
+      ) : (
+        <DataTable
+          headers={["Image", "Status", "Requested by", "Requested", "Agent"]}
+          rows={q.data!.content.map((s) => [
+            <Link to={`/app/scans/${s.id}`}>
+              <b>{s.targetName}</b>
+            </Link>,
+            <Badge value={s.status} />,
+            s.requestedBy,
+            fmt(s.requestedAt),
+            <code>{s.agentId ?? "queued"}</code>,
+          ])}
+          empty="No on-demand scans have been requested."
+        />
+      )}
+      <Pager
+        page={page}
+        pages={q.data?.totalPages ?? 0}
+        set={(p) => {
+          const next = new URLSearchParams(sp);
+          next.set("page", String(p));
+          setSp(next);
+        }}
+      />
+    </>
+  );
+}
+function ScanDetail() {
+  const { id } = useParams();
+  const q = useQuery({
+    queryKey: ["scan", id],
+    queryFn: () => api<Scan>(`/scan-requests/${id}`),
+    refetchInterval: (data) => (data.state.data && !["COMPLETED", "FAILED"].includes(data.state.data.status) ? 2000 : false),
+  });
+  const summary = useQuery({
+    queryKey: ["scan-summary", id],
+    queryFn: () => api<ResultSummary>(`/scan-requests/${id}/summary`),
+    enabled: !!id && q.data?.status === "COMPLETED",
+  });
+  if (q.isLoading) return <PanelState />;
+  if (q.isError) return <ErrorState error={q.error} />;
+  const s = q.data!;
+  return (
+    <>
+      <PageHead kicker={`SCAN ${s.id.slice(0, 8)}`} title={s.targetName} action={<Badge value={s.status} />} />
+      <div className="scan-detail-grid">
+        <section className="panel">
+          <PanelTitle title="Execution timeline" note={s.status === "FAILED" || s.status === "COMPLETED" ? "Execution finished" : "Synchronized every 2 seconds"} />
+          <Timeline scan={s} />
+        </section>
+        <section className="panel severity-summary">
+          <PanelTitle title="Result summary" note={s.status === "FAILED" ? "Execution ended" : s.scanId ? "Persisted result" : "Awaiting result"} />
+          {s.status === "COMPLETED" ? (
+            <ResultSummaryPanel requestId={s.id} summary={summary.data} loading={summary.isLoading} error={summary.error} />
+          ) : s.status === "FAILED" ? (
+            <div className="form-error">
+              <h3>Scan failed</h3>
+              <p>{s.safeError ?? "The execution could not finish."}</p>
+              <p>{s.scanId ? "A report was received; processing did not complete." : "No report was ingested, so there are no findings or processing identifiers."}</p>
+              <p>Ended {fmt(s.completedAt)}</p>
+            </div>
+          ) : (
+            <div className="processing-orb">
+              <i />
+              <span>{s.status}</span>
+            </div>
+          )}
+        </section>
+      </div>
+      <details className="panel technical-panel" open>
+        <summary>
+          Technical evidence <span>Identifiers and integrity</span>
+        </summary>
+        <dl>
+          <Tech k="requestId" v={s.id} />
+          <Tech k="scanId" v={s.scanId ?? (s.status === "FAILED" ? "Not created" : undefined)} />
+          <Tech k="eventId" v={s.eventId ?? (s.status === "FAILED" ? "Not created" : undefined)} />
+          <Tech k="correlationId" v={summary.data?.correlationId ?? (s.status === "FAILED" ? "Unavailable" : undefined)} />
+          <Tech k="contentHash" v={s.contentHash ?? (s.status === "FAILED" ? "Unavailable" : undefined)} />
+          <Tech k="scanner" v={s.scanner ?? (s.status === "FAILED" ? "Unavailable" : undefined)} />
+          <Tech k="recovery attempts" v={String(s.recoveryAttempts)} />
+        </dl>
+      </details>
+      {s.safeError && s.status !== "FAILED" && <div className="form-error">{s.safeError}</div>}
+    </>
+  );
+}
+function ResultSummaryPanel({ requestId, summary, loading, error }: { requestId: string; summary?: ResultSummary; loading: boolean; error?: Error | null }) {
+  if (loading) return <PanelState />;
+  if (error) return <ErrorState error={error} />;
+  if (!summary) return <p className="muted">The result summary is not available yet.</p>;
+  const duration = summary.receivedAt && summary.completedAt ? `${((new Date(summary.completedAt).getTime() - new Date(summary.receivedAt).getTime()) / 1000).toFixed(1)} s` : "—";
+  return (
+    <>
+      <div className="summary-metrics">
+        <Metric label="Findings" value={summary.findingCount} />
+        <Metric label="Processing time" value={duration} />
+      </div>
+      <SeverityRows data={summary.severitySummary} />
+      <Link className="button ghost" to={`/app/findings?requestId=${requestId}`}>
+        Explore findings →
+      </Link>
+    </>
+  );
+}
+function Tech({ k, v }: { k: string; v?: string }) {
+  return (
+    <div>
+      <dt>{k}</dt>
+      <dd>
+        <code>{v ?? "pending"}</code>
+      </dd>
+    </div>
+  );
+}
+function Findings() {
+  const [sp, setSp] = useSearchParams();
+  const assetId = sp.get("assetId") ?? "",
+    resultId = sp.get("resultId") ?? "",
+    search = sp.get("query") ?? "",
+    severity = sp.get("severity") ?? "",
+    cursor = sp.get("cursor") ?? "";
+  const page = Number(sp.get("page") ?? 0);
+  const assets = useQuery({
+    queryKey: ["finding-assets"],
+    queryFn: () => api<Page<AssetView>>("/assets?page=0&size=100"),
+  });
+  const results = useQuery({
+    queryKey: ["finding-results", assetId],
+    queryFn: () => api<Page<ResultView>>(`/results?assetId=${encodeURIComponent(assetId)}&page=0&size=100`),
+    enabled: !!assetId,
+  });
+  const queryString = new URLSearchParams({ page: String(page), size: "25" });
+  if (search) queryString.set("query", search);
+  if (severity) queryString.set("severity", severity);
+  if (cursor) queryString.set("cursor", cursor);
+  const q = useQuery({
+    queryKey: ["result-findings", resultId, page, search, severity, cursor],
+    queryFn: () => api<FindingsPage>(`/results/${resultId}/findings?${queryString}`),
+    enabled: !!resultId,
+  });
+  const change = (key: string, value: string, keepResult = false) => {
+    const next = new URLSearchParams(sp);
+    if (value) next.set(key, value);
+    else next.delete(key);
+    next.delete("page");
+    next.delete("cursor");
+    if (key === "assetId" && !keepResult) next.delete("resultId");
+    setSp(next);
+  };
+  const nextAwsPage = () => {
+    if (!q.data?.nextCursor) return;
+    const next = new URLSearchParams(sp);
+    next.set("cursor", q.data.nextCursor);
+    next.set("page", String(page + 1));
+    setSp(next);
+  };
+  const firstAwsPage = () => {
+    const next = new URLSearchParams(sp);
+    next.delete("cursor");
+    next.delete("page");
+    setSp(next);
+  };
+  return (
+    <>
+      <PageHead kicker="SEARCHABLE VULNERABILITY INVENTORY" title="Findings" />
+      <div className="finding-filters panel">
+        <label>
+          Image
+          <select aria-label="Finding image" value={assetId} onChange={(e) => change("assetId", e.target.value)}>
+            <option value="">Select an image</option>
+            {assets.data?.content.map((a) => (
+              <option key={a.id} value={a.id}>
+                {a.name} · {a.reference}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label>
+          Result
+          <select aria-label="Finding result" value={resultId} onChange={(e) => change("resultId", e.target.value, true)} disabled={!assetId}>
+            <option value="">Select a result</option>
+            {results.data?.content.map((r) => (
+              <option key={r.id} value={r.id}>
+                {fmt(r.completedAt ?? r.receivedAt)} · {r.findingCount} findings
+              </option>
+            ))}
+          </select>
+        </label>
+        <label>
+          Search
+          <input aria-label="Search findings" value={search} maxLength={100} placeholder="CVE, package, or title" onChange={(e) => change("query", e.target.value, true)} />
+        </label>
+        <label>
+          Severity
+          <select aria-label="Finding severity" value={severity} onChange={(e) => change("severity", e.target.value, true)}>
+            <option value="">All severities</option>
+            {["CRITICAL", "HIGH", "MEDIUM", "LOW", "UNKNOWN"].map((value) => (
+              <option key={value}>{value}</option>
+            ))}
+          </select>
+        </label>
+      </div>
+      {!resultId ? (
+        <Empty title="Select an image and result" text="Choose an image, then one of its processed results to search every stored finding." />
+      ) : q.isLoading ? (
+        <PanelState />
+      ) : q.isError ? (
+        <ErrorState error={q.error} />
+      ) : (
+        <>
+          <p className="result-count">{q.data!.totalExact ? `${q.data!.totalElements.toLocaleString()} matching findings` : `${q.data!.content.length} matches on this page`}</p>
+          {q.data?.truncated && <p className="callout">The search work limit was reached. Continue to inspect the next bounded batch.</p>}
+          <DataTable headers={["Vulnerability", "Package", "Severity", "Risk", "Fixed version"]} rows={q.data!.content.map((f: any) => [<code>{f.vulnerabilityId}</code>, f.packageName, <Badge value={f.severity} />, f.riskScore, f.fixedVersion ?? "—"])} empty="No findings match these filters in this batch." />
+          {q.data!.totalExact ? (
+            <Pager
+              page={q.data?.number ?? page}
+              pages={q.data?.totalPages ?? 0}
+              set={(p) => {
+                const next = new URLSearchParams(sp);
+                next.set("page", String(p));
+                setSp(next);
+              }}
+            />
+          ) : (
+            <div className="pager">
+              <button disabled={!cursor} onClick={firstAwsPage}>
+                ← First page
+              </button>
+              <span>Batch {page + 1}</span>
+              <button disabled={!q.data?.nextCursor} onClick={nextAwsPage}>
+                Next batch →
+              </button>
+            </div>
+          )}
+        </>
+      )}
+    </>
+  );
+}
+function QueuePanel({ queues, enabled }: { queues?: QueueTelemetry; enabled: boolean }) {
+  if (!enabled || !queues)
+    return (
+      <section className="panel">
+        <PanelTitle title="Queues" note="Telemetry unavailable" />
+        <p className="muted">Queue counts are not exposed in this environment. SQS controls remain outside the console.</p>
+      </section>
+    );
+  if (queues.status !== "healthy")
+    return (
+      <section className="panel">
+        <PanelTitle title="Queues" note="Degraded telemetry" />
+        <p className="muted">Queue telemetry status: {queues.status}. Counts may be stale or unavailable.</p>
+      </section>
+    );
+  return (
+    <section className="panel">
+      <PanelTitle title="Queues" note="Approximate read-only counts" />
+      <div className="health-rows">
+        <Health label="Main queue visible" value={String(queues.source?.visible ?? 0)} ok={(queues.source?.visible ?? 0) === 0} />
+        <Health label="Main queue in flight" value={String(queues.source?.inFlight ?? 0)} ok />
+        <Health label="DLQ visible" value={String(queues.dlq?.visible ?? 0)} ok={(queues.dlq?.visible ?? 0) === 0} />
+        <Health label="DLQ in flight" value={String(queues.dlq?.inFlight ?? 0)} ok={(queues.dlq?.inFlight ?? 0) === 0} />
+      </div>
+    </section>
+  );
+}
+function Operations() {
+  const q = useQuery({
+    queryKey: ["operations"],
+    queryFn: () => api<OperationsData>("/operations"),
+    refetchInterval: 15000,
+  });
+  if (q.isLoading) return <PanelState />;
+  if (q.isError) return <ErrorState error={q.error} />;
+  const o = q.data!;
+  return (
+    <>
+      <PageHead kicker="RUNTIME CONTROL PLANE" title="Operations" action={<AgentPill agent={o.agent} />} />
+      <div className="metric-grid">
+        <Metric label="Publication pending" value={o.publicationOutbox.pending} />
+        <Metric label="Publication failed" note="All-time events awaiting review" value={o.publicationOutbox.failed} tone={o.publicationOutbox.failed ? "bad" : "good"} />
+        <Metric label="Agent outbox" value={o.agent?.outboxPending ?? 0} />
+        <Metric label="DLQ" value={o.agent?.deadLetters ?? 0} tone={o.agent?.deadLetters ? "bad" : "good"} />
+      </div>
+      <div className="dashboard-grid">
+        <section className="panel">
+          <PanelTitle title="Agent" note="Outbound-only command channel" />
+          <HealthRows agent={o.agent} />
+        </section>
+        <section className="panel">
+          <PanelTitle title="Runtime" note="No credential values exposed" />
+          <div className="health-rows">
+            <Health label="Active profile" value={o.activeProfiles.join(", ")} ok />
+            <Health label="On-demand scans" value={o.scansEnabled ? "Enabled" : "Disabled"} ok={o.scansEnabled} />
+            <Health label="SQS telemetry" value={o.sqsTelemetryEnabled ? "Read only" : "Disabled"} ok={o.sqsTelemetryEnabled} />
+            <Health label="Credentials" value="Temporary session" ok />
+          </div>
+        </section>
+      </div>
+      <p className="callout">Publication failures count events that exhausted their publication attempts, including historical failures. They require review before retrying and do not mean all scans are failing.</p>
+      <QueuePanel queues={o.queues} enabled={o.sqsTelemetryEnabled} />
+      <p className="callout">DLQ redrive remains a reviewed runbook operation. This console never exposes destructive queue controls.</p>
+    </>
+  );
+}
+
+function ChangePassword() {
+  const nav = useNavigate();
+  const qc = useQueryClient();
+  const [error, setError] = useState("");
+  const m = useMutation({
+    mutationFn: (b: any) =>
+      api<Principal>("/auth/change-password", {
+        method: "POST",
+        body: JSON.stringify(b),
+      }),
+    onSuccess: (p) => {
+      qc.setQueryData(["me"], p);
+      nav("/app");
+    },
+  });
+  return (
+    <>
+      <PageHead kicker="FIRST ACCESS" title="Set a permanent password" />
+      <form
+        className="panel form-panel"
+        onSubmit={(e) => {
+          e.preventDefault();
+          const d = new FormData(e.currentTarget);
+          if (d.get("next") !== d.get("confirm")) return setError("Passwords do not match");
+          m.mutate({ currentPassword: d.get("current"), newPassword: d.get("next") }, { onError: (e) => setError(e.message) });
+        }}
+      >
+        <label>
+          Temporary password
+          <input name="current" type="password" required />
+        </label>
+        <label>
+          New password
+          <input name="next" type="password" minLength={14} required />
+        </label>
+        <label>
+          Confirm password
+          <input name="confirm" type="password" minLength={14} required />
+        </label>
+        <p className="muted">Use at least 14 characters with upper-case, lower-case and numeric characters.</p>
+        {error && <div className="form-error">{error}</div>}
+        <button className="button primary">Change password</button>
+      </form>
+    </>
+  );
+}
+function AdminUsers() {
+  const qc = useQueryClient();
+  const [temporary, setTemporary] = useState("");
+  const q = useQuery({
+    queryKey: ["admin-users"],
+    queryFn: () => api<any[]>("/admin/users"),
+  });
+  const create = useMutation({
+    mutationFn: (body: any) => api<any>("/admin/users", { method: "POST", body: JSON.stringify(body) }),
+    onSuccess: (r) => {
+      setTemporary(r.temporaryPassword);
+      qc.invalidateQueries({ queryKey: ["admin-users"] });
+    },
+  });
+  const update = useMutation({
+    mutationFn: (body: any) => api<any>("/admin/users", { method: "PATCH", body: JSON.stringify(body) }),
+    onSuccess: (r) => {
+      if (r.temporaryPassword) setTemporary(r.temporaryPassword);
+      qc.invalidateQueries({ queryKey: ["admin-users"] });
+    },
+  });
+  return (
+    <>
+      <PageHead kicker="IDENTITY" title="Users" />
+      <form
+        className="inline-form panel"
+        onSubmit={(e) => {
+          e.preventDefault();
+          const d = new FormData(e.currentTarget);
+          create.mutate({ username: d.get("username"), role: d.get("role") });
+          e.currentTarget.reset();
+        }}
+      >
+        <input name="username" placeholder="new.operator" required maxLength={100} />
+        <select name="role">
+          <option>OPERATOR</option>
+          <option>ADMIN</option>
+        </select>
+        <button className="button primary">Create user</button>
+      </form>
+      {temporary && (
+        <div className="one-time" role="status">
+          <b>Copy this temporary password now</b>
+          <code>{temporary}</code>
+          <button onClick={() => setTemporary("")}>Dismiss</button>
+          <small>It will not be shown again.</small>
+        </div>
+      )}
+      {q.isLoading ? (
+        <PanelState />
+      ) : q.isError ? (
+        <ErrorState error={q.error} />
+      ) : (
+        <DataTable
+          headers={["Username", "Role", "State", "Password", "Actions"]}
+          rows={(q.data ?? []).map((u) => [
+            u.username,
+            <Badge value={u.role} />,
+            u.enabled ? "Enabled" : "Locked",
+            u.passwordChangeRequired ? "Change required" : "Current",
+            <span className="row-actions">
+              <button
+                onClick={() =>
+                  update.mutate({
+                    id: u.id,
+                    enabled: !u.enabled,
+                    rotatePassword: false,
+                  })
+                }
+              >
+                {u.enabled ? "Disable" : "Enable"}
+              </button>
+              <button
+                onClick={() =>
+                  update.mutate({
+                    id: u.id,
+                    enabled: u.enabled,
+                    rotatePassword: true,
+                  })
+                }
+              >
+                Rotate
+              </button>
+            </span>,
+          ])}
+          empty="No console users."
+        />
+      )}
+    </>
+  );
+}
+function Audit() {
+  const q = useQuery({
+    queryKey: ["audit"],
+    queryFn: () => api<Page<any>>("/admin/audit?page=0&size=50"),
+  });
+  return (
+    <>
+      <PageHead kicker="ACCOUNTABILITY" title="Audit log" />
+      {q.isLoading ? <PanelState /> : q.isError ? <ErrorState error={q.error} /> : <DataTable headers={["Time", "Actor", "Action", "Subject", "Outcome"]} rows={(q.data?.content ?? []).map((e) => [fmt(e.createdAt), e.actor ?? "system", <code>{e.action}</code>, e.subjectType ?? "—", <Badge value={e.outcome} />])} empty="No audited actions." />}
+    </>
+  );
+}
+
+function DataTable({ headers, rows, empty }: { headers: string[]; rows: ReactNode[][]; empty: string }) {
+  if (!rows.length) return <Empty title="Nothing to show" text={empty} />;
+  return (
+    <div className="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            {headers.map((h) => (
+              <th key={h}>{h}</th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map((r, i) => (
+            <tr key={i}>
+              {r.map((c, j) => (
+                <td key={j}>{c}</td>
+              ))}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+function Pager({ page, pages, set }: { page: number; pages: number; set: (p: number) => void }) {
+  if (pages < 2) return null;
+  return (
+    <div className="pager">
+      <button disabled={!page} onClick={() => set(page - 1)}>
+        ← Previous
+      </button>
+      <span>
+        Page {page + 1} of {pages}
+      </span>
+      <button disabled={page + 1 >= pages} onClick={() => set(page + 1)}>
+        Next →
+      </button>
+    </div>
+  );
+}
+function SeverityRows({ data }: { data: Record<string, number> }) {
+  const total = Math.max(
+    Object.values(data).reduce((sum, value) => sum + value, 0),
+    1,
+  );
+  return (
+    <div className="severity-rows">
+      {Object.entries(data).map(([k, v]) => (
+        <div key={k}>
+          <span className={k.toLowerCase()}>{k}</span>
+          <b>{v}</b>
+          <progress max={total} value={v} aria-label={`${k}: ${v}`} />
+        </div>
+      ))}
+    </div>
+  );
+}
+function FullState({ label }: { label: string }) {
+  return (
+    <main className="full-state">
+      <Mark />
+      <span>{label}</span>
+    </main>
+  );
+}
+function PanelState() {
+  return (
+    <div className="panel skeleton" aria-label="Loading">
+      <i />
+      <i />
+      <i />
+    </div>
+  );
+}
+function ErrorState({ error }: { error: Error }) {
+  return <Empty title="Data temporarily unavailable" text={error.message} />;
+}
+function Empty({ title, text }: { title: string; text: string }) {
+  return (
+    <div className="empty">
+      <span>◇</span>
+      <h2>{title}</h2>
+      <p>{text}</p>
+    </div>
+  );
+}
 
 export default App;
