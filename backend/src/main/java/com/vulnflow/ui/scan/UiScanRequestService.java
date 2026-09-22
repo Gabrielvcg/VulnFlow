@@ -107,12 +107,23 @@ public class UiScanRequestService {
     }
     @Transactional(readOnly=true)
     public UUID authorizeResultAccess(UUID requestId,UiPrincipal principal){
+        UiScanRequest request=authorizedResultRequest(requestId,principal);
+        return request.getScan().getId();
+    }
+    @Transactional(readOnly=true)
+    public FindingContext findingContext(UUID requestId,UiPrincipal principal){
+        Scan scan=authorizedResultRequest(requestId,principal).getScan();
+        var asset=scan.getAsset();
+        return new FindingContext(asset.getId(),scan.getId(),asset.getName(),asset.getExternalReference(),scan.getReceivedAt());
+    }
+    private UiScanRequest authorizedResultRequest(UUID requestId,UiPrincipal principal){
         UiScanRequest request=principal.role()==UiRole.ADMIN
                 ? requests.findById(requestId).orElseThrow(()->new ResourceNotFoundException("Scan request",requestId))
                 : requests.findByIdAndRequestedById(requestId,principal.id()).orElseThrow(()->new ResourceNotFoundException("Scan request",requestId));
         if(request.getScan()==null)throw new ResourceNotFoundException("Scan result",requestId);
-        return request.getScan().getId();
+        return request;
     }
+    public record FindingContext(UUID assetId,UUID resultId,String assetName,String reference,Instant receivedAt){}
     private UiScanRequest claimed(String agentId,UUID id){UiScanRequest r=requests.findByIdForUpdate(id).orElseThrow(()->new ResourceNotFoundException("Scan request",id));if(r.getAgent()==null||!agentId.equals(r.getAgent().getId()))throw new StaleScanClaimException();return r;}
     private void recoverExpired(){Instant now=Instant.now();requests.findByStatusAndRequestedAtBefore(UiScanRequestStatus.REQUESTED,now.minus(properties.requestExpiry())).forEach(r->r.recover(properties.requestExpiry(),properties.maxRecoveryAttempts()));requests.findByStatusInAndClaimExpiresAtBefore(LEASED,now).forEach(r->r.recover(properties.requestExpiry(),properties.maxRecoveryAttempts()));}
     private void reject(String code,String message){throw new ScanRequestRejectedException(code,message);}
