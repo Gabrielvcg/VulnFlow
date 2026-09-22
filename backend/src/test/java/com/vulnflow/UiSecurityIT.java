@@ -127,6 +127,23 @@ class UiSecurityIT {
                 .andExpect(jsonPath("$.totalElements").value(1))
                 .andExpect(jsonPath("$.content[0].vulnerabilityId").value("CVE-2026-1234"));
     }
+    @Test void ordersLocalFindingsByRiskBeforePagination() throws Exception {
+        Asset asset = assets.save(new Asset("alpine", AssetType.CONTAINER_IMAGE, "alpine:3.20"));
+        Scan scan = scans.save(new Scan(asset, ScannerType.TRIVY, "alpine.json", "b".repeat(64)));
+        findings.save(new Finding(scan, asset, "CVE-LOW", "zlib", "1", null, FindingSeverity.LOW,
+                "Low risk", "description", false, 20));
+        findings.save(new Finding(scan, asset, "CVE-HIGH", "openssl", "1", "2", FindingSeverity.HIGH,
+                "High risk", "description", false, 87));
+
+        mvc.perform(get("/api/ui/v1/results/{id}/findings", scan.getId())
+                        .queryParam("size", "1").cookie(login("operator")))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content[0].vulnerabilityId").value("CVE-HIGH"));
+        mvc.perform(get("/api/ui/v1/results/{id}/findings", scan.getId())
+                        .queryParam("size", "1").queryParam("page", "1").cookie(login("operator")))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content[0].vulnerabilityId").value("CVE-LOW"));
+    }
     @Test void passwordChangeRefreshesTheExistingSessionPrincipal() throws Exception {
         users.deleteAll();
         users.save(new UiUser("first-access", encoder.encode(PASSWORD), UiRole.OPERATOR, true));

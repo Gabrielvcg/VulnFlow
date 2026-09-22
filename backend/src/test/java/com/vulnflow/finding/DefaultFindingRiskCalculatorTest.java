@@ -29,4 +29,11 @@ class DefaultFindingRiskCalculatorTest {
         assertThat(calculator.calculate(FindingSeverity.HIGH, true)).isEqualTo(80);
         assertThat(calculator.calculate(FindingSeverity.CRITICAL, true)).isEqualTo(100);
     }
+
+    @Test
+    void usesCvssWhenAvailableAndFallsBackForInvalidScores() {
+        assertThat(calculator.calculate(FindingSeverity.HIGH, false, 8.7)).isEqualTo(87);
+        assertThat(calculator.calculate(FindingSeverity.HIGH, true, 9.6)).isEqualTo(100);
+        assertThat(calculator.calculate(FindingSeverity.HIGH, false, 11.0)).isEqualTo(70);
+    }
 }

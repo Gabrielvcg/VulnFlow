@@ -33,3 +33,21 @@ test('overview labels every current severity without hover',async({page})=>{
   await expect(page.locator('.severity-overview').getByText('UNKNOWN',{exact:true})).toBeVisible();
   await expect(page.getByText('No historical double counting')).toBeVisible();
 });
+
+test('request findings opens the matching image and result',async({page})=>{
+  await page.route('**/api/ui/v1/**',route=>{
+    const url=new URL(route.request().url());
+    if(url.pathname.endsWith('/auth/me'))return route.fulfill({json:{id:'u',username:'admin',role:'ADMIN',passwordChangeRequired:false}});
+    if(url.pathname.endsWith('/scan-requests/request'))return route.fulfill({json:{id:'request',targetName:'VulnFlow Agent',status:'COMPLETED',scanId:'result',requestedAt:'2026-09-22T19:54:00Z'}});
+    if(url.pathname.endsWith('/scan-requests/request/finding-context'))return route.fulfill({json:{assetId:'asset',resultId:'result'}});
+    if(url.pathname.endsWith('/scan-requests/request/summary'))return route.fulfill({json:{scanId:'result',status:'COMPLETED',findingCount:167,severitySummary:{CRITICAL:1,HIGH:0,MEDIUM:0,LOW:0,UNKNOWN:0}}});
+    if(url.pathname.endsWith('/assets'))return route.fulfill({json:{content:[{id:'asset',name:'VulnFlow Agent',reference:'ghcr.io/example/agent'}],number:0,totalPages:1,totalElements:1}});
+    if(url.pathname.endsWith('/results'))return route.fulfill({json:{content:[{id:'result',assetId:'asset',findingCount:167,receivedAt:'2026-09-22T19:54:00Z'}],number:0,totalPages:1,totalElements:1}});
+    return route.fulfill({json:{content:[{id:'finding',vulnerabilityId:'CVE-REAL',packageName:'curl',severity:'CRITICAL',riskScore:98}],number:0,totalPages:1,totalElements:1,totalExact:true}});
+  });
+  await page.goto('/app/scans/request');
+  await page.getByRole('link',{name:'Explore findings'}).click();
+  await expect(page.getByRole('combobox',{name:'Finding image'})).toHaveValue('asset');
+  await expect(page.getByRole('combobox',{name:'Finding result'})).toHaveValue('result');
+  await expect(page.getByText('CVE-REAL')).toBeVisible();
+});
