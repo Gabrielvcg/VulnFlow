@@ -379,10 +379,13 @@ function PublicFindings() {
   const [query, setQuery] = useState("");
   const [severity, setSeverity] = useState("ALL");
   const needle = query.trim().toLowerCase();
-  const findings = recordedScan.findings.filter((finding) => (severity === "ALL" || finding.severity === severity) && (!needle || [finding.vulnerabilityId, finding.packageName, finding.title].some((value) => value.toLowerCase().includes(needle))));
+  const severityRank: Record<string, number> = { CRITICAL: 0, HIGH: 1, MEDIUM: 2, LOW: 3, UNKNOWN: 4 };
+  const findings = recordedScan.findings
+    .filter((finding) => (severity === "ALL" || finding.severity === severity) && (!needle || [finding.vulnerabilityId, finding.packageName, finding.title].some((value) => value.toLowerCase().includes(needle))))
+    .sort((left, right) => severityRank[left.severity] - severityRank[right.severity] || left.vulnerabilityId.localeCompare(right.vulnerabilityId));
   return (
-    <section id="findings" className="section public-findings">
-      <SectionHead kicker="RECORDED FINDINGS" title="Inspect what Lambda persisted." text="These are 20 unmodified finding records from the 190-result DynamoDB dataset. Search locally by CVE, package or title; no production request is made." />
+    <section id="findings" className="section public-findings" aria-label="Recorded findings">
+      <SectionHead kicker="RECORDED FINDINGS" title="Inspect what Lambda persisted." text="These are selected public fields from 26 records in the 190-result DynamoDB dataset. Search locally by CVE, package or normalized title; no production request is made." />
       <div className="public-findings-toolbar">
         <label>
           Search recorded evidence
@@ -401,7 +404,7 @@ function PublicFindings() {
         </label>
         <div className="public-findings-count">
           <strong>{findings.length}</strong>
-          <span>visible of 20 recorded · 190 total</span>
+          <span>visible of {recordedScan.findings.length} recorded · 190 total</span>
         </div>
       </div>
       <div className="public-findings-list" aria-live="polite">
