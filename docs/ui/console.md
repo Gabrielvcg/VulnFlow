@@ -4,7 +4,7 @@
 
 The web image serves two deliberately separate surfaces:
 
-- `/` is static, sanitized, and performs no API request.
+- `/` is a static, sanitized snapshot of a completed `debian:11-slim` AWS execution and performs no API request. It includes a searchable 20-record sample from the 190 findings persisted for that scan.
 - `/login` and `/app/**` use `/api/ui/v1/**`, JDBC-backed sessions, an eight-hour inactivity timeout, `Secure`/`HttpOnly`/`SameSite=Lax` session cookies, and CSRF tokens.
 
 The Agent and existing integrations continue to use `X-API-Key` on `/api/v1/**`. The browser bundle contains no API key, registry credential, AWS identifier, password, or production result.
