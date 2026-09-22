@@ -115,14 +115,8 @@ public class UiQueryController {
     public FindingsPage requestFindings(@PathVariable UUID id,@AuthenticationPrincipal UiPrincipal principal,
             @RequestParam(defaultValue="0")int page,@RequestParam(required=false)String cursor,
             @RequestParam(defaultValue="25")int size){
-        UUID scanId=scanRequests.authorizeResultAccess(id,principal);int limit=bounded(size);
-        Page<Finding> local=findings.findByScanId(scanId,PageRequest.of(Math.max(page,0),limit,
-                Sort.by(Sort.Order.desc("riskScore"),Sort.Order.asc("vulnerabilityId"),Sort.Order.asc("id"))));
-        if(local.hasContent()||resultReaders.getIfAvailable()==null)return new FindingsPage(
-                local.map(FindingView::from).getContent(),null,local.getNumber(),local.getTotalPages(),local.getTotalElements(),false,true);
-        var awsPage=resultReaders.getIfAvailable().findFindings(scanId,cursor,limit);
-        return new FindingsPage(awsPage.findings().stream().map(FindingView::from).toList(),awsPage.nextCursor(),0,
-                awsPage.nextCursor()==null?1:2,awsPage.findings().size(),false,false);
+        UUID scanId=scanRequests.authorizeResultAccess(id,principal);
+        return resultFindings(scanId,page,size,null,null,cursor);
     }
 
     @GetMapping("/scan-requests/{id}/finding-context")
