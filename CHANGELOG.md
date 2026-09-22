@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Resolve request finding context inside the authorized service transaction so the selected image loads in production.
 - Open a request's exact result in Findings, sort stored findings by descending risk across pages, and use available Trivy CVSS scores for newly ingested risk values.
 - Replace the synthetic public scan fixture with a read-only snapshot of a completed `debian:11-slim` AWS execution and a searchable set of real DynamoDB findings ordered from `CRITICAL` through `UNKNOWN`.
 - Give the production Agent a dedicated read-only Docker configuration for scanning private GHCR images without sharing the host Docker login or socket.
