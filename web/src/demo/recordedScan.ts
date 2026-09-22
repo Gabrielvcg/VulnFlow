@@ -68,6 +68,12 @@ export const recordedScan = {
     },
   ] satisfies DemoStage[],
   findings: [
+    { vulnerabilityId: "CVE-2019-8457", packageName: "libdb5.3", installedVersion: "5.3.28+dfsg1-0.8", severity: "CRITICAL", title: "Heap out-of-bounds read in rtreenode()", knownExploited: false, riskScore: 90 },
+    { vulnerabilityId: "CVE-2023-45853", packageName: "zlib1g", installedVersion: "1:1.2.11.dfsg-2+deb11u2", severity: "CRITICAL", title: "Integer overflow and heap buffer overflow in zipOpenNewFileInZip4_6", knownExploited: false, riskScore: 90 },
+    { vulnerabilityId: "CVE-2026-13221", packageName: "perl-base", installedVersion: "5.32.1-4+deb11u5", severity: "CRITICAL", title: "Incorrect regular-expression processing in Perl", knownExploited: false, riskScore: 90 },
+    { vulnerabilityId: "CVE-2026-42496", packageName: "perl-base", installedVersion: "5.32.1-4+deb11u5", severity: "CRITICAL", title: "Path traversal through crafted symlinks in Archive::Tar", knownExploited: false, riskScore: 90 },
+    { vulnerabilityId: "CVE-2026-57433", packageName: "perl-base", installedVersion: "5.32.1-4+deb11u5", severity: "CRITICAL", title: "Signed integer overflow in Perl Storable", knownExploited: false, riskScore: 90 },
+    { vulnerabilityId: "CVE-2026-8376", packageName: "perl-base", installedVersion: "5.32.1-4+deb11u5", severity: "CRITICAL", title: "Heap buffer overflow while compiling regular expressions", knownExploited: false, riskScore: 90 },
     {
       vulnerabilityId: "CVE-2011-3374",
       packageName: "apt",
