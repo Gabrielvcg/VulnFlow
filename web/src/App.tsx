@@ -1224,8 +1224,14 @@ function Tech({ k, v }: { k: string; v?: string }) {
 }
 function Findings() {
   const [sp, setSp] = useSearchParams();
-  const assetId = sp.get("assetId") ?? "",
-    resultId = sp.get("resultId") ?? "",
+  const requestId = sp.get("requestId") ?? "";
+  const context = useQuery({
+    queryKey: ["finding-context", requestId],
+    queryFn: () => api<{ assetId: string; resultId: string; assetName: string; reference: string; receivedAt: string }>(`/scan-requests/${requestId}/finding-context`),
+    enabled: !!requestId,
+  });
+  const assetId = sp.get("assetId") ?? context.data?.assetId ?? "",
+    resultId = sp.get("resultId") ?? context.data?.resultId ?? "",
     search = sp.get("query") ?? "",
     severity = sp.get("severity") ?? "",
     cursor = sp.get("cursor") ?? "";
@@ -1254,6 +1260,7 @@ function Findings() {
     else next.delete(key);
     next.delete("page");
     next.delete("cursor");
+    next.delete("requestId");
     if (key === "assetId" && !keepResult) next.delete("resultId");
     setSp(next);
   };
@@ -1278,6 +1285,9 @@ function Findings() {
           Image
           <select aria-label="Finding image" value={assetId} onChange={(e) => change("assetId", e.target.value)}>
             <option value="">Select an image</option>
+            {context.data && !assets.data?.content.some((a) => a.id === context.data?.assetId) && (
+              <option value={context.data.assetId}>{context.data.assetName} · {context.data.reference}</option>
+            )}
             {assets.data?.content.map((a) => (
               <option key={a.id} value={a.id}>
                 {a.name} · {a.reference}
@@ -1289,6 +1299,9 @@ function Findings() {
           Result
           <select aria-label="Finding result" value={resultId} onChange={(e) => change("resultId", e.target.value, true)} disabled={!assetId}>
             <option value="">Select a result</option>
+            {context.data && !results.data?.content.some((r) => r.id === context.data?.resultId) && (
+              <option value={context.data.resultId}>{fmt(context.data.receivedAt)} · selected request</option>
+            )}
             {results.data?.content.map((r) => (
               <option key={r.id} value={r.id}>
                 {fmt(r.completedAt ?? r.receivedAt)} · {r.findingCount} findings
@@ -1310,7 +1323,11 @@ function Findings() {
           </select>
         </label>
       </div>
-      {!resultId ? (
+      {context.isError ? (
+        <ErrorState error={context.error} />
+      ) : context.isLoading ? (
+        <PanelState />
+      ) : !resultId ? (
         <Empty title="Select an image and result" text="Choose an image, then one of its processed results to search every stored finding." />
       ) : q.isLoading ? (
         <PanelState />

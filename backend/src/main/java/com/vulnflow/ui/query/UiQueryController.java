@@ -25,7 +25,9 @@ import software.amazon.awssdk.services.sqs.model.QueueAttributeName;
 @RestController
 @RequestMapping("/api/ui/v1")
 public class UiQueryController {
-    private static final int MAX_AWS_SEARCH_PAGES = 20;
+    private static final int MAX_AWS_FINDINGS = 100_000;
+    private static final Comparator<FindingView> RISK_ORDER = Comparator.comparingInt(FindingView::riskScore)
+            .reversed().thenComparing(FindingView::vulnerabilityId).thenComparing(FindingView::id);
     private final AssetRepository assets; private final ScanRepository scans; private final FindingRepository findings;
     private final UiAgentRepository agents; private final UiScanRequestService scanRequests;
     private final AwsPublicationOutboxRepository outbox; private final UiProperties properties;
@@ -101,24 +103,27 @@ public class UiQueryController {
         int limit=bounded(size);
         ProcessingResultReader reader=resultReaders.getIfAvailable();
         if(reader==null||findings.countByScanId(id)>0){
-            Page<Finding> local=findings.searchByScanId(id,needle,severity,PageRequest.of(Math.max(page,0),limit));
+            Page<Finding> local=findings.searchByScanId(id,needle,severity,PageRequest.of(Math.max(page,0),limit,
+                    Sort.by(Sort.Order.desc("riskScore"),Sort.Order.asc("vulnerabilityId"),Sort.Order.asc("id"))));
             return new FindingsPage(local.map(FindingView::from).getContent(),null,local.getNumber(),
                     local.getTotalPages(),local.getTotalElements(),false,true);
         }
-        return searchAwsFindings(reader,id,cursor,limit,needle,severity);
+        return searchAwsFindings(reader,id,page,limit,needle,severity);
     }
 
     @GetMapping("/scan-requests/{id}/findings")
     public FindingsPage requestFindings(@PathVariable UUID id,@AuthenticationPrincipal UiPrincipal principal,
             @RequestParam(defaultValue="0")int page,@RequestParam(required=false)String cursor,
             @RequestParam(defaultValue="25")int size){
-        UUID scanId=scanRequests.authorizeResultAccess(id,principal);int limit=bounded(size);
-        Page<Finding> local=findings.findByScanId(scanId,PageRequest.of(Math.max(page,0),limit));
-        if(local.hasContent()||resultReaders.getIfAvailable()==null)return new FindingsPage(
-                local.map(FindingView::from).getContent(),null,local.getNumber(),local.getTotalPages(),local.getTotalElements(),false,true);
-        var awsPage=resultReaders.getIfAvailable().findFindings(scanId,cursor,limit);
-        return new FindingsPage(awsPage.findings().stream().map(FindingView::from).toList(),awsPage.nextCursor(),0,
-                awsPage.nextCursor()==null?1:2,awsPage.findings().size(),false,false);
+        UUID scanId=scanRequests.authorizeResultAccess(id,principal);
+        return resultFindings(scanId,page,size,null,null,cursor);
+    }
+
+    @GetMapping("/scan-requests/{id}/finding-context")
+    public FindingContext findingContext(@PathVariable UUID id,@AuthenticationPrincipal UiPrincipal principal){
+        Scan scan=requireScan(scanRequests.authorizeResultAccess(id,principal));
+        return new FindingContext(scan.getAsset().getId(),scan.getId(),scan.getAsset().getName(),
+                scan.getAsset().getExternalReference(),scan.getReceivedAt());
     }
 
     @GetMapping("/scan-requests/{id}/summary")
@@ -142,20 +147,23 @@ public class UiQueryController {
             severity.put(value.name(),(int)findings.countByScanIdAndSeverity(scan.getId(),value));
         return new ResultSummary(scan.getId(),null,scan.getStatus().name(),scan.getScanner().name(),scan.getScannerVersion(),
                 scan.getContentHash(),scan.getReceivedAt(),scan.getCompletedAt(),(int)findings.countByScanId(scan.getId()),severity,scan.getFailureReason());}
-    private FindingsPage searchAwsFindings(ProcessingResultReader reader,UUID scanId,String cursor,int limit,
+    private FindingsPage searchAwsFindings(ProcessingResultReader reader,UUID scanId,int page,int limit,
             String needle,FindingSeverity severity){
         List<FindingView> matches=new ArrayList<>();
-        String next=cursor;
-        int pages=0;
+        String next=null;
+        int read=0;
         do{
-            var batch=reader.findFindings(scanId,next,limit-matches.size());
-            next=batch.nextCursor();pages++;
+            var batch=reader.findFindings(scanId,next,100);
+            next=batch.nextCursor();read+=batch.findings().size();
             batch.findings().stream().map(FindingView::from)
-                    .filter(finding->matches(finding,needle,severity))
-                    .limit((long) limit-matches.size()).forEach(matches::add);
-        }while(next!=null&&matches.size()<limit&&pages<MAX_AWS_SEARCH_PAGES);
-        boolean budgetExhausted=next!=null&&matches.size()<limit&&pages>=MAX_AWS_SEARCH_PAGES;
-        return new FindingsPage(matches,next,0,next==null?1:2,matches.size(),budgetExhausted,false);
+                    .filter(finding->matches(finding,needle,severity)).forEach(matches::add);
+            if(next!=null&&read>=MAX_AWS_FINDINGS)throw new IllegalStateException("Scan findings exceed the sortable search limit");
+        }while(next!=null);
+        matches.sort(RISK_ORDER);
+        int start=(int)Math.min((long)Math.max(page,0)*limit,matches.size());
+        int end=Math.min(start+limit,matches.size());
+        return new FindingsPage(matches.subList(start,end),null,Math.max(page,0),
+                (matches.size()+limit-1)/limit,matches.size(),false,true);
     }
     private static boolean matches(FindingView finding,String needle,FindingSeverity severity){
         return (severity==null||severity.name().equals(finding.severity()))
@@ -199,6 +207,7 @@ public class UiQueryController {
         result.status().name(),result.scanner(),result.scannerVersion(),result.contentHash(),result.receivedAt(),result.completedAt(),result.findingCount(),result.severitySummary(),result.safeError());}}
     public record FindingsPage(List<FindingView> content,String nextCursor,int number,int totalPages,long totalElements,
                                boolean truncated,boolean totalExact){}
+    public record FindingContext(UUID assetId,UUID resultId,String assetName,String reference,Instant receivedAt){}
     public record AgentView(String id,String status,boolean online,Instant lastHeartbeatAt,int outboxPending,int deadLetters,long outboxBytes,long diskFreeBytes,String safeError){
         static AgentView from(UiAgent agent,java.time.Duration offline){return new AgentView(agent.getId(),agent.getStatus(),agent.getLastHeartbeatAt().isAfter(Instant.now().minus(offline)),
                 agent.getLastHeartbeatAt(),agent.getOutboxPending(),agent.getOutboxDeadLetters(),agent.getOutboxBytes(),agent.getDiskFreeBytes(),agent.getLastError());}}
