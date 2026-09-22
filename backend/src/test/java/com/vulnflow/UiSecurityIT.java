@@ -23,6 +23,8 @@ import com.vulnflow.ui.auth.UiUserRepository;
 import com.vulnflow.ui.audit.UiAuditRepository;
 import com.vulnflow.ui.scan.UiScanRequest;
 import com.vulnflow.ui.scan.UiScanRequestRepository;
+import com.vulnflow.ui.scan.UiAgent;
+import com.vulnflow.ui.scan.UiAgentRepository;
 import com.vulnflow.ui.target.UiTarget;
 import com.vulnflow.ui.target.UiTargetRepository;
 import jakarta.servlet.http.Cookie;
@@ -47,6 +49,7 @@ class UiSecurityIT {
     @Container @ServiceConnection static final PostgreSQLContainer<?> POSTGRES=new PostgreSQLContainer<>("postgres:16.4-alpine");
     @Autowired MockMvc mvc; @Autowired ObjectMapper mapper; @Autowired UiUserRepository users; @Autowired UiAuditRepository audit; @Autowired UiScanRequestRepository requests; @Autowired UiTargetRepository targets; @Autowired PasswordEncoder encoder;
     @Autowired AssetRepository assets; @Autowired ScanRepository scans; @Autowired FindingRepository findings;
+    @Autowired UiAgentRepository agents;
     @BeforeEach void prepare(){requests.deleteAll();targets.deleteAll();findings.deleteAll();scans.deleteAll();assets.deleteAll();audit.deleteAll();users.deleteAll();users.save(new UiUser("operator",encoder.encode(PASSWORD),UiRole.OPERATOR,false));}
 
     @Test void requiresCsrfForLogin() throws Exception {mvc.perform(post("/api/ui/v1/auth/login").contentType(MediaType.APPLICATION_JSON).content("{\"username\":\"operator\",\"password\":\""+PASSWORD+"\"}")).andExpect(status().isForbidden());}
@@ -81,6 +84,28 @@ class UiSecurityIT {
                 .andExpect(jsonPath("$.content[0].id").value(scan.getId().toString()))
                 .andExpect(jsonPath("$.content[0].assetName").value("public-nginx"))
                 .andExpect(jsonPath("$.content[0].reference").value("nginx:stable"));
+    }
+    @Test void resolvesFindingContextForTheAuthorizedRequest() throws Exception {
+        UiUser owner = users.findByUsernameIgnoreCase("operator").orElseThrow();
+        Asset asset = assets.save(new Asset("VulnFlow Agent", AssetType.CONTAINER_IMAGE, "ghcr.io/example/agent"));
+        UiTarget target = targets.save(new UiTarget("VulnFlow Agent", "ghcr.io/example/agent", asset, owner));
+        Scan scan = scans.save(new Scan(asset, ScannerType.TRIVY, "agent.json", "a".repeat(64)));
+        UiAgent agent = agents.save(new UiAgent("test-finding-context"));
+        UiScanRequest request = new UiScanRequest(target, owner);
+        java.util.UUID claim = request.claim(agent, java.time.Duration.ofMinutes(5));
+        request.start(claim, java.time.Duration.ofMinutes(5));
+        request.uploading(claim, java.time.Duration.ofMinutes(5));
+        request.processing(claim, scan, java.util.UUID.randomUUID());
+        request.complete();
+        requests.save(request);
+
+        mvc.perform(get("/api/ui/v1/scan-requests/{id}/finding-context", request.getId())
+                        .cookie(login("operator")))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.assetId").value(asset.getId().toString()))
+                .andExpect(jsonPath("$.resultId").value(scan.getId().toString()))
+                .andExpect(jsonPath("$.assetName").value("VulnFlow Agent"))
+                .andExpect(jsonPath("$.reference").value("ghcr.io/example/agent"));
     }
     @Test void registeringAndChangingAnImageKeepsTheTargetLinkedToTheMatchingAsset() throws Exception {
         users.save(new UiUser("admin", encoder.encode(PASSWORD), UiRole.ADMIN, false));
