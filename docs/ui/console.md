@@ -30,6 +30,8 @@ Bootstrap is skipped whenever any UI user already exists. A temporary password r
 
 Active scan details poll every two seconds and stop at `COMPLETED` or `FAILED`. Dashboard and operations views poll every ten and fifteen seconds respectively. The dashboard is explicitly limited to 30 days and 500 scans. Findings remain scoped to one selected scan.
 
+The request detail's Explore findings link selects its associated image and result. Findings are ordered by descending risk before pagination. Newly processed Trivy findings use the highest valid CVSS score supplied by the report, scaled to 0–100; when CVSS is absent, risk falls back to the severity score. Previously stored findings retain their original scores.
+
 PostgreSQL supplies the recent scan identities and control state. Local mode aggregates findings from PostgreSQL; AWS mode resolves those same bounded identities with DynamoDB `BatchGetItem`, in batches of 100, so the dashboard never presents PostgreSQL processing state as AWS result truth.
 
 ## Development
