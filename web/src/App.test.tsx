@@ -52,4 +52,15 @@ describe("public case study", () => {
     expect(screen.getByText("CVE-2022-3715")).toBeInTheDocument();
     expect(screen.queryByText("CVE-2011-3374")).not.toBeInTheDocument();
   });
+
+  it("orders recorded findings from critical through unknown", () => {
+    render(
+      <QueryClientProvider client={new QueryClient()}>
+        <MemoryRouter initialEntries={["/"]}><App /></MemoryRouter>
+      </QueryClientProvider>,
+    );
+    const severities = screen.getByRole("region", { name: "Recorded findings" }).querySelectorAll(".finding-heading .badge");
+    expect(severities[0]).toHaveTextContent("CRITICAL");
+    expect(severities[severities.length - 1]).toHaveTextContent("UNKNOWN");
+  });
 });

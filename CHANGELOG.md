@@ -2,7 +2,7 @@
 
 ## Unreleased
 
-- Replace the synthetic public scan fixture with a read-only snapshot of a completed `debian:11-slim` AWS execution and a searchable set of real DynamoDB findings.
+- Replace the synthetic public scan fixture with a read-only snapshot of a completed `debian:11-slim` AWS execution and a searchable set of real DynamoDB findings ordered from `CRITICAL` through `UNKNOWN`.
 - Give the production Agent a dedicated read-only Docker configuration for scanning private GHCR images without sharing the host Docker login or socket.
 - Keep the Agent credential directory traversable for deployment validation while preventing directory listing and retaining mode `600` on the credential file.
 - Present executable targets and result assets as one image catalog in the console while preserving their separate persistence responsibilities.
