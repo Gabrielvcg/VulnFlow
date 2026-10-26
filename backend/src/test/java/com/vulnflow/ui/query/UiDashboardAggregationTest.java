@@ -147,7 +147,7 @@ class UiDashboardAggregationTest {
 
     private static long valueForSum(boolean aws, Map<String, Integer> awsCounts,
             Map<FindingSeverity, Long> localCounts, FindingSeverity severity) {
-        return aws ? awsCounts.getOrDefault(severity.name(), 0) : localCounts.get(severity);
+        return aws ? (long) awsCounts.getOrDefault(severity.name(), 0) : localCounts.get(severity);
     }
 
     private static long calls(FindingRepository repository, String method) {
