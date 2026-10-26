@@ -83,14 +83,25 @@ jobs:
           reports = glob.glob("backend/target/failsafe-reports/TEST-*.xml")
           tests = 0
           skipped = 0
+          suites = {}
           for report in reports:
               root = ET.parse(report).getroot()
+              suites[root.attrib["name"]] = int(root.attrib.get("tests", 0))
               tests += int(root.attrib.get("tests", 0))
               skipped += int(root.attrib.get("skipped", 0))
 
           print(f"Failsafe integration tests: total={tests}, skipped={skipped}")
           if tests == 0 or skipped != 0:
               sys.exit("PostgreSQL integration tests did not all run")
+          required = {
+              "com.vulnflow.CommandUploadRetryIT": 4,
+              "com.vulnflow.CommandUploadMigrationIT": 1,
+              "com.vulnflow.FlywayUpgradeIT": 1,
+              "com.vulnflow.AwsExecutionPathIT": 1,
+          }
+          for name, minimum in required.items():
+              if suites.get(name, 0) < minimum:
+                  sys.exit(f"Required integration suite missing or incomplete: {name}")
           PY
 
       - name: Require Lambda package and offline AWS demo
@@ -101,6 +112,19 @@ jobs:
           forbidden_aws_test_pattern='local''stack|endpoint''Override'
           ! git grep -I -E "$forbidden_aws_test_pattern" -- ':!docs/**'
 
+      - name: Record verified Lambda artifact checksum
+        working-directory: aws/lambda-processor/target
+        run: sha256sum vulnflow-lambda-processor-0.4.9.jar > vulnflow-lambda-processor-0.4.9.jar.sha256
+
+      - name: Retain verified Lambda artifact for controlled promotion
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: vulnflow-lambda-${{ github.sha }}
+          path: |
+            aws/lambda-processor/target/vulnflow-lambda-processor-0.4.9.jar
+            aws/lambda-processor/target/vulnflow-lambda-processor-0.4.9.jar.sha256
+          if-no-files-found: error
+          retention-days: 14
       - name: Confirm VPS remains local mode
         shell: bash
         run: |

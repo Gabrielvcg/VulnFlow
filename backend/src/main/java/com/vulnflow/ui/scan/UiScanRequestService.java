@@ -93,9 +93,27 @@ public class UiScanRequestService {
     }
     public record AgentOption(String id, String status, boolean online) {}
     @Transactional public void start(String agentId,UUID id,UUID token){UiScanRequest r=claimed(agentId,id);r.start(token,properties.claimLease());}
-    @Transactional public void fail(String agentId,UUID id,UUID token,String error){UiScanRequest r=claimed(agentId,id);if(r.getStatus()!=UiScanRequestStatus.FAILED)r.fail(token,error);}
+    @Transactional public void fail(String agentId,UUID id,UUID token,String error){UiScanRequest r=claimed(agentId,id);if(r.getStatus()!=UiScanRequestStatus.FAILED||r.getScan()!=null)r.fail(token,error);}
     @Transactional public void verifyUpload(UUID id,UUID token){UiScanRequest r=requests.findByIdForUpdate(id).orElseThrow(()->new ResourceNotFoundException("Scan request",id));r.uploading(token,properties.claimLease());}
-    @Transactional public void associateUpload(UUID id,UUID token,UUID scanId,UUID eventId){UiScanRequest r=requests.findByIdForUpdate(id).orElseThrow();Scan scan=scans.findById(scanId).orElseThrow();r.processing(token,scan,eventId);}
+    @Transactional public void associateUpload(UUID id,UUID token,UUID scanId,UUID eventId){UiScanRequest r=requests.findByIdForUpdate(id).orElseThrow();Scan scan=scans.findById(scanId).orElseThrow();r.acknowledgeAssociation(token,scan,eventId);}
+    @Transactional
+    public UiScanRequest.UploadReservation reserveUpload(UUID id, UUID token, UUID assetId, String hash) {
+        UiScanRequest request = requests.findByIdForUpdate(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Scan request", id));
+        return request.reserveUpload(token, assetId, hash, properties.claimLease());
+    }
+
+    @Transactional
+    public void associateUpload(UUID id, UUID token, UUID attemptId, UUID scanId, UUID eventId) {
+        UiScanRequest request = requests.findByIdForUpdate(id).orElseThrow();
+        Scan scan = scans.findById(scanId).orElseThrow();
+        request.associateUpload(token, attemptId, scan, eventId);
+    }
+
+    @Transactional
+    public void releaseUpload(UUID id, UUID token, UUID attemptId) {
+        requests.findByIdForUpdate(id).ifPresent(request -> request.releaseUpload(token, attemptId));
+    }
     @Transactional public void completeFromLocalScan(UiScanRequest r){if(r.getStatus()==UiScanRequestStatus.PROCESSING&&r.getScan()!=null){if(r.getScan().getStatus()==ScanStatus.COMPLETED){r.complete();return;}if(r.getScan().getStatus()==ScanStatus.FAILED){r.fail(null,r.getScan().getFailureReason());return;}ProcessingResultReader reader=resultReaders.getIfAvailable();if(reader!=null)reader.findScan(r.getScan().getId()).ifPresent(result->{if(result.status()==ProcessingResultStatus.COMPLETED)r.complete();else if(result.status()==ProcessingResultStatus.FAILED)r.fail(null,result.safeError());});}}
 
     @Transactional(readOnly=true) public Page<ScanRequestResponse> list(Pageable pageable,UiPrincipal principal,UiScanRequestStatus status,UUID targetId,UUID assetId){UUID userId=principal.role()==UiRole.ADMIN?null:principal.id();return requests.findFiltered(userId,status,targetId,assetId,pageable).map(this::responseProjected);}

@@ -38,6 +38,17 @@ public class ScanRegistrationService implements ScanSubmissionService {
         this.workerProperties = workerProperties;
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    public Optional<IngestionSubmission> findRegistered(UUID assetId, String contentHash) {
+        return scanRepository.findByAssetIdAndContentHash(assetId, contentHash).flatMap(scan -> {
+            IngestionJob job = jobRepository.findByScanId(scan.getId()).orElse(null);
+            if (job == null && scan.getStatus() != ScanStatus.COMPLETED) {
+                return Optional.empty();
+            }
+            return Optional.of(existingSubmission(scan, job));
+        });
+    }
     @Transactional
     @Override
     public IngestionSubmission registerReceived(
