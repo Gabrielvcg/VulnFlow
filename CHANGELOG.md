@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Keep prepared uploads as identity-based internal carriers rather than array-valued records, and make long arithmetic explicit in dashboard regression fixtures.
+
 - Gate reviewed delivery on V10-to-V11 PostgreSQL migration/constraints, reservation rollback and claim recovery, disposable backup restoration and explicitly required CI suites; retain the verified Lambda JAR/checksum for controlled AWS promotion.
 
 - Patch: acknowledge accepted command-upload retries using the original token, asset and validated content hash; pin pending upload identity and execution ownership, reconcile uncertain registration through read-only lookups, and preserve stale-agent fences without retaining an active lease. Add nullable upload reservation columns in V11.
