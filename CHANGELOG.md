@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Align the prior reconciliation integration assertion with accepted-upload fencing: post-association agent failure notifications reject both retained and unrelated tokens while preserving the original terminal failure.
+
 - Keep prepared uploads as identity-based internal carriers rather than array-valued records, and make long arithmetic explicit in dashboard regression fixtures.
 
 - Gate reviewed delivery on V10-to-V11 PostgreSQL migration/constraints, reservation rollback and claim recovery, disposable backup restoration and explicitly required CI suites; retain the verified Lambda JAR/checksum for controlled AWS promotion.
