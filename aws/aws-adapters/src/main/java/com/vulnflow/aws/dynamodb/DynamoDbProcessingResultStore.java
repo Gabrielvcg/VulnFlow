@@ -2,6 +2,7 @@ package com.vulnflow.aws.dynamodb;
 
 import com.vulnflow.contract.IngestionEventV1;
 import com.vulnflow.processing.FindingSeverity;
+import com.vulnflow.processing.InvalidReportException;
 import com.vulnflow.processing.NormalizedFinding;
 import com.vulnflow.processing.ProcessedVulnerabilityReport;
 import com.vulnflow.processing.port.ProcessingFailure;
@@ -29,6 +30,8 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.concurrent.ThreadLocalRandom;
+import java.util.function.LongUnaryOperator;
 import java.util.regex.Pattern;
 import software.amazon.awssdk.core.exception.SdkException;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
@@ -61,13 +64,23 @@ public final class DynamoDbProcessingResultStore
     private static final String STATUS_FAILED = "FAILED";
     private static final int DYNAMODB_BATCH_LIMIT = 25;
     private static final int DYNAMODB_BATCH_GET_LIMIT = 100;
+    private static final int BATCH_GET_MAX_ATTEMPTS = 3;
+    private static final long BATCH_GET_INITIAL_BACKOFF_MILLIS = 50;
     private static final int MAX_CURSOR_LENGTH = 1024;
 
     private final DynamoDbClient client;
     private final String tableName;
     private final int maximumFindings;
+    private final BatchReadWaiter batchReadWaiter;
+    private final LongUnaryOperator batchReadJitter;
 
     public DynamoDbProcessingResultStore(DynamoDbClient client, String tableName, int maximumFindings) {
+        this(client, tableName, maximumFindings, Thread::sleep,
+                maximumDelayMillis -> ThreadLocalRandom.current().nextLong(maximumDelayMillis + 1));
+    }
+
+    DynamoDbProcessingResultStore(DynamoDbClient client, String tableName, int maximumFindings,
+            BatchReadWaiter batchReadWaiter, LongUnaryOperator batchReadJitter) {
         this.client = Objects.requireNonNull(client, "client");
         if (tableName == null || !TABLE_NAME.matcher(tableName).matches()) {
             throw new IllegalArgumentException("tableName is invalid");
@@ -77,6 +90,8 @@ public final class DynamoDbProcessingResultStore
         }
         this.tableName = tableName;
         this.maximumFindings = maximumFindings;
+        this.batchReadWaiter = Objects.requireNonNull(batchReadWaiter, "batchReadWaiter");
+        this.batchReadJitter = Objects.requireNonNull(batchReadJitter, "batchReadJitter");
     }
 
     @Override
@@ -99,7 +114,11 @@ public final class DynamoDbProcessingResultStore
             if (outcome != null) {
                 return outcome;
             }
-        } else {
+        }
+        if (report.findings().size() > maximumFindings) {
+            throw new InvalidReportException("The report exceeds the configured finding limit");
+        }
+        if (state == null) {
             if (beginCompletion(event, report)) {
                 return ProcessingStoreOutcome.DUPLICATE;
             }
@@ -119,7 +138,10 @@ public final class DynamoDbProcessingResultStore
             if (STATUS_FAILED.equals(existing.status()) || STATUS_COMPLETED.equals(existing.status())) {
                 return ProcessingStoreOutcome.DUPLICATE;
             }
-            throw new ProcessingStoreConflictException("The event already has an incomplete completion attempt");
+            if (STATUS_WRITING.equals(existing.status())) {
+                throw new TransientProcessingStoreException("The event still has an incomplete completion attempt", null);
+            }
+            throw new ProcessingStoreConflictException("The event has an unsupported persisted state");
         }
 
         Map<String, AttributeValue> eventItem = baseEventItem(event, STATUS_FAILED, 0);
@@ -145,6 +167,9 @@ public final class DynamoDbProcessingResultStore
                 assertSameEvent(event, raced);
                 if (STATUS_FAILED.equals(raced.status()) || STATUS_COMPLETED.equals(raced.status())) {
                     return ProcessingStoreOutcome.DUPLICATE;
+                }
+                if (STATUS_WRITING.equals(raced.status())) {
+                    throw new TransientProcessingStoreException("The event still has an incomplete completion attempt", exception);
                 }
             }
             throw mapTransactionFailure("The failed result could not be committed", exception);
@@ -175,13 +200,16 @@ public final class DynamoDbProcessingResultStore
                         .consistentRead(true)
                         .keys(batch.stream().map(id -> key(scanPk(id), META)).toList())
                         .build());
-                for (int attempt = 0; !pending.isEmpty() && attempt < 3; attempt++) {
+                for (int attempt = 0; !pending.isEmpty() && attempt < BATCH_GET_MAX_ATTEMPTS; attempt++) {
                     var response = client.batchGetItem(BatchGetItemRequest.builder().requestItems(pending).build());
                     for (Map<String, AttributeValue> item : response.responses().getOrDefault(tableName, List.of())) {
                         ProcessingResultSummary summary = toSummary(item);
                         results.put(summary.scanId(), summary);
                     }
                     pending = response.unprocessedKeys();
+                    if (!pending.isEmpty() && attempt + 1 < BATCH_GET_MAX_ATTEMPTS) {
+                        awaitBatchReadRetry(attempt);
+                    }
                 }
                 if (!pending.isEmpty()) {
                     throw new TransientProcessingStoreException("The result summary batch was not fully read", null);
@@ -193,17 +221,31 @@ public final class DynamoDbProcessingResultStore
         }
     }
 
+    private void awaitBatchReadRetry(int attempt) {
+        long maximumDelayMillis = BATCH_GET_INITIAL_BACKOFF_MILLIS << attempt;
+        try {
+            batchReadWaiter.await(batchReadJitter.applyAsLong(maximumDelayMillis));
+        } catch (InterruptedException exception) {
+            Thread.currentThread().interrupt();
+            throw new TransientProcessingStoreException("The result summary batch retry was interrupted", exception);
+        }
+    }
+
+    @FunctionalInterface
+    interface BatchReadWaiter {
+        void await(long millis) throws InterruptedException;
+    }
+
     @Override
     public ProcessingFindingPage findFindings(UUID scanId, String cursor, int size) {
         Objects.requireNonNull(scanId, "scanId");
         if (size < 1 || size > 100) {
             throw new IllegalArgumentException("size must be between 1 and 100");
         }
-        if (cursor == null) {
-            Optional<ProcessingResultSummary> summary = findScan(scanId);
-            if (summary.isEmpty() || summary.get().status() != ProcessingResultStatus.COMPLETED) {
-                return new ProcessingFindingPage(List.of(), null);
-            }
+        String decodedCursor = decodeCursor(cursor);
+        Optional<ProcessingResultSummary> summary = findScan(scanId);
+        if (summary.isEmpty() || summary.get().status() != ProcessingResultStatus.COMPLETED) {
+            return new ProcessingFindingPage(List.of(), null);
         }
 
         QueryRequest.Builder request = QueryRequest.builder()
@@ -215,7 +257,6 @@ public final class DynamoDbProcessingResultStore
                         ":prefix", string("FINDING#")))
                 .limit(size)
                 .consistentRead(true);
-        String decodedCursor = decodeCursor(cursor);
         if (decodedCursor != null) {
             request.exclusiveStartKey(key(scanPk(scanId), decodedCursor));
         }
@@ -384,9 +425,6 @@ public final class DynamoDbProcessingResultStore
         Objects.requireNonNull(report, "report");
         if (!event.scanId().equals(report.scanId()) || !event.assetId().equals(report.assetId())) {
             throw new ProcessingStoreConflictException("The processed report identity does not match the event");
-        }
-        if (report.findings().size() > maximumFindings) {
-            throw new ProcessingStoreConflictException("The report exceeds the configured finding limit");
         }
     }
 

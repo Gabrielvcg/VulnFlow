@@ -5,6 +5,7 @@ import com.vulnflow.ingestion.IngestionSubmission;
 import com.vulnflow.ingestion.ScanSubmissionService;
 import com.vulnflow.processing.port.ReportStorage;
 import java.util.UUID;
+import java.util.Optional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Profile;
@@ -26,6 +27,10 @@ public class AwsScanSubmissionService implements ScanSubmissionService {
     }
 
     @Override
+    public Optional<IngestionSubmission> findRegistered(UUID assetId, String contentHash) {
+        return registrationTransaction.findRegistered(assetId, contentHash);
+    }
+    @Override
     public IngestionSubmission registerReceived(
             Asset asset,
             String sourceFileName,
@@ -33,21 +38,18 @@ public class AwsScanSubmissionService implements ScanSubmissionService {
             byte[] content) {
         UUID candidateScanId = UUID.randomUUID();
         String payloadKey = reportStorage.store(candidateScanId, content);
-        try {
-            AwsRegistrationResult result = registrationTransaction.register(
-                    candidateScanId,
-                    asset.getId(),
-                    sourceFileName,
-                    contentHash,
-                    payloadKey);
-            if (!result.ownsUploadedPayload()) {
-                compensate(payloadKey);
-            }
-            return result.submission();
-        } catch (RuntimeException exception) {
+        // A thrown registration call cannot prove rollback: the commit acknowledgement may have been lost.
+        // Retain the payload unless a successful result confirms that this upload is not referenced.
+        AwsRegistrationResult result = registrationTransaction.register(
+                candidateScanId,
+                asset.getId(),
+                sourceFileName,
+                contentHash,
+                payloadKey);
+        if (!result.ownsUploadedPayload()) {
             compensate(payloadKey);
-            throw exception;
         }
+        return result.submission();
     }
 
     private void compensate(String payloadKey) {

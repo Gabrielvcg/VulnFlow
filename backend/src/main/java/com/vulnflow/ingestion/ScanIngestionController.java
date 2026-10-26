@@ -32,14 +32,29 @@ public class ScanIngestionController {
         if ((scanRequestId == null) != (claimToken == null)) {
             throw new IllegalArgumentException("scanRequestId and claimToken must be provided together");
         }
-        if (scanRequestId != null) {
-            scanRequestService.verifyUpload(scanRequestId, claimToken);
-        }
-        ScanIngestionResponse response = scanIngestionService.ingestTrivy(assetId, file);
-        if (scanRequestId != null) {
-            scanRequestService.associateUpload(scanRequestId, claimToken, response.scanId(), response.eventId());
-        }
-        if (response.outcome() == ScanIngestionOutcome.DUPLICATE
+        ScanIngestionResponse response;
+        if (scanRequestId == null) {
+            response = scanIngestionService.ingestTrivy(assetId, file);
+        } else {
+            PreparedScanUpload upload = scanIngestionService.prepareTrivy(assetId, file);
+            var reservation = scanRequestService.reserveUpload(scanRequestId, claimToken, assetId, upload.contentHash());
+            try {
+                response = scanIngestionService.ingestCommandUpload(upload, reservation.acceptedScanId());
+                if (reservation.acceptedScanId() == null) {
+                    scanRequestService.associateUpload(scanRequestId, claimToken, reservation.attemptId(),
+                            response.scanId(), response.eventId());
+                }
+            } catch (RuntimeException exception) {
+                if (reservation.attemptId() != null) {
+                    try {
+                        scanRequestService.releaseUpload(scanRequestId, claimToken, reservation.attemptId());
+                    } catch (RuntimeException releaseFailure) {
+                        exception.addSuppressed(releaseFailure);
+                    }
+                }
+                throw exception;
+            }
+        }        if (response.outcome() == ScanIngestionOutcome.DUPLICATE
                 || response.outcome() == ScanIngestionOutcome.DEAD_LETTER) {
             return ResponseEntity.ok(response);
         }
