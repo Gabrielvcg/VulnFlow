@@ -2,6 +2,23 @@
 
 ## Unreleased
 
+- Align the prior reconciliation integration assertion with accepted-upload fencing: post-association agent failure notifications reject both retained and unrelated tokens while preserving the original terminal failure.
+
+- Keep prepared uploads as identity-based internal carriers rather than array-valued records, and make long arithmetic explicit in dashboard regression fixtures.
+
+- Gate reviewed delivery on V10-to-V11 PostgreSQL migration/constraints, reservation rollback and claim recovery, disposable backup restoration and explicitly required CI suites; retain the verified Lambda JAR/checksum for controlled AWS promotion.
+
+- Patch: acknowledge accepted command-upload retries using the original token, asset and validated content hash; pin pending upload identity and execution ownership, reconcile uncertain registration through read-only lookups, and preserve stale-agent fences without retaining an active lease. Add nullable upload reservation columns in V11.
+
+- Patch: accept legal JSON media type parameters through Spring MediaType parsing; retain supported structured JSON suffixes and the existing unsupported-report error before registration.
+
+- Project asset scan history from page-batched AWS summaries when available, preserving local receipt/identity metadata and pagination without persisting remote completion into PostgreSQL.
+- Persist new AWS reports exceeding the finding limit as permanent INVALID_REPORT failures before acknowledgement; preserve finalized/conflicting results and retry failure writes that encounter a matching incomplete result.
+- Patch: retain uploaded AWS reports when registration throws and its commit outcome is uncertain; clean up only uploads confirmed as unowned duplicates, preserving the original exception. Add modeled regression coverage and document orphan retention costs.
+- Aggregate dashboard local fallback counts with the existing bulk count per severity, excluding scans with AWS summaries while preserving selection, exact long totals and empty-window behavior.
+- Pace DynamoDB summary BatchGet unprocessed-key retries with bounded exponential full jitter, keeping three attempts per batch and propagating interrupted waits as transient failures with the interrupt flag restored.
+- Materialize AWS console finding views only for the selected page after filtering and stable full sorting; preserve exact totals and reader traversal without a heap or new pagination policy.
+- Require a completed DynamoDB scan marker on every findings page, including blank and continuation cursors, with strongly consistent summary reads and cursor validation before storage access.
 - Resolve request finding context inside the authorized service transaction so the selected image loads in production.
 - Open a request's exact result in Findings, sort stored findings by descending risk across pages, and use available Trivy CVSS scores for newly ingested risk values.
 - Replace the synthetic public scan fixture with a read-only snapshot of a completed `debian:11-slim` AWS execution and a searchable set of real DynamoDB findings ordered from `CRITICAL` through `UNKNOWN`.
