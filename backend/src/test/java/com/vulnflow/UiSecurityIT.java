@@ -290,7 +290,7 @@ class UiSecurityIT {
         SessionMaterial material = csrf();
         mvc.perform(post("/api/ui/v1/auth/logout").cookie(session,material.cookie())
                 .header("X-XSRF-TOKEN",material.token())).andExpect(status().isNoContent());
-        mvc.perform(get("/api/ui/v1/auth/me").cookie(session)).andExpect(status().isUnauthorized());
+        mvc.perform(get("/api/ui/v1/auth/me").cookie(session)).andExpect(status().isForbidden());
     }
     private SessionMaterial csrf() throws Exception {MvcResult result=mvc.perform(get("/api/ui/v1/auth/csrf")).andExpect(status().isOk()).andReturn();return new SessionMaterial(mapper.readTree(result.getResponse().getContentAsByteArray()).path("token").asText(),result.getResponse().getCookie("XSRF-TOKEN"));}
     private Cookie login(String username) throws Exception {SessionMaterial material=csrf();return mvc.perform(post("/api/ui/v1/auth/login").cookie(material.cookie()).header("X-XSRF-TOKEN",material.token()).contentType(MediaType.APPLICATION_JSON).content(mapper.writeValueAsBytes(java.util.Map.of("username",username,"password",PASSWORD)))).andExpect(status().isOk()).andReturn().getResponse().getCookie("VULNFLOW_SESSION");}
