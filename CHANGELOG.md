@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Disable implicit fallback logout and retain default CSRF protection outside the API chains; keep the UI XSRF cookie HttpOnly while delivering its token through the existing JSON endpoint.
+
 - Align the prior reconciliation integration assertion with accepted-upload fencing: post-association agent failure notifications reject both retained and unrelated tokens while preserving the original terminal failure.
 
 - Keep prepared uploads as identity-based internal carriers rather than array-valued records, and make long arithmetic explicit in dashboard regression fixtures.
