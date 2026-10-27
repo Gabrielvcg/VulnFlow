@@ -60,7 +60,7 @@ public class SecurityConfiguration {
     @Order(2)
     SecurityFilterChain uiSecurityFilterChain(HttpSecurity http, PasswordChangeRequiredFilter passwordFilter,UiEnabledFilter enabledFilter)
             throws Exception {
-        CookieCsrfTokenRepository csrf = CookieCsrfTokenRepository.withHttpOnlyFalse();
+        CookieCsrfTokenRepository csrf = new CookieCsrfTokenRepository();
         csrf.setCookieName("XSRF-TOKEN");
         csrf.setHeaderName("X-XSRF-TOKEN");
         csrf.setCookieCustomizer(cookie -> cookie.sameSite("Lax").secure(true).path("/"));
@@ -86,7 +86,7 @@ public class SecurityConfiguration {
     @Order(3)
     SecurityFilterChain publicSecurityFilterChain(HttpSecurity http) throws Exception {
         return http
-                .csrf(AbstractHttpConfigurer::disable)
+                .logout(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(authorize -> authorize.anyRequest().permitAll())
                 .build();
     }
