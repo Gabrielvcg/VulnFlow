@@ -12,6 +12,8 @@ import java.util.HexFormat;
 import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.InvalidMediaTypeException;
+import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -38,16 +40,31 @@ public class DefaultScanIngestionService implements ScanIngestionService {
 
     @Override
     public ScanIngestionResponse ingestTrivy(UUID assetId, MultipartFile file) {
+        return submit(prepareTrivy(assetId, file));
+    }
+
+    @Override
+    public PreparedScanUpload prepareTrivy(UUID assetId, MultipartFile file) {
         Asset asset = assetService.requireAsset(assetId);
         validateFile(file);
         byte[] content = readContent(file);
-        String contentHash = sha256(content);
+        return new PreparedScanUpload(asset, safeFileName(file), sha256(content), content);
+    }
 
+    @Override
+    public ScanIngestionResponse ingestCommandUpload(PreparedScanUpload upload, UUID acceptedScanId) {
+        var existing = registrationService.findRegistered(upload.asset().getId(), upload.contentHash());
+        if (acceptedScanId != null) {
+            IngestionSubmission submission = existing.filter(value -> acceptedScanId.equals(value.scanId()))
+                    .orElseThrow(() -> new IllegalStateException("The accepted upload could not be loaded"));
+            return response(submission);
+        }
+        return existing.map(this::response).orElseGet(() -> submit(upload));
+    }
+
+    private ScanIngestionResponse submit(PreparedScanUpload upload) {
         IngestionSubmission submission = registrationService.registerReceived(
-                asset,
-                safeFileName(file),
-                contentHash,
-                content);
+                upload.asset(), upload.fileName(), upload.contentHash(), upload.content());
         if (submission.outcome() == ScanIngestionOutcome.ACCEPTED) {
             metrics.jobAccepted();
         }
@@ -58,6 +75,10 @@ public class DefaultScanIngestionService implements ScanIngestionService {
                 submission.scanId(),
                 submission.assetId(),
                 submission.outcome());
+        return response(submission);
+    }
+
+    private ScanIngestionResponse response(IngestionSubmission submission) {
         return new ScanIngestionResponse(
                 submission.scanId(),
                 submission.jobId(),
@@ -77,9 +98,18 @@ public class DefaultScanIngestionService implements ScanIngestionService {
             throw new ReportTooLargeException("The Trivy report exceeds the configured file size limit");
         }
         String contentType = file.getContentType();
-        if (contentType == null
-                || !(contentType.equalsIgnoreCase("application/json")
-                || contentType.toLowerCase().endsWith("+json"))) {
+        if (contentType == null) {
+            throw new UnsupportedReportMediaTypeException("Only JSON report files are accepted");
+        }
+        MediaType mediaType;
+        try {
+            mediaType = MediaType.parseMediaType(contentType);
+        } catch (InvalidMediaTypeException exception) {
+            throw new UnsupportedReportMediaTypeException("Only JSON report files are accepted");
+        }
+        if (!((mediaType.getType().equalsIgnoreCase("application")
+                && mediaType.getSubtype().equalsIgnoreCase("json"))
+                || mediaType.getSubtype().endsWith("+json"))) {
             throw new UnsupportedReportMediaTypeException("Only JSON report files are accepted");
         }
     }

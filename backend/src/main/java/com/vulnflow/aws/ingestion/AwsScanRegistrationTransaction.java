@@ -31,6 +31,19 @@ public class AwsScanRegistrationTransaction {
         this.properties = properties;
     }
 
+    @Transactional(readOnly = true)
+    public Optional<IngestionSubmission> findRegistered(UUID assetId, String contentHash) {
+        return scanRepository.findByAssetIdAndContentHash(assetId, contentHash).flatMap(scan -> {
+            Optional<AwsPublicationOutbox> outbox = outboxRepository.findByScanId(scan.getId());
+            if (outbox.isPresent()) {
+                return Optional.of(existing(scan, outbox.get()).submission());
+            }
+            if (scan.getStatus() == ScanStatus.COMPLETED) {
+                return Optional.of(submission(scan, null, null, ScanIngestionOutcome.DUPLICATE));
+            }
+            return Optional.empty();
+        });
+    }
     @Transactional
     public AwsRegistrationResult register(
             UUID candidateScanId,

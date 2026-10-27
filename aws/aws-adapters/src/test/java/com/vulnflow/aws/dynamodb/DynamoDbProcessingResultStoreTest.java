@@ -5,7 +5,6 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.when;
 import static org.mockito.Mockito.lenient;
 
@@ -144,7 +143,7 @@ class DynamoDbProcessingResultStoreTest {
     }
 
     @Test
-    void validatesTheSummaryOnlyOnTheFirstFindingsPage() {
+    void validatesTheSummaryOnContinuationFindingsPages() {
         when(client.getItem(any(GetItemRequest.class)))
                 .thenReturn(GetItemResponse.builder().item(scanItem(event, "COMPLETED", 2)).build());
         when(client.query(any(QueryRequest.class))).thenReturn(QueryResponse.builder()
@@ -158,7 +157,7 @@ class DynamoDbProcessingResultStoreTest {
 
         store.findFindings(event.scanId(), cursor, 1);
 
-        verify(client, never()).getItem(any(GetItemRequest.class));
+        verify(client).getItem(any(GetItemRequest.class));
         verify(client).query(any(QueryRequest.class));
     }
 

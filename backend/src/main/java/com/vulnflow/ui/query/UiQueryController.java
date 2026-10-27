@@ -26,8 +26,8 @@ import software.amazon.awssdk.services.sqs.model.QueueAttributeName;
 @RequestMapping("/api/ui/v1")
 public class UiQueryController {
     private static final int MAX_AWS_FINDINGS = 100_000;
-    private static final Comparator<FindingView> RISK_ORDER = Comparator.comparingInt(FindingView::riskScore)
-            .reversed().thenComparing(FindingView::vulnerabilityId).thenComparing(FindingView::id);
+    private static final Comparator<ProcessingFindingResult> RISK_ORDER = Comparator.comparingInt(ProcessingFindingResult::riskScore)
+            .reversed().thenComparing(ProcessingFindingResult::vulnerabilityId).thenComparing(ProcessingFindingResult::findingKey);
     private final AssetRepository assets; private final ScanRepository scans; private final FindingRepository findings;
     private final UiAgentRepository agents; private final UiScanRequestService scanRequests;
     private final AwsPublicationOutboxRepository outbox; private final UiProperties properties;
@@ -53,12 +53,13 @@ public class UiQueryController {
         List<UUID> assetIds=recent.stream().map(scan->scan.getAsset().getId()).distinct().toList();
         List<Scan> current=assetIds.isEmpty()?List.of():scans.findLatestByAssetIds(assetIds);
         Map<UUID,ProcessingResultSummary> summaries=summaries(current);
+        List<UUID> localScanIds=current.stream().filter(scan->summaries.get(scan.getId())==null)
+                .map(Scan::getId).toList();
         Map<String,Long> severity=new LinkedHashMap<>(); long findingCount=0;
         for(FindingSeverity value:FindingSeverity.values()){
-            long count=0;
-            for(Scan scan:current){ProcessingResultSummary summary=summaries.get(scan.getId());count+=summary==null
-                    ?findings.countByScanIdAndSeverity(scan.getId(),value)
-                    :summary.severitySummary().getOrDefault(value.name(),0);}
+            long count=localScanIds.isEmpty()?0:findings.countByScanIdInAndSeverity(localScanIds,value);
+            for(Scan scan:current){ProcessingResultSummary summary=summaries.get(scan.getId());
+                if(summary!=null)count+=summary.severitySummary().getOrDefault(value.name(),0);}
             severity.put(value.name(),count); findingCount+=count;
         }
         UiAgent agent=agents.findAllByOrderByLastHeartbeatAtDesc().stream().findFirst().orElse(null);
@@ -78,8 +79,23 @@ public class UiQueryController {
 
     @GetMapping("/assets/{id}/scans")
     public Page<ScanResponse> assetScans(@PathVariable UUID id,@RequestParam(defaultValue="0")int page,
-            @RequestParam(defaultValue="25")int size){requireAsset(id);return scans.findByAssetIdOrderByReceivedAtDesc(
-                    id,PageRequest.of(Math.max(page,0),bounded(size))).map(ScanResponse::from);}
+            @RequestParam(defaultValue="25")int size){requireAsset(id);
+        Page<Scan> result=scans.findByAssetIdOrderByReceivedAtDesc(id,PageRequest.of(Math.max(page,0),bounded(size)));
+        Map<UUID,ProcessingResultSummary> summaries=summaries(result.getContent());
+        return result.map(scan->assetScanResponse(scan,summaries.get(scan.getId())));}
+
+    private ScanResponse assetScanResponse(Scan scan,ProcessingResultSummary summary){
+        if(summary==null)return ScanResponse.from(scan);
+        ScanStatus status=switch(summary.status()){
+            case RECEIVED,PUBLISH_PENDING,QUEUED -> ScanStatus.RECEIVED;
+            case PROCESSING -> ScanStatus.PROCESSING;
+            case COMPLETED -> ScanStatus.COMPLETED;
+            case FAILED -> ScanStatus.FAILED;
+        };
+        return new ScanResponse(scan.getId(),scan.getAsset().getId(),scan.getScanner(),summary.scannerVersion(),
+                status,scan.getStartedAt(),summary.completedAt(),scan.getReceivedAt(),scan.getSourceFileName(),
+                scan.getContentHash(),status==ScanStatus.FAILED?summary.safeError():null);
+    }
 
     @GetMapping("/results")
     public Page<ResultView> results(@RequestParam(required=false)UUID assetId,
@@ -147,24 +163,24 @@ public class UiQueryController {
                 scan.getContentHash(),scan.getReceivedAt(),scan.getCompletedAt(),(int)findings.countByScanId(scan.getId()),severity,scan.getFailureReason());}
     private FindingsPage searchAwsFindings(ProcessingResultReader reader,UUID scanId,int page,int limit,
             String needle,FindingSeverity severity){
-        List<FindingView> matches=new ArrayList<>();
+        List<ProcessingFindingResult> matches=new ArrayList<>();
         String next=null;
         int read=0;
         do{
             var batch=reader.findFindings(scanId,next,100);
             next=batch.nextCursor();read+=batch.findings().size();
-            batch.findings().stream().map(FindingView::from)
+            batch.findings().stream()
                     .filter(finding->matches(finding,needle,severity)).forEach(matches::add);
             if(next!=null&&read>=MAX_AWS_FINDINGS)throw new IllegalStateException("Scan findings exceed the sortable search limit");
         }while(next!=null);
         matches.sort(RISK_ORDER);
         int start=(int)Math.min((long)Math.max(page,0)*limit,matches.size());
         int end=Math.min(start+limit,matches.size());
-        return new FindingsPage(matches.subList(start,end),null,Math.max(page,0),
+        return new FindingsPage(matches.subList(start,end).stream().map(FindingView::from).toList(),null,Math.max(page,0),
                 (matches.size()+limit-1)/limit,matches.size(),false,true);
     }
-    private static boolean matches(FindingView finding,String needle,FindingSeverity severity){
-        return (severity==null||severity.name().equals(finding.severity()))
+    private static boolean matches(ProcessingFindingResult finding,String needle,FindingSeverity severity){
+        return (severity==null||severity.name().equals(finding.severity().name()))
                 &&(needle.isEmpty()||contains(finding.vulnerabilityId(),needle)||contains(finding.packageName(),needle)
                 ||contains(finding.title(),needle));
     }

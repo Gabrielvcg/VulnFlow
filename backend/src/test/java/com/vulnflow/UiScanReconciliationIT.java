@@ -77,11 +77,15 @@ class UiScanReconciliationIT {
     }
 
     @Test
-    void duplicateFailureAcknowledgementPreservesTheOriginalFailureAndAgentBoundary() {
+    void postAssociationFailureRejectsObsoleteClaimsAndPreservesOriginalFailure() {
         UiScanRequest request = processingRequest(false);
         request.fail(null, "Original failure");
         requests.save(request);
-        service.fail(request.getAgent().getId(), request.getId(), UUID.randomUUID(), "Repeated notification");
+        UUID acceptedToken = request.getClaimToken();
+        assertThatThrownBy(() -> service.fail(request.getAgent().getId(), request.getId(), acceptedToken, "Repeated notification"))
+                .isInstanceOf(StaleScanClaimException.class);
+        assertThatThrownBy(() -> service.fail(request.getAgent().getId(), request.getId(), UUID.randomUUID(), "Wrong token"))
+                .isInstanceOf(StaleScanClaimException.class);
         assertThat(requests.findById(request.getId()).orElseThrow().getSafeError()).isEqualTo("Original failure");
         assertThatThrownBy(() -> service.fail("different-agent", request.getId(), UUID.randomUUID(), "Rejected"))
                 .isInstanceOf(StaleScanClaimException.class);
